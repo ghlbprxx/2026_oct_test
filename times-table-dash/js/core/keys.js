@@ -2,11 +2,13 @@
 import { view, game } from './state.js';
 import { syncMusic, unlockAudio } from './audio.js';
 import { press, backspace, clearInput, submit, pauseGame, resumeGame } from './game.js';
-import { story, beat, storyPress, storyBack, storyCheck, storyGo } from './story.js';
+import { story, beat, talkDone, talkAdvance, storyPress, storyBack, storyCheck, storyGo } from './story.js';
 
 function onKey(e) {
   if (e.target && /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
   if (view.value === 'story') {
+    // dialogue first: Enter / Space finish the line, then show the next one
+    if (!talkDone.value) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); talkAdvance(); } return; }
     const onBeat = story.page >= 1 && story.page <= story.beats.length;
     if (onBeat && !beat.value.status) {
       if (/^[0-9]$/.test(e.key)) { e.preventDefault(); storyPress(e.key); }

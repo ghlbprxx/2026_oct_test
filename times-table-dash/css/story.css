@@ -57,3 +57,45 @@
   .story-status{grid-column:2;flex-direction:row;align-items:center;gap:8px}
   .story-text{font-size:1.08rem}
 }
+
+/* ---------- 16-bit adventure presentation ---------- */
+/* The screen and dialogue box keep fixed retro colors in both themes, like a game cartridge would. */
+.screen{--ink-8:#1b2142;position:relative;aspect-ratio:16/8;border-radius:10px;overflow:hidden;background:linear-gradient(180deg,var(--s1),var(--s2));box-shadow:0 0 0 4px var(--ink-8),0 0 0 7px #f4f1e8,0 0 0 10px var(--ink-8),var(--shadow);margin:10px}
+.screen-art{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;image-rendering:pixelated}
+.sky-orb{position:absolute;top:14%;right:12%;width:34px;height:34px;background:#ffe08a;box-shadow:0 0 0 4px rgba(255,224,138,.35);clip-path:polygon(25% 0,75% 0,100% 25%,100% 75%,75% 100%,25% 100%,0 75%,0 25%)}
+.screen.night .sky-orb{background:#f4efd6;box-shadow:none}
+.screen.night::before{content:"";position:absolute;inset:0 0 40% 0;background-image:radial-gradient(#fff 1px,transparent 1.5px);background-size:46px 38px;opacity:.55}
+.ground{position:absolute;left:0;right:0;bottom:0;height:30%;background:repeating-linear-gradient(90deg,transparent 0 16px,rgba(0,0,0,.05) 16px 32px),var(--g);border-top:4px solid rgba(0,0,0,.12)}
+.stage-tag{position:absolute;left:10px;top:8px;z-index:2;font-family:var(--f-pixel);font-weight:700;font-size:.85rem;letter-spacing:.06em;color:#fff;background:rgba(27,33,66,.75);padding:2px 8px;border-radius:4px}
+.sprite{position:absolute;left:50%;bottom:22%;font-size:clamp(2.6rem,11vw,3.6rem);line-height:1;transform:translateX(-50%);animation:hop8 1.4s steps(2,jump-none) infinite;filter:drop-shadow(0 4px 0 rgba(0,0,0,.18))}
+.title-card{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:12px;text-align:center;color:#fff;background:rgba(27,33,66,.62);animation:dropIn .5s steps(5) both}
+.tc-small{font-family:var(--f-pixel);font-weight:500;font-size:1rem;letter-spacing:.2em;text-transform:uppercase;color:#ffe08a}
+.tc-big{font-family:var(--f-pixel);font-weight:700;font-size:clamp(1.5rem,6.5vw,2.3rem);line-height:1.1;text-shadow:3px 3px 0 #1b2142;text-transform:uppercase}
+.tc-stars{font-size:1.8rem;letter-spacing:6px;color:#ffe08a;text-shadow:3px 3px 0 #1b2142}
+.tc-stars .off{color:rgba(255,255,255,.3)}
+
+.dialog{position:relative;display:flex;gap:12px;align-items:flex-start;width:calc(100% - 20px);margin:0 10px;min-height:104px;padding:12px 14px;text-align:left;cursor:pointer;
+  background:#1b2142;color:#f4f1e8;border:3px solid #f4f1e8;border-radius:8px;box-shadow:0 0 0 3px #1b2142,var(--shadow)}
+.dialog:focus-visible{outline:3px solid #ffe08a;outline-offset:5px}
+.portrait{flex:none;display:grid;place-items:center;width:64px;height:64px;border-radius:4px;border:3px solid #f4f1e8;overflow:hidden}
+.portrait img{width:100%;height:100%;object-fit:cover;image-rendering:pixelated}
+.portrait-emoji{font-size:2.3rem;line-height:1}
+.dialog-body{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}
+.speaker{font-family:var(--f-pixel);font-weight:700;font-size:.95rem;letter-spacing:.04em;color:#ffe08a}
+.dialog-text{font-size:1.12rem;line-height:1.5;font-weight:700;min-height:3em}
+.dialog-text b{font-family:var(--f-display);color:#9fe3c0;font-size:1.1em}
+.dialog.narr .dialog-text{font-family:var(--f-pixel);font-weight:500;letter-spacing:.02em;color:#d9e2ff}
+.more{position:absolute;right:12px;bottom:6px;color:#ffe08a;font-size:.9rem;animation:blinkMore 1s steps(1) infinite}
+.tap-hint{margin:0;text-align:center;font-family:var(--f-pixel);color:var(--muted);animation:fadeUp var(--t-slow) var(--ease) both}
+.page.center{align-items:center;text-align:center}
+.challenge-tag{display:inline-block;font-family:var(--f-pixel);font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;background:var(--sun-soft);color:var(--sun);border-radius:4px;padding:1px 7px;margin-right:4px;vertical-align:2px}
+.btn.pixel{font-family:var(--f-pixel);letter-spacing:.04em}
+
+@keyframes hop8{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-6px)}}
+@keyframes dropIn{from{transform:translateY(-100%);opacity:0}to{transform:none;opacity:1}}
+@keyframes blinkMore{50%{opacity:0}}
+@media (max-width:600px){
+  .portrait{width:52px;height:52px}
+  .portrait-emoji{font-size:1.9rem}
+  .dialog-text{font-size:1.04rem}
+}

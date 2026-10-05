@@ -2,7 +2,7 @@
 // Audio starts only after the first tap or key press, as browsers require.
 import { AUDIO } from '../data/assets.js';
 import { store } from './util.js';
-import { view, game, sound, music } from './state.js';
+import { view, game, sound, music, storyTrack } from './state.js';
 const { computed, watch } = Vue;
 
 const HAS_MUSIC = Object.values(AUDIO.music).some(Boolean);
@@ -28,11 +28,11 @@ function tone(freq, dur, type, vol, when) {
   o.connect(g); g.connect(c.destination); o.start(t); o.stop(t + dur + 0.03);
 }
 // recorded effects (decoded once), falling back to soft synth tones
-const sfxBuf = {}; let sfxLoading = false;
-function loadSfx() {
-  if (sfxLoading) return; const c = audio(); if (!c) return; sfxLoading = true;
-  Object.keys(AUDIO.sfx).forEach(k => {
-    const src = AUDIO.sfx[k]; if (!src) return;
+const sfxBuf = {}, sfxLoaded = new Set();
+function loadSfx(group) {
+  if (sfxLoaded.has(group)) return; const c = audio(); if (!c) return; sfxLoaded.add(group);
+  Object.keys(AUDIO[group]).forEach(k => {
+    const src = AUDIO[group][k]; if (!src) return;
     fetch(src).then(r => { if (!r.ok) throw new Error(src); return r.arrayBuffer(); })
       .then(b => new Promise((res, rej) => c.decodeAudioData(b, res, rej)))
       .then(buf => { sfxBuf[k] = buf; }).catch(() => {});
@@ -54,8 +54,14 @@ export const sfx = {
   count() { fxPlay('count', 1, () => tone(587, 0.1, 'sine', 0.07)); },
   go() { fxPlay('go', 1, () => tone(784, 0.22, 'sine', 0.09)); },
   combo() { fxPlay('combo', 1, () => [523, 659, 784].forEach((f, i) => tone(f, 0.18, 'sine', 0.07, i * 0.09))); },
-  end() { fxPlay('end', 1, () => [523, 659, 784, 1047].forEach((f, i) => tone(f, 0.24, 'sine', 0.07, i * 0.12))); }
+  end() { fxPlay('end', 1, () => [523, 659, 784, 1047].forEach((f, i) => tone(f, 0.24, 'sine', 0.07, i * 0.12))); },
+  // story mode: soft square-wave chiptune fallbacks
+  blip() { fxPlay('blip', 1, () => tone(1046, 0.035, 'square', 0.012)); },
+  start() { fxPlay('start', 1, () => [392, 523, 659, 784].forEach((f, i) => tone(f, 0.12, 'square', 0.025, i * 0.08))); },
+  item() { fxPlay('item', 1, () => [784, 988, 1319].forEach((f, i) => tone(f, 0.1, 'square', 0.025, i * 0.07))); },
+  clear() { fxPlay('clear', 1, () => [523, 659, 784, 1047, 0, 784, 1047].forEach((f, i) => f && tone(f, i === 6 ? 0.5 : 0.14, 'square', 0.025, i * 0.12))); }
 };
+export function loadStorySounds() { if (unlocked) loadSfx('storySfx'); }
 export function toggleSound() { sound.value = !sound.value; store.set('ttd.sound', sound.value); unlockAudio(); if (sound.value) sfx.tick(); }
 
 // ---------- background music (decoded buffers loop gaplessly, long crossfades) ----------
@@ -67,21 +73,32 @@ function loopBounds(buf) {
   while (b > a && Math.abs(d[b]) < 1e-4) b--;
   return [a / buf.sampleRate, (b + 1) / buf.sampleRate];
 }
+const trackSrc = (k) => k.startsWith('story:') ? k.slice(6) : AUDIO.music[k];
 function loadMusic(k) {
-  if (!AUDIO.music[k] || musicState[k]) return;
+  if (!trackSrc(k) || musicState[k]) return;
   const c = audio(); if (!c) return;
   musicState[k] = 'loading';
-  fetch(AUDIO.music[k]).then(r => { if (!r.ok) throw new Error(k); return r.arrayBuffer(); })
+  fetch(trackSrc(k)).then(r => { if (!r.ok) throw new Error(k); return r.arrayBuffer(); })
     .then(b => new Promise((res, rej) => c.decodeAudioData(b, res, rej)))
     .then(buf => { musicBuf[k] = { buf, bounds: loopBounds(buf) }; musicState[k] = 'ok'; syncMusic(); })
     .catch(() => { musicState[k] = 'bad'; syncMusic(); });
 }
+// first track in the list that isn't known to be missing; story tracks load on demand
 function resolveTrack(want) {
-  const order = { results: ['results', 'menu'], play: ['play'], menu: ['menu'] }[want] || [];
-  for (const k of order) if (AUDIO.music[k] && musicState[k] !== 'bad') return k;
+  const order = want.startsWith('story:') ? [want, 'menu'] : ({ results: ['results', 'menu'], play: ['play'], menu: ['menu'] }[want] || []);
+  for (const k of order) {
+    if (!trackSrc(k) || musicState[k] === 'bad') continue;
+    if (!musicState[k]) loadMusic(k);
+    return k;
+  }
   return null;
 }
-const wantMusic = computed(() => view.value === 'play' ? 'play' : view.value === 'over' ? 'results' : 'menu');
+const wantMusic = computed(() => {
+  if (view.value === 'play') return 'play';
+  if (view.value === 'over') return 'results';
+  if (view.value === 'story' && storyTrack.value) return 'story:' + storyTrack.value;
+  return 'menu';
+});
 function rampGain(g, v, sec) { const c = audio(), now = c.currentTime; g.cancelScheduledValues(now); g.setValueAtTime(g.value, now); g.linearRampToValueAtTime(v, now + sec); }
 function startTrack(k) {
   const c = audio(), m = musicBuf[k], len = m.bounds[1] - m.bounds[0];
@@ -100,12 +117,13 @@ function stopCur() {
 }
 function applyLevel() {
   if (!cur) return;
-  const quiet = (view.value === 'play' && game.phase === 'paused') || view.value === 'story';
+  const quiet = (view.value === 'play' && game.phase === 'paused') || (view.value === 'story' && cur.k === 'menu');
   rampGain(cur.g.gain, quiet ? MUSIC_VOL * 0.45 : MUSIC_VOL, 1.2);
 }
 export function syncMusic() {
   if (!HAS_MUSIC || !unlocked) return;
   const k = music.value && !document.hidden ? resolveTrack(wantMusic.value) : null;
+  if (k && musicState[k] === 'loading') { applyLevel(); return; } // keep the current track until this one is ready
   const target = k && musicState[k] === 'ok' ? k : null;
   if ((cur ? cur.k : pendingK) !== target) {
     if (cur) stopCur();
@@ -118,7 +136,7 @@ export function syncMusic() {
   }
   applyLevel();
 }
-export function unlockAudio() { if (unlocked) return; unlocked = true; audio(); loadSfx(); Object.keys(AUDIO.music).forEach(loadMusic); syncMusic(); }
+export function unlockAudio() { if (unlocked) return; unlocked = true; audio(); loadSfx('sfx'); Object.keys(AUDIO.music).forEach(loadMusic); if (view.value === 'story') loadSfx('storySfx'); syncMusic(); }
 export function toggleMusic() { music.value = !music.value; store.set('ttd.music', music.value); unlockAudio(); syncMusic(); }
 
-watch([view, music, () => game.phase], () => syncMusic());
+watch([view, music, storyTrack, () => game.phase], () => syncMusic());

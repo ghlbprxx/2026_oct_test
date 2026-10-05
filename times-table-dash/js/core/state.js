@@ -4,6 +4,8 @@ import { store, clamp, labelTables } from './util.js';
 const { ref, reactive, computed, watch } = Vue;
 
 export const view = ref('home');
+// music file for the open story (set by story.js, read by audio.js)
+export const storyTrack = ref(null);
 
 // ---------- persisted settings and progress ----------
 export const settings = reactive({ tables: [6, 7, 8], from: 1, to: 10, duration: 60 });

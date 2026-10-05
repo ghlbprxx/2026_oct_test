@@ -17,7 +17,7 @@ js/
   main.js                  entry: registers shared components, mounts App, installs keyboard input
   App.js                   header + the current view (cross-faded)
   data/
-    stories.js             story text, number ranges and the generator (edit this to add or change stories)
+    stories.js             cast, world dialogue, number ranges and the generator (edit this to add or change stories)
     practice.js            times table presets, stickers, Kazu's home tips
     assets.js              art and audio paths (+ which art loaded)
   core/                    state and logic, no templates
@@ -37,12 +37,15 @@ art/, audio/               optional assets; missing files fall back to drawings,
 State is shared through module-level singletons in `js/core/`, so a view just imports what it needs and returns it from `setup()`.
 
 ## Modes
-- **Story mode**: five untimed stories with Kazu. Each page is a word problem you answer with the keypad. After a wrong answer you get a tip, then a picture hint, and after three misses the answer is shown so you can keep going. Stories are never locked. You can switch between them from the list or with the ‹ › buttons, and the dots let you go back to any page you've already reached.
+- **Story mode**: five untimed "worlds" told like a 16-bit adventure. Each world has a title card, an RPG dialogue box with character portraits and letter-by-letter text (tap, Enter or Space to continue), one math challenge per stage, and a "Stage clear!" ending. The cast is Kazu, Mimi, Grandpa Tanuki, Gusty the wind sprite and Professor Hoot.
+  - **Wrong answers:** the first miss gives a tip, the second shows a picture hint, and after three misses the answer is shown so the child can keep going.
+  - **Navigation:** every world is open. Use the world map or the ‹ › buttons to switch, and the stage dots to revisit earlier stages.
   1. The Spring Picnic: addition
-  2. The Windy Walk: subtraction
+  2. The Windy Walk: subtraction (Gusty keeps taking things away)
   3. The Bakery Morning: mixed + and −
-  4. Lantern Night: division
+  4. Lantern Night: division (sharing fairly)
   5. The School Festival: mixed +, − and ÷
+  - **Optional art and audio:** each world can have its own backdrop and music, and each character a portrait. Everything falls back to emoji, a drawn backdrop and synth chiptune sounds. See [ASSET_PROMPTS.md](ASSET_PROMPTS.md) for the file paths and generation prompts.
 - **Times table practice**: the original timed round, with presets and an optional "Customize" panel.
 - **Sticker book** and **Cheat sheet**: linked from the home screen.
 

@@ -18,7 +18,7 @@ export default {
   <section class="home-hero stack">
     <div>
       <h1 class="greet">Hi there! What shall we do today?</h1>
-      <p class="page-sub">Read a story and solve its puzzles, or practice your times tables.</p>
+      <p class="page-sub">Go on a story adventure, or practice your times tables.</p>
     </div>
     <div class="scene">
       <sakura-scene></sakura-scene>
@@ -35,7 +35,7 @@ export default {
       <span class="choice-icon" aria-hidden="true">📖</span>
       <span class="choice-title">Story mode</span>
       <span class="choice-sub">{{ storyHomeLine }}</span>
-      <span class="choice-go">{{ storiesDone ? 'Continue' : 'Start reading' }} <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></span>
+      <span class="choice-go">{{ storiesDone ? 'Continue' : 'Press start' }} <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></span>
     </button>
     <button type="button" class="choice tone-accent" @click="go('practice')">
       <span class="choice-icon" aria-hidden="true">⏱️</span>
