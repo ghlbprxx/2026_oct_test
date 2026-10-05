@@ -1,0 +1,10 @@
+{
+  "name": "walk-this-way",
+  "private": true,
+  "type": "module",
+  "description": "Gait-matching browser game. No build step; package.json exists only so Node treats core/ as ES modules for tests.",
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "start": "python3 -m http.server 8000"
+  }
+}

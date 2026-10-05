@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Walk This Way</title>
+  <meta name="description" content="Match a character's walk by adjusting body and gait parameters — learn what shapes how people walk." />
+  <link rel="stylesheet" href="styles.css" />
+  <script type="importmap">
+  {
+    "imports": {
+      "vue": "https://unpkg.com/vue@3.5.43/dist/vue.esm-browser.prod.js",
+      "three": "https://unpkg.com/three@0.186.1/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.186.1/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+  <div id="app"><div class="boot">Loading Walk This Way…</div></div>
+  <div id="error-overlay" class="error-overlay" hidden></div>
+
+  <!-- Classic script: if modules never boot (file://, offline CDN), say why instead of a blank page. -->
+  <script>
+    setTimeout(function () {
+      if (window.__wtwBooted) return;
+      var el = document.getElementById('error-overlay');
+      el.hidden = false;
+      el.innerHTML = '<h2>The game did not start</h2><p>' +
+        (location.protocol === 'file:'
+          ? 'ES modules cannot load from <code>file://</code>. Serve this folder with <code>npx serve</code> or <code>python3 -m http.server</code> and open the http:// URL.'
+          : 'Vue or Three.js could not be loaded from the CDN (unpkg.com). Check your network connection and reload.') +
+        '</p>';
+    }, 8000);
+  </script>
+  <script type="module" src="main.js"></script>
+</body>
+</html>
