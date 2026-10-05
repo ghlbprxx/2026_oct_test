@@ -8,7 +8,8 @@ import { CONFIG } from '../data/config.js';
 import { createBody } from '../core/character.js';
 import { poseAt } from '../core/gait.js';
 import { vAdd, qRotate } from '../core/math3.js';
-import { forwardKinematics } from '../core/skeleton.js';
+import { forwardKinematics, pointWorld } from '../core/skeleton.js';
+import { MOCAP_GAIT } from '../data/mocapGait.js';
 import { sampleTrajectory, scoreMatch, mismatches } from '../core/scoring.js';
 import { nextHint } from '../core/hints.js';
 import { createClock } from '../core/clock.js';
@@ -80,6 +81,71 @@ test('knees bend naturally and the planted foot never slides', () => {
         assert.ok(Math.abs(ball[2] - (z0 - b.info.stride * (phase - phase0))) < 0.003, `ball slides at ${phase}`);
       }
     }
+  }
+});
+
+test('mocap gait data is well formed', () => {
+  const { summary, swing, reference } = MOCAP_GAIT;
+  assert.ok(summary.cycleSeconds > 0.8 && summary.cycleSeconds < 1.6);
+  assert.ok(summary.stanceFraction > 0.55 && summary.stanceFraction < 0.7);
+  for (const k of ['z', 'lift', 'pitch']) assert.equal(swing[k].length, 25);
+  assert.equal(swing.z[0], 0);
+  assert.equal(swing.z[24], 1);
+  assert.equal(Math.max(...swing.lift), 1);
+  for (const k of Object.keys(reference)) assert.equal(reference[k].length, 32, k);
+});
+
+// Same gait events (heel strike, toe-off) line up even when the stance fractions differ.
+function mocapAt(curve, phase, beta) {
+  const mb = MOCAP_GAIT.summary.stanceFraction;
+  const ph = phase < beta ? (phase / beta) * mb : mb + ((phase - beta) / (1 - beta)) * (1 - mb);
+  const x = ph * 32, i = Math.floor(x) % 32, t = x - Math.floor(x);
+  return curve[i] + (curve[(i + 1) % 32] - curve[i]) * t;
+}
+
+test('the gait follows the mocap: straight-ish landing, knee bend before toe-off, early swing peak', () => {
+  // A walker with the mocap character's proportions and timing.
+  const params = { ...defaults, sex: 'F', height: 1.70, legLength: 0.54, strideLength: 1.30, cadence: 94, doubleSupport: 0.30 };
+  const b = createBody(params);
+  const deg = 180 / Math.PI, n = 64;
+  const knee = [], hip = [];
+  for (let i = 0; i < n; i++) {
+    const pose = poseAt(params, b.dims, i / n, b.info);
+    const w = forwardKinematics(b.skeleton, pose);
+    const th = w.shin_L.p.map((x, k) => x - w.thigh_L.p[k]);
+    knee.push(pose.rot.shin_L[0] * deg);
+    hip.push(Math.atan2(th[2], -th[1]) * deg);
+  }
+  const rms = (a, ref) => Math.sqrt(a.reduce((s, v, i) => s + (v - mocapAt(ref, i / n, b.info.beta)) ** 2, 0) / n);
+  assert.ok(rms(knee, MOCAP_GAIT.reference.kneeFlexion) < 13, `knee RMS ${rms(knee, MOCAP_GAIT.reference.kneeFlexion).toFixed(1)}°`);
+  assert.ok(rms(hip, MOCAP_GAIT.reference.hipFlexion) < 14, `hip RMS ${rms(hip, MOCAP_GAIT.reference.hipFlexion).toFixed(1)}°`);
+  assert.ok(knee[0] > 5 && knee[0] < 25, `knee at heel strike ${knee[0].toFixed(0)}°`);
+  assert.ok(knee[Math.round(n * b.info.beta)] > 15, 'knee should bend before toe-off');
+  const peak = Math.max(...knee), at = knee.indexOf(peak) / n;
+  assert.ok(peak > 50 && peak < 75, `swing knee peak ${peak.toFixed(0)}°`);
+  assert.ok(Math.abs(at - MOCAP_GAIT.summary.kneePeakSwingPhase) < 0.06, `swing knee peaks at ${at}`);
+  assert.ok(b.info.bob > 0.02 && b.info.bob < 0.06, `bob ${b.info.bob}`);
+});
+
+test('hips move smoothly and swing toes clear the floor', () => {
+  for (const params of [defaults, ...TARGETS.map(targetParams)]) {
+    const b = createBody(params);
+    const N = 1000, dt = 1 / b.info.f / N;
+    const y = [];
+    let lowestToe = Infinity;
+    for (let i = 0; i < N; i++) {
+      const pose = poseAt(params, b.dims, i / N, b.info);
+      const w = forwardKinematics(b.skeleton, pose);
+      y.push(w.pelvis.p[1]);
+      if (i / N > b.info.beta + 0.02) {
+        const tip = pointWorld(w, ['toes_L', [0, 0, b.dims.footLen - b.dims.heelDist - b.dims.ballDist]]);
+        lowestToe = Math.min(lowestToe, tip[1]);
+      }
+    }
+    let acc = 0;
+    for (let i = 0; i < N; i++) acc = Math.max(acc, Math.abs(y[(i + 1) % N] - 2 * y[i] + y[(i + N - 1) % N]) / dt / dt);
+    assert.ok(acc < 20, `pelvis jolts: ${acc.toFixed(1)} m/s²`);
+    assert.ok(lowestToe > -0.002, `toe scrapes: ${lowestToe}`);
   }
 });
 

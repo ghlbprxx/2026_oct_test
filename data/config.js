@@ -61,6 +61,13 @@ export const CONFIG = {
     // If a model fails to load (missing .bin/textures), the procedural body is used instead.
     models: { F: 'assets/person_v2/scene.gltf', M: null },
     modelCredits: { F: '“Female base mesh” by AK_anna (Sketchfab), CC BY 4.0' },
+    // Motion-captured reference walk, played as recorded (toggle with 🎬 Mocap / M). Its gait shapes
+    // were extracted into data/mocapGait.js; see tools/extract-mocap-gait.mjs.
+    reference: {
+      url: 'assets/walking_test/walking_test.glb',
+      credit: '“walking test” by Oussama.Lamrani (Sketchfab), CC BY 4.0',
+      speed: 1.02,          // m/s the clip walks at (its stride ÷ cycle time), for floor mode
+    },
     // Marker/trail colors by body side.
     sideColors: { L: '#ff9f1c', R: '#7b61ff', C: '#1d3557' },
     cameras: [ // positions live in render/camera.js

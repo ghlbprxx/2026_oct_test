@@ -42,6 +42,7 @@ window.addEventListener('keydown', (e) => {
   else if (e.key === 'f' || e.key === 'F') game.toggleFloor();
   else if (e.key === 'j' || e.key === 'J') game.toggleMarkers();
   else if (e.key === 't' || e.key === 'T') game.toggleTrails();
+  else if (e.key === 'm' || e.key === 'M') game.toggleReference();
 });
 
 let last = performance.now();

@@ -1,0 +1,11 @@
+Model Information:
+* title:	walking test
+* source:	https://sketchfab.com/3d-models/walking-test-004f03d6c54d42f5bf5a4050f45003d4
+* author:	Oussama.Lamrani (https://sketchfab.com/Oussama.Lamrani)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "walking test" (https://sketchfab.com/3d-models/walking-test-004f03d6c54d42f5bf5a4050f45003d4) by Oussama.Lamrani (https://sketchfab.com/Oussama.Lamrani) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

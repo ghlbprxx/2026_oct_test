@@ -9,6 +9,7 @@ import { createTrails } from './trails.js';
 import { createRiggedView } from './riggedView.js';
 import { loadModel } from './modelLoader.js';
 import { autoRig } from './autoRig.js';
+import { createReferenceView } from './referenceView.js';
 
 const PALETTES = {
   target: { skin: '#e3b08e', cheek: '#e2a487', shirt: '#e0674a', pants: '#3c4f75', shoe: '#2b2b30', sole: '#d9d4cc', hair: '#4a3020' },
@@ -21,12 +22,15 @@ export function createRenderLayer(container, game, config) {
   const lane = config.render.laneOffset;
   // [x, z] per lane. Side-by-side across X normally; staggered along Z for the side camera
   // (looking down -X), where X lanes would hide one character behind the other.
+  // The mocap reference walks beside the Target (across), or between and behind the two (side view).
   const LAYOUTS = {
-    across: { target: [-lane, 0], player: [lane, 0] },
-    staggered: { target: [0, 1.45], player: [0, -1.45] }, // treadmills are 2.6 m long
+    across: { target: [-lane, 0], player: [lane, 0], reference: [-3 * lane, 0] },
+    staggered: { target: [0, 1.45], player: [0, -1.45], reference: [-1.2, 0] }, // treadmills are 2.6 m long
   };
   let layoutName = 'across';
-  const stage = createStage(scene, [LAYOUTS.across.target[0], LAYOUTS.across.player[0]]);
+  const stage = createStage(scene, [LAYOUTS.across.target[0], LAYOUTS.across.player[0], LAYOUTS.across.reference[0]]);
+  const reference = config.render.reference ? createReferenceView(scene, config.render.reference) : null;
+  let referenceNoticeShown = false;
   const rig = createCameraRig(camera, renderer.domElement);
   const sideColors = config.render.sideColors;
   const procedural = {
@@ -44,6 +48,7 @@ export function createRenderLayer(container, game, config) {
   const credit = document.createElement('div');   // CC BY attribution for loaded models
   credit.className = 'model-credit';
   container.appendChild(credit);
+  const creditFor = { realistic: '', reference: '' };
   for (const [sex, url] of Object.entries(config.render.models || {})) {
     if (!url) continue;
     notice.textContent = 'Loading realistic model…';
@@ -54,7 +59,7 @@ export function createRenderLayer(container, game, config) {
           realistic[key][sex] = createRiggedView(scene, { rig, palette: PALETTES[key], sideColors });
           realistic[key][sex].setVisible(false);
         }
-        if (config.render.modelCredits && config.render.modelCredits[sex]) credit.textContent = config.render.modelCredits[sex];
+        if (config.render.modelCredits && config.render.modelCredits[sex]) creditFor.realistic = config.render.modelCredits[sex];
         built.target = built.player = -1;   // rebuild with the model on the next frame
         notice.textContent = '';
       })
@@ -70,7 +75,7 @@ export function createRenderLayer(container, game, config) {
 
   // Floating name tags projected from each head.
   const labels = {};
-  for (const [key, text] of [['target', 'Target'], ['player', 'You']]) {
+  for (const [key, text] of [['target', 'Target'], ['player', 'You'], ['reference', 'Mocap']]) {
     const el = document.createElement('div');
     el.className = `lane-label lane-label--${key}`;
     el.textContent = text;
@@ -84,11 +89,11 @@ export function createRenderLayer(container, game, config) {
 
   function frame(dt) {
     const f = game.getFrame();
-    const { floor, ghost: showGhost, camera: camName, markers, trails: showTrails } = game.state.playback;
+    const { floor, ghost: showGhost, camera: camName, markers, trails: showTrails, reference: showReference } = game.state.playback;
     const wanted = camName === 'side' && !floor ? 'staggered' : 'across';
     if (wanted !== layoutName) {
       layoutName = wanted;
-      stage.setLanes([LAYOUTS[wanted].target, LAYOUTS[wanted].player]);
+      stage.setLanes([LAYOUTS[wanted].target, LAYOUTS[wanted].player, LAYOUTS[wanted].reference]);
     }
     const lanes = LAYOUTS[layoutName];
     const at = {};
@@ -118,17 +123,36 @@ export function createRenderLayer(container, game, config) {
       trails.update(key, c, lanes[key], floor ? travelZ : null, showTrails);
     }
     ghost.update(showGhost, f.target, at.player[0], at.player[1]);
-    stage.update(floor, [f.target.distance, f.player.distance]);
+    const refOn = !!(reference && showReference);
+    if (reference) {
+      reference.update(refOn, f.time, ...lanes.reference, floor ? travelZ : null);
+      if (refOn && reference.status === 'loading' && !referenceNoticeShown) notice.textContent = 'Loading mocap reference…';
+      if (reference.status === 'ready' && notice.textContent === 'Loading mocap reference…') notice.textContent = '';
+      if (refOn && reference.status === 'failed' && !referenceNoticeShown) {
+        referenceNoticeShown = true;
+        notice.textContent = 'Mocap reference unavailable.';
+        setTimeout(() => { notice.textContent = ''; }, 6000);
+      }
+      creditFor.reference = refOn && reference.status === 'ready' ? config.render.reference.credit : '';
+    }
+    const creditText = [creditFor.realistic, creditFor.reference].filter(Boolean).join(' · ');
+    if (credit.textContent !== creditText) credit.textContent = creditText;
+    stage.update(floor, [f.target.distance, f.player.distance, reference ? reference.distance(f.time) : 0], [true, true, refOn]);
     rig.sync(camName, floor);
     rig.update(dt);
     render();
 
     const w = container.clientWidth, h = container.clientHeight;
-    for (const key of ['target', 'player']) {
-      const head = views[key].bone('head');
-      if (!head) continue;
-      head.getWorldPosition(tmp);
-      tmp.y += f[key].body.dims.headR * 2.6;
+    for (const key of ['target', 'player', 'reference']) {
+      if (key === 'reference') {
+        if (!refOn || !reference.headWorld(tmp)) { labels.reference.style.display = 'none'; continue; }
+        tmp.y += 0.3;
+      } else {
+        const head = views[key].bone('head');
+        if (!head) continue;
+        head.getWorldPosition(tmp);
+        tmp.y += f[key].body.dims.headR * 2.6;
+      }
       tmp.project(camera);
       const visible = tmp.z < 1;
       labels[key].style.display = visible ? '' : 'none';
@@ -165,6 +189,7 @@ export function createRenderLayer(container, game, config) {
       credit.remove();
       ghost.dispose();
       trails.dispose();
+      if (reference) reference.dispose();
       Object.values(labels).forEach((el) => el.remove());
       disposeScene();
     },

@@ -66,9 +66,10 @@ export function createStage(scene, laneXs) {
   return {
     setLanes(positions) { treadmills.forEach((t, i) => t.group.position.set(positions[i][0], 0, positions[i][1])); },
     // distances: meters walked per lane; the belt texture scrolls backward to match.
-    update(floorMode, distances) {
+    // shown (optional): which lanes are in use.
+    update(floorMode, distances, shown = []) {
       treadmills.forEach((t, i) => {
-        t.group.visible = !floorMode;
+        t.group.visible = !floorMode && shown[i] !== false;
         t.tex.offset.y = -(distances[i] / BELT_LENGTH) * BELT_REPEAT;
       });
     },

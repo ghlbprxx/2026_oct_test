@@ -133,6 +133,7 @@ button, select, input { font: inherit; color: inherit; }
 }
 .lane-label--target { background: var(--target); }
 .lane-label--player { background: var(--accent); }
+.lane-label--reference { background: #5b4b8a; }
 
 /* Playback bar */
 .playback { display: flex; align-items: center; gap: 8px; padding: 8px 16px; background: var(--panel); border-top: 1px solid var(--line); }

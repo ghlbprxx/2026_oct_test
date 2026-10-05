@@ -31,7 +31,7 @@ export const TARGETS = [
     id: 'bo', name: 'Bo', sex: 'M', difficulty: 'Normal',
     bio: 'Camp counselor — springy, long strides on short legs; bounces with every step.',
     focus: ['legLength', 'strideLength', 'doubleSupport', 'cadence'],
-    params: { legLength: 0.45, strideLength: 1.65, doubleSupport: 0.12, cadence: 118, bodyFat: 24 },
+    params: { legLength: 0.45, strideLength: 1.50, doubleSupport: 0.12, cadence: 118, bodyFat: 24 },
   },
   {
     id: 'marisol', name: 'Marisol', sex: 'F', difficulty: 'Normal',

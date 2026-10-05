@@ -28,7 +28,7 @@ export function createGame({ registry, targets, config, storage, wrap = (o) => o
     timedBest: 0,
     unlocked: saved.unlocked,
     best: saved.best || {},
-    playback: { speed: 1, paused: false, ghost: false, floor: false, camera: 'threeQuarter', markers: true, trails: true },
+    playback: { speed: 1, paused: false, ghost: false, floor: false, camera: 'threeQuarter', markers: true, trails: true, reference: false },
     storageOk: storage.ok,
     strideClamped: false,
     result: null,
@@ -44,6 +44,7 @@ export function createGame({ registry, targets, config, storage, wrap = (o) => o
     playerVersion: 0,
     targetVersion: 0,
     dirty: true,
+    time: 0,       // sim seconds since start; drives the mocap reference clip
   };
 
   const target = () => targets.find((t) => t.id === state.targetId);
@@ -104,6 +105,7 @@ export function createGame({ registry, targets, config, storage, wrap = (o) => o
 
   // One fixed physics step for both characters.
   function step(dt) {
+    rt.time += dt;
     stepCharacterSim(rt.target, rt.targetBody, dt, config.springs, config.trails);
     stepCharacterSim(rt.player, rt.playerBody, dt, config.springs, config.trails);
     // When cadences match, ease the Player's phase onto the Target's so the walks line up.
@@ -179,6 +181,7 @@ export function createGame({ registry, targets, config, storage, wrap = (o) => o
     toggleFloor() { state.playback.floor = !state.playback.floor; },
     toggleMarkers() { state.playback.markers = !state.playback.markers; },
     toggleTrails() { state.playback.trails = !state.playback.trails; },
+    toggleReference() { state.playback.reference = !state.playback.reference; },
     setCamera(c) { state.playback.camera = c; },
 
     // Called once per animation frame with real elapsed seconds.
@@ -204,6 +207,7 @@ export function createGame({ registry, targets, config, storage, wrap = (o) => o
     // Read by the render layer every frame.
     getFrame() {
       return {
+        time: rt.time,
         target: { body: rt.targetBody, pose: rt.target.pose, distance: rt.target.distance, cycles: rt.target.cycles, trail: rt.target.trail, version: rt.targetVersion },
         player: { body: rt.playerBody, pose: rt.player.pose, distance: rt.player.distance, cycles: rt.player.cycles, trail: rt.player.trail, version: rt.playerVersion },
       };
