@@ -16,6 +16,10 @@ export default {
     <aside class="sidebar">
       <div class="sidebar__head">
         <h2>Your walker</h2>
+        <div class="seg seg--small" role="group" aria-label="Body type" title="Body shape and where fat sits. Starts matched to the Target; not scored.">
+          <button :class="{ active: state.params.sex === 'F' }" @click="game.setSex('F')">♀ F</button>
+          <button :class="{ active: state.params.sex === 'M' }" @click="game.setSex('M')">♂ M</button>
+        </div>
         <button class="btn btn--ghost" :disabled="state.status === 'timeup'" @click="game.resetParams()">Reset</button>
       </div>
       <section v-for="g in sections" :key="g.id" class="group" :class="{ 'group--soon': !g.enabled }">

@@ -9,7 +9,7 @@ export const GROUPS = [
   { id: 'posture', label: 'Posture', enabled: false },
   { id: 'arms', label: 'Arm swing', enabled: false },
   { id: 'asymmetry', label: 'Asymmetry & limp', enabled: false },
-  { id: 'mass', label: 'Body mass', enabled: false },
+  { id: 'build', label: 'Build', enabled: true },
 ];
 
 const entry = (e) => ({ weight: 1, enabled: true, ...e });
@@ -104,6 +104,15 @@ export const PARAMS = [
     mismatch: { low: 'Pelvis tucked too much', high: 'Pelvis tilted forward too much' },
   }),
 
+  // ── Build ────────────────────────────────────────────────────
+  entry({
+    id: 'bodyFat', group: 'build', label: 'Body fat', unit: '%',
+    min: 8, max: 45, step: 1, default: 22, weight: 0.8,
+    explain: 'Share of body mass that is fat. More fat means more soft-tissue bounce (belly, chest, hips, thighs, upper arms) and usually a slightly wider stance for balance.',
+    hint: { vague: 'Watch what bounces', low: 'Add body fat', high: 'Reduce body fat' },
+    mismatch: { low: 'Build too lean', high: 'Build too heavy' },
+  }),
+
   // ── Later (registered, disabled) ─────────────────────────────
   ...[
     ['hipRange', 'Hip range', '°', 20, 60, 40],
@@ -119,8 +128,7 @@ export const PARAMS = [
   stub('armSwingAsym', 'arms', 'Arm swing asymmetry', '%', -50, 50, 0),
   stub('strideAsym', 'asymmetry', 'Stride asymmetry', '%', -30, 30, 0),
   stub('limp', 'asymmetry', 'Limp', '', 0, 1, 0),
-  stub('bodyMass', 'mass', 'Body mass', 'kg', 40, 140, 70),
-  stub('massDistribution', 'mass', 'Weight distribution', '', -1, 1, 0),
+  stub('massDistribution', 'build', 'Weight distribution', '', -1, 1, 0),
 ];
 
 function stub(id, group, label, unit, min, max, def) {

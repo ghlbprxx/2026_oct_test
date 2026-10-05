@@ -11,10 +11,11 @@ export function buildSkeleton(d) {
     ['chest', 'spine', [0, d.spineLen, 0]],
     ['neck', 'chest', [0, d.chestLen, 0]],
     ['head', 'neck', [0, d.neck, 0]],
-    ['belly', 'spine', [0, d.spineLen * 0.35, r.spine * 0.45]],
-    ['chestSoft', 'chest', [0, d.chestLen * 0.45, r.chest * 0.55]],
+    // Soft-tissue bones (spring-driven; the skinned body is partly weighted to them).
+    ['belly', 'spine', [0, d.spineLen * 0.3, r.spine * 0.5]],
     ['cheek_L', 'head', [d.headR * 0.58, d.headR * 0.82, d.headR * 0.7]],
     ['cheek_R', 'head', [-d.headR * 0.58, d.headR * 0.82, d.headR * 0.7]],
+    ['hairTail', 'head', [0, d.headR * 1.25, -d.headR * 0.95]],
   ];
   for (const [s, x] of [['L', 1], ['R', -1]]) {
     bones.push(
@@ -24,6 +25,11 @@ export function buildSkeleton(d) {
       [`thigh_${s}`, 'pelvis', [x * d.hipHalf, 0, 0]],
       [`shin_${s}`, `thigh_${s}`, [0, -d.thigh, 0]],
       [`foot_${s}`, `shin_${s}`, [0, -d.shin, 0]],
+      [`toes_${s}`, `foot_${s}`, [0, -d.ankleHeight, d.ballDist]],   // toe break at the ball, on the sole
+      [`chestSoft_${s}`, 'chest', [x * 0.045 * d.H, d.chestLen * 0.5, r.chest * 0.55]],
+      [`glute_${s}`, 'pelvis', [x * 0.048 * d.H, -0.035 * d.H, -0.075 * d.H]],
+      [`thighFat_${s}`, `thigh_${s}`, [0, -0.35 * d.thigh, 0]],
+      [`armFat_${s}`, `upperArm_${s}`, [0, -0.5 * d.upperArm, -0.005 * d.H]],
     );
   }
   return bones.map(([name, parent, offset]) => ({ name, parent, offset }));
@@ -33,7 +39,7 @@ export function buildSkeleton(d) {
 export function pointSpec(name, d) {
   if (name === 'headTop') return ['head', [0, 2 * d.headR, 0]];
   if (name === 'toe_L' || name === 'toe_R') {
-    return [`foot_${name.slice(-1)}`, [0, -d.ankleHeight + 0.012 * d.H, d.footLen - d.heelDist - 0.01 * d.H]];
+    return [`toes_${name.slice(-1)}`, [0, 0.012 * d.H, d.footLen - d.heelDist - d.ballDist - 0.01 * d.H]];
   }
   return [name, [0, 0, 0]];
 }

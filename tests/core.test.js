@@ -6,7 +6,8 @@ import { PARAMS } from '../data/params.js';
 import { TARGETS } from '../data/targets.js';
 import { CONFIG } from '../data/config.js';
 import { createBody } from '../core/character.js';
-import { poseAt, footAt } from '../core/gait.js';
+import { poseAt } from '../core/gait.js';
+import { vAdd, qRotate } from '../core/math3.js';
 import { forwardKinematics } from '../core/skeleton.js';
 import { sampleTrajectory, scoreMatch, mismatches } from '../core/scoring.js';
 import { nextHint } from '../core/hints.js';
@@ -15,7 +16,8 @@ import { createStorage } from '../core/storage.js';
 import { createGame } from '../core/game.js';
 
 const defaults = Object.fromEntries(PARAMS.map((p) => [p.id, p.default]));
-const targetParams = (t) => ({ ...defaults, ...t.params });
+const targetParams = (t) => ({ ...defaults, sex: t.sex, ...t.params });
+const byId = (id) => TARGETS.find((t) => t.id === id);
 const memoryStore = () => {
   const m = new Map();
   return { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => m.set(k, String(v)), removeItem: (k) => m.delete(k) };
@@ -29,7 +31,9 @@ test('registry entries are complete and targets use only enabled MVP params', ()
     assert.ok(p.min <= p.default && p.default <= p.max, `${p.id} default out of range`);
   }
   const enabled = new Set(PARAMS.filter((p) => p.enabled).map((p) => p.id));
-  assert.equal(TARGETS.length, 5);
+  assert.equal(TARGETS.length, 10);
+  assert.equal(TARGETS.filter((t) => t.sex === 'F').length, 5);
+  assert.equal(TARGETS.filter((t) => t.sex === 'M').length, 5);
   for (const t of TARGETS) {
     for (const [k, v] of Object.entries(t.params)) {
       assert.ok(enabled.has(k), `${t.id} uses non-MVP param ${k}`);
@@ -50,18 +54,30 @@ test('gait produces finite poses at parameter extremes', () => {
   }
 });
 
-test('knees never hyperextend and planted feet track their targets', () => {
+test('knees bend naturally and the planted foot never slides', () => {
   for (const params of [defaults, ...TARGETS.map(targetParams)]) {
     const b = createBody(params);
-    for (let i = 0; i < 200; i++) {
-      const phase = i / 200;
+    let z0 = null, phase0 = 0;
+    for (let i = 0; i < 400; i++) {
+      const phase = i / 400;
       const pose = poseAt(params, b.dims, phase, b.info);
+      const world = forwardKinematics(b.skeleton, pose);
       assert.ok(pose.rot.shin_L[0] >= -1e-9, 'knee bent backwards');
-      const want = footAt(phase, b.info, b.dims);
-      const got = forwardKinematics(b.skeleton, pose).foot_L.p;
-      // Mid-stance (flat foot) must be planted precisely: no sliding.
-      if (phase > 0.15 * b.info.beta && phase < 0.6 * b.info.beta) {
-        assert.ok(Math.hypot(got[1] - want.y, got[2] - want.z) < 0.001, `foot slides at phase ${phase}`);
+      // IK reaches the (possibly toe-rolled) ankle target exactly.
+      const got = world.foot_L.p;
+      assert.ok(Math.hypot(got[1] - pose.feet.L.y, got[2] - pose.feet.L.z) < 0.001, `IK misses at phase ${phase}`);
+      // Mid-stance knee: soft but not crouched (real walking ≈ 5–20°).
+      if (Math.abs(phase - b.info.beta / 2) < 0.0013) {
+        const knee = pose.rot.shin_L[0] * 180 / Math.PI;
+        assert.ok(knee > 3 && knee < 25, `mid-stance knee ${knee.toFixed(1)}°`);
+      }
+      // From foot-flat to toe-off the ball of the foot stays on the ground and moves with the belt.
+      const u = phase / b.info.beta;
+      if (u >= 0.15 && u <= 0.97) {
+        const ball = vAdd(got, qRotate(world.foot_L.q, [0, -b.dims.ankleHeight, b.dims.ballDist]));
+        if (z0 === null) { z0 = ball[2]; phase0 = phase; }
+        assert.ok(Math.abs(ball[1]) < 0.003, `ball lifts ${ball[1]} at ${phase}`);
+        assert.ok(Math.abs(ball[2] - (z0 - b.info.stride * (phase - phase0))) < 0.003, `ball slides at ${phase}`);
       }
     }
   }
@@ -78,7 +94,7 @@ test('exact match scores 100; default walker is below Easy for every target', ()
 });
 
 test('scores stay within 0..100 and drop as a parameter moves away', () => {
-  const tp = targetParams(TARGETS[2]);
+  const tp = targetParams(byId('rosa'));
   const samples = sampleTrajectory(tp, CONFIG.score);
   let prev = 101;
   for (const v of [6.5, 5.5, 4, 2, 0]) {
@@ -98,7 +114,7 @@ test('breakdown is plain language and sorted by severity', () => {
 });
 
 test('hints escalate from vague to specific, then restart on a new parameter', () => {
-  const tp = targetParams(TARGETS[2]);
+  const tp = targetParams(byId('rosa'));
   const breakdown = mismatches(defaults, tp, PARAMS);
   let h = null;
   const texts = [];

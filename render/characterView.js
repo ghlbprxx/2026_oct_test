@@ -1,11 +1,13 @@
-// Procedural human built on the canonical skeleton: tapered, anatomically shaped limbs and
-// torso (lathe profiles), realistic head proportions, simple clothing, and optional joint markers.
+// Procedural human on the canonical skeleton: one continuous skinned body (smooth bends at every
+// joint, soft tissue that bounces with core's springs), plus rigid accessories (hands, shoes, hair,
+// eyes, ears) and optional joint markers.
 // Implements the view contract:
 //   build(dims) · applyPose(pose) · setPosition(x, z) · setVisible(v) · setOpacity(a) · dispose()
 // plus setMarkersVisible(v) for the joint markers.
-// A glTF or skinned-mesh view can replace this file by implementing the same contract.
+// A glTF view can replace this file by implementing the same contract.
 import * as THREE from 'three';
 import { buildSkeleton, pointSpec } from '../core/skeleton.js';
+import { buildBodyGeometry } from './bodyMesh.js';
 
 // Marker points: [name, side, bone it sits on (or a helper node created in build)].
 export const MARKERS = [
@@ -19,39 +21,6 @@ export const MARKERS = [
   ['toe_L', 'L'], ['toe_R', 'R'],
 ];
 
-const smooth = (u) => u * u * (3 - 2 * u);
-
-// Radius along a limb from [t, r] keys (t = 0 at the joint, 1 at the far end), eased between keys.
-function radiusAt(keys, t) {
-  for (let i = 1; i < keys.length; i++) {
-    const [ta, ra] = keys[i - 1];
-    const [tb, rb] = keys[i];
-    if (t <= tb) return ra + (rb - ra) * smooth((t - ta) / (tb - ta || 1));
-  }
-  return keys[keys.length - 1][1];
-}
-
-// Lathe limb hanging along -Y from the joint (or rising along +Y), with rounded ends.
-function limbGeometry(len, keys, up = false, segs = 22) {
-  const r0 = keys[0][1];
-  const r1 = keys[keys.length - 1][1];
-  const c0 = r0 * 0.6, c1 = r1 * 0.6;
-  const pts = [];
-  const CAP = 5, BODY = 18;
-  for (let i = 0; i <= CAP; i++) { const a = (i / CAP) * Math.PI / 2; pts.push([r1 * Math.sin(a), -len - c1 * Math.cos(a)]); }
-  for (let i = BODY - 1; i >= 1; i--) { const t = i / BODY; pts.push([radiusAt(keys, t), -t * len]); }
-  for (let i = 0; i <= CAP; i++) { const a = (i / CAP) * Math.PI / 2; pts.push([r0 * Math.cos(a), c0 * Math.sin(a)]); }
-  const v = (up ? pts.map(([x, y]) => [x, -y]).reverse() : pts).map(([x, y]) => new THREE.Vector2(Math.max(x, 1e-4), y));
-  return new THREE.LatheGeometry(v, segs);
-}
-
-// Torso section from a bottom→top [halfWidth, y] profile, squashed front-to-back.
-function torsoGeometry(profile, depth) {
-  const g = new THREE.LatheGeometry(profile.map(([r, y]) => new THREE.Vector2(Math.max(r, 1e-4), y)), 28);
-  g.scale(1, 1, depth);
-  return g;
-}
-
 export function createCharacterView(scene, { palette, ghost = false, opacity = 1, sideColors = null }) {
   const group = new THREE.Group();
   scene.add(group);
@@ -61,6 +30,7 @@ export function createCharacterView(scene, { palette, ghost = false, opacity = 1
   let points = {};
   let markerMeshes = [];
   let skeleton = [];
+  let skinSkeleton = null;
   let geometries = [];
   let markersVisible = true;
 
@@ -68,6 +38,8 @@ export function createCharacterView(scene, { palette, ghost = false, opacity = 1
     for (const g of geometries) g.dispose();
     geometries = [];
     markerMeshes = [];
+    if (skinSkeleton) skinSkeleton.dispose();
+    skinSkeleton = null;
     group.clear();
     bones = {};
     points = {};
@@ -75,16 +47,16 @@ export function createCharacterView(scene, { palette, ghost = false, opacity = 1
 
   function mesh(parent, geometry, mat, { pos, rot, scale } = {}) {
     geometries.push(geometry);
-    const m = new THREE.Mesh(geometry, typeof mat === 'string' ? materials[mat] : mat);
+    const m = new THREE.Mesh(geometry, materials[mat]);
     if (pos) m.position.set(...pos);
     if (rot) m.rotation.set(...rot);
     if (scale) m.scale.set(...scale);
     m.castShadow = !ghost;
     if (ghost) m.renderOrder = 10;
-    (typeof parent === 'string' ? bones[parent] : parent).add(m);
+    bones[parent].add(m);
     return m;
   }
-  const sphere = (r, w = 24, h = 16) => new THREE.SphereGeometry(r, w, h);
+  const sphere = (r, w = 20, h = 14) => new THREE.SphereGeometry(r, w, h);
   // Helper node for a non-bone point, placed exactly where core's pointSpec says.
   function helper(name, d) {
     const [parent, pos] = pointSpec(name, d);
@@ -97,91 +69,74 @@ export function createCharacterView(scene, { palette, ghost = false, opacity = 1
   function build(d) {
     clear();
     skeleton = buildSkeleton(d);
-    for (const b of skeleton) {
-      const o = new THREE.Object3D();
+    const boneList = skeleton.map((b) => {
+      const o = new THREE.Bone();
       o.name = b.name;
       o.rotation.order = 'YXZ';
       o.position.fromArray(b.offset);
-      (b.parent ? bones[b.parent] : group).add(o);
       bones[b.name] = o;
-    }
+      return o;
+    });
+    for (const b of skeleton) (b.parent ? bones[b.parent] : group).add(bones[b.name]);
     const H = d.H;
-    const r = d.radii;
     const hr = d.headR;
+    const F = d.sex === 'F';
 
-    // ── Torso: hips (pelvis bone), abdomen (spine), ribcage (chest) ──
-    const pu = d.pelvisUp;
-    mesh('pelvis', torsoGeometry([
-      [0, -0.07 * H], [0.05 * H, -0.066 * H], [0.08 * H, -0.045 * H], [r.hip, -0.012 * H],
-      [r.hip * 0.97, pu * 0.5], [r.spine * 1.02, pu + 0.012 * H], [0, pu + 0.012 * H],
-    ], 0.7), 'pants');
-    const sl = d.spineLen;
-    mesh('spine', torsoGeometry([
-      [0, -0.015 * H], [r.spine * 1.0, -0.015 * H], [r.spine * 0.95, sl * 0.45], [r.spine * 1.03, sl], [0, sl + 0.01 * H],
-    ], 0.66), 'shirt');
-    mesh('belly', sphere(r.spine * 0.62), 'shirt', { scale: [1.15, 0.9, 0.42] });
-    const cl = d.chestLen;
-    mesh('chest', torsoGeometry([
-      [0, -0.012 * H], [r.spine * 1.03, -0.012 * H], [r.chest * 0.98, cl * 0.35], [r.chest, cl * 0.62],
-      [r.chest * 0.88, cl * 0.86], [r.neck * 1.6, cl * 1.0], [r.neck * 1.05, cl + 0.012 * H], [0, cl + 0.012 * H],
-    ], 0.6), 'shirt');
-    mesh('chestSoft', sphere(r.chest * 0.42), 'shirt', { scale: [1.5, 0.75, 0.38] });
-    // Trapezius slope from neck to each shoulder.
+    // Continuous skinned body.
+    const bodyGeo = buildBodyGeometry(d, skeleton, palette);
+    geometries.push(bodyGeo);
+    const body = new THREE.SkinnedMesh(bodyGeo, materials.body);
+    body.castShadow = !ghost;
+    body.frustumCulled = false;
+    if (ghost) body.renderOrder = 10;
+    group.add(body);
+    group.updateMatrixWorld(true);
+    skinSkeleton = new THREE.Skeleton(boneList);
+    body.bind(skinSkeleton);
+
+    // Face details and hair (rigid on the head).
     for (const x of [1, -1]) {
-      const trap = new THREE.CapsuleGeometry(0.024 * H, d.shoulderHalf * 0.8, 6, 12);
-      mesh('chest', trap, 'shirt', { pos: [x * d.shoulderHalf * 0.5, cl * 0.92, -0.005 * H], rot: [0, 0, x * (Math.PI / 2 - 0.25)] });
+      mesh('head', sphere(hr * 0.07, 12, 10), 'eye', { pos: [x * hr * 0.3, hr * 1.06, hr * 0.86] });
+      mesh('head', new THREE.CapsuleGeometry(hr * 0.025, hr * 0.18, 4, 8), 'hair',
+        { pos: [x * hr * 0.3, hr * 1.22, hr * 0.84], rot: [0, 0, Math.PI / 2 + x * 0.12] });
+      mesh('head', sphere(hr * 0.2, 14, 10), 'skin', { pos: [x * hr * 0.78, hr * 0.98, -0.02 * hr], scale: [0.35, 1.0, 0.7] });
+    }
+    mesh('head', new THREE.SphereGeometry(hr * 1.04, 32, 16, 0, Math.PI * 2, 0, Math.PI * (F ? 0.55 : 0.43)), 'hair',
+      { pos: [0, hr * 1.02, -0.03 * hr], rot: [-0.35, 0, 0], scale: [0.84, 1.0, 0.96] });
+    if (F) {
+      // Ponytail hangs from a spring-driven bone, so it swings with every step.
+      mesh('hairTail', sphere(hr * 0.22, 14, 10), 'hair', { pos: [0, 0, 0] });
+      mesh('hairTail', new THREE.CapsuleGeometry(hr * 0.16, hr * 0.7, 6, 12), 'hair',
+        { pos: [0, -hr * 0.5, -hr * 0.12], rot: [0.25, 0, 0], scale: [1, 1, 0.8] });
     }
 
-    // ── Neck & head ──
-    mesh('neck', limbGeometry(d.neck + hr * 0.35, [[0, r.neck * 1.05], [1, r.neck * 0.9]], true), 'skin');
-    const skull = { pos: [0, hr, 0.02 * hr], scale: [0.8, 1.0, 0.93] };
-    mesh('head', sphere(hr, 32, 24), 'skin', skull);
-    mesh('head', sphere(hr * 0.62, 24, 16), 'skin', { pos: [0, hr * 0.52, hr * 0.28], scale: [1.0, 0.85, 1.0] }); // jaw
-    mesh('head', new THREE.SphereGeometry(hr * 1.03, 32, 16, 0, Math.PI * 2, 0, Math.PI * 0.45), 'hair',
-      { pos: [0, hr * 1.02, -0.02 * hr], rot: [-0.32, 0, 0], scale: [0.83, 1.0, 0.95] });
-    for (const x of [1, -1]) {
-      mesh('head', sphere(hr * 0.075, 12, 10), 'eye', { pos: [x * hr * 0.3, hr * 1.06, hr * 0.84] });
-      mesh('head', sphere(hr * 0.2, 14, 10), 'skin', { pos: [x * hr * 0.78, hr * 0.98, -0.02 * hr], scale: [0.35, 1.0, 0.7] }); // ears
-    }
-    mesh('head', sphere(hr * 0.12, 14, 10), 'skin', { pos: [0, hr * 0.92, hr * 0.92], scale: [0.75, 1.25, 1.0] }); // nose
-    mesh('cheek_L', sphere(hr * 0.13, 14, 10), 'cheek');
-    mesh('cheek_R', sphere(hr * 0.13, 14, 10), 'cheek');
-    helper('headTop', d);
-
-    // ── Arms ──
+    // Hands: mitt with a thumb.
     for (const s of ['L', 'R']) {
-      const ua = `upperArm_${s}`;
-      mesh(ua, limbGeometry(d.upperArm, [[0, r.upperArm], [0.25, r.upperArm * 0.97], [0.65, r.upperArm * 0.86], [1, r.elbow]]), 'skin');
-      // Short sleeve over the shoulder and top of the arm.
-      mesh(ua, limbGeometry(d.upperArm * 0.42, [[0, r.upperArm * 1.12], [1, r.upperArm * 1.06]]), 'shirt');
-      mesh(`forearm_${s}`, limbGeometry(d.forearm, [[0, r.elbow], [0.22, r.forearm], [1, r.wrist]]), 'skin');
-      // Hand: flat mitt (palm faces the body) with a thumb.
       const hl = d.hand;
       mesh(`hand_${s}`, sphere(hl * 0.5, 20, 14), 'skin', { pos: [0, -hl * 0.45, 0.004 * H], scale: [0.36, 1.0, 0.62] });
       mesh(`hand_${s}`, new THREE.CapsuleGeometry(hl * 0.09, hl * 0.3, 4, 8), 'skin',
         { pos: [(s === 'L' ? -1 : 1) * hl * 0.06, -hl * 0.32, hl * 0.22], rot: [0.5, 0, 0] });
     }
 
-    // ── Legs ──
+    // Shoes: heel-to-ball piece on the foot bone, toe cap on the toes bone so the shoe bends at the ball.
     for (const s of ['L', 'R']) {
-      mesh(`thigh_${s}`, limbGeometry(d.thigh, [[0, r.thigh], [0.3, r.thigh * 0.95], [0.75, r.thigh * 0.74], [1, r.knee]]), 'pants');
-      mesh(`shin_${s}`, sphere(r.knee * 1.02, 18, 12), 'pants');
-      mesh(`shin_${s}`, limbGeometry(d.shin, [[0, r.knee], [0.28, r.calf], [0.78, r.ankle * 1.15], [1, r.ankle]]), 'pants');
-      // Shoe: rounded upper + flat sole, heel at -heelDist, toe at footLen - heelDist.
-      const f = `foot_${s}`;
-      const fl = d.footLen;
-      const midZ = fl / 2 - d.heelDist;
-      mesh(f, new THREE.CapsuleGeometry(r.foot, Math.max(fl - 2 * r.foot, 0.01), 8, 16), 'shoe',
-        { pos: [0, -d.ankleHeight + r.foot * 1.05, midZ], rot: [Math.PI / 2, 0, 0], scale: [1.2, 1, 0.8] });
-      mesh(f, new THREE.BoxGeometry(r.foot * 2.3, 0.012 * H, fl * 0.98), 'sole',
-        { pos: [0, -d.ankleHeight + 0.006 * H, midZ] });
-      mesh(f, sphere(r.ankle * 1.2, 14, 10), 'shoe', { pos: [0, -0.01 * H, -0.01 * H] }); // ankle collar
+      const f = `foot_${s}`, t = `toes_${s}`;
+      const rf = d.radii.foot;
+      const rearLen = d.heelDist + d.ballDist;            // heel → ball
+      const toeLen = d.footLen - rearLen;                 // ball → tip
+      mesh(f, new THREE.CapsuleGeometry(rf, Math.max(rearLen - rf, 0.01), 8, 16), 'shoe',
+        { pos: [0, -d.ankleHeight + rf * 1.05, (d.ballDist - d.heelDist) / 2], rot: [Math.PI / 2, 0, 0], scale: [1.2, 1, 0.8] });
+      mesh(f, new THREE.BoxGeometry(rf * 2.3, 0.012 * H, rearLen), 'sole', { pos: [0, -d.ankleHeight + 0.006 * H, (d.ballDist - d.heelDist) / 2] });
+      mesh(f, sphere(d.radii.ankle * 1.25, 14, 10), 'shoe', { pos: [0, -0.008 * H, -0.01 * H] });
+      mesh(t, new THREE.CapsuleGeometry(rf * 0.95, Math.max(toeLen - rf, 0.01), 8, 16), 'shoe',
+        { pos: [0, rf * 0.95, toeLen / 2 - rf * 0.2], rot: [Math.PI / 2, 0, 0], scale: [1.2, 1, 0.72] });
+      mesh(t, new THREE.BoxGeometry(rf * 2.2, 0.012 * H, toeLen), 'sole', { pos: [0, 0.006 * H, toeLen / 2] });
       helper(`toe_${s}`, d);
     }
+    helper('headTop', d);
 
     // Marker points that are just bone origins.
     for (const [name, , bone] of MARKERS) if (!points[name]) points[name] = bones[bone || name];
-
     if (markerMats) {
       const rDot = 0.013 * H;
       const dot = new THREE.SphereGeometry(rDot, 14, 10);
@@ -226,7 +181,7 @@ export function createCharacterView(scene, { palette, ghost = false, opacity = 1
     setOpacity(a) { for (const m of Object.values(materials)) m.opacity = a; },
     dispose() {
       clear();
-      for (const m of Object.values(materials)) m.dispose();
+      for (const m of new Set(Object.values(materials))) m.dispose();
       scene.remove(group);
     },
   };
@@ -238,17 +193,12 @@ function makeMaterials(palette, ghost, opacity) {
       color: palette.ghost, roughness: 0.6, transparent: true, opacity, depthWrite: false,
       emissive: palette.ghost, emissiveIntensity: 0.25,
     });
-    return Object.fromEntries(['skin', 'shirt', 'pants', 'shoe', 'sole', 'hair', 'eye', 'cheek'].map((k) => [k, g]));
+    return Object.fromEntries(['body', 'skin', 'shoe', 'sole', 'hair', 'eye'].map((k) => [k, g]));
   }
-  // Standard (not Physical) materials: the room environment supplies soft realistic shading
-  // without sheen/clearcoat shader cost.
-  const cloth = (color) => new THREE.MeshStandardMaterial({ color, roughness: 0.95 });
-  const skin = new THREE.MeshStandardMaterial({ color: palette.skin, roughness: 0.6 });
   return {
-    skin,
-    cheek: new THREE.MeshStandardMaterial({ color: palette.cheek, roughness: 0.6 }),
-    shirt: cloth(palette.shirt),
-    pants: cloth(palette.pants),
+    // Skin and clothing colors come from per-vertex colors on the skinned body.
+    body: new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.78 }),
+    skin: new THREE.MeshStandardMaterial({ color: palette.skin, roughness: 0.6 }),
     shoe: new THREE.MeshStandardMaterial({ color: palette.shoe, roughness: 0.5 }),
     sole: new THREE.MeshStandardMaterial({ color: palette.sole, roughness: 0.8 }),
     hair: new THREE.MeshStandardMaterial({ color: palette.hair, roughness: 0.85 }),

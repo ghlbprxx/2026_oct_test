@@ -18,7 +18,7 @@ export function createGame({ registry, targets, config, storage, wrap = (o) => o
     mode: 'sandbox',
     difficulty: 'normal',
     targetId: targets[0].id,
-    params: { ...defaults },
+    params: { ...defaults, sex: targets[0].sex || 'M' },
     score: 0,
     breakdown: [],
     hint: null,
@@ -47,7 +47,8 @@ export function createGame({ registry, targets, config, storage, wrap = (o) => o
   };
 
   const target = () => targets.find((t) => t.id === state.targetId);
-  const targetParams = (t = target()) => ({ ...defaults, ...t.params });
+  // `sex` rides along with the numeric params (body shape only; it's not in the registry, so not scored).
+  const targetParams = (t = target()) => ({ ...defaults, sex: t.sex || 'M', ...t.params });
   const threshold = () => config.thresholds[state.difficulty];
 
   function rebuildPlayer() {
@@ -81,7 +82,7 @@ export function createGame({ registry, targets, config, storage, wrap = (o) => o
 
   // Fresh attempt on the current target: default Player, synced phases, mode reset.
   function restart() {
-    state.params = { ...defaults };
+    state.params = { ...defaults, sex: target().sex || 'M' }; // Player starts with the Target's sex
     state.hint = null;
     state.hintsUsed = 0;
     state.result = null;
@@ -132,9 +133,14 @@ export function createGame({ registry, targets, config, storage, wrap = (o) => o
       state.params[id] = clamp(Number(value), p.min, p.max);
       rebuildPlayer();
     },
+    setSex(sex) {
+      if (sex !== 'M' && sex !== 'F') return;
+      state.params.sex = sex;
+      rebuildPlayer();
+    },
     resetParams() {
       if (state.status === 'timeup') return;
-      state.params = { ...defaults };
+      state.params = { ...defaults, sex: state.params.sex };
       rebuildPlayer();
     },
     selectTarget(id) {

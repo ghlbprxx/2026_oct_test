@@ -27,9 +27,9 @@ npm test
 
 ## How to Play
 
-1. Pick a **mode** (Sandbox / Challenge / Timed), a **Target**, and a **difficulty**.
+1. Pick a **mode** (Sandbox / Challenge / Timed), a **Target** (5 women ♀, 5 men ♂), and a **difficulty**.
 2. Watch the Target (orange) and your walker (teal). Read the Target's bio for clues.
-3. Drag the sliders on the right. The **match score** updates live.
+3. Drag the sliders on the right. The **match score** updates live. Your walker starts with the Target's body type (♀/♂), and you can switch it at the top of the sidebar. Body type changes shape only and isn't scored.
 4. Use **Biggest differences**, **Hint** (it gets more specific each time you click), the **👻 Ghost** overlay, and the **joint dots and trails** to close the gap.
 
 | Control | Action |
@@ -66,8 +66,8 @@ package.json        only so Node treats .js as ES modules for tests (no dependen
 
 core/               pure JS — no Three.js, no Vue, runs in Node
   math3.js          vectors, quaternions (Euler YXZ, same convention as Three.js)
-  body.js           parameters → body dimensions
-  skeleton.js       canonical bone list, forward kinematics, marker/trail point definitions
+  body.js           parameters → body dimensions, stance width, soft-tissue amounts (sex × body fat)
+  skeleton.js       canonical bones (incl. soft-tissue + toe bones), forward kinematics, marker/trail points
   ik.js             exact analytic two-bone leg IK
   gait.js           parametric gait cycle → Pose
   springs.js        damped linear + angular springs (fixed step)
@@ -82,7 +82,8 @@ core/               pure JS — no Three.js, no Vue, runs in Node
 render/             Three.js only
   index.js          render-layer facade: syncs scene to game frames, lane layout, name tags
   scene.js          renderer, lights, shadows, resize
-  characterView.js  procedural human + joint markers (the swappable view)
+  characterView.js  skinned human + accessories + joint markers (the swappable view)
+  bodyMesh.js       procedural skinned body: shape by sex/body fat, joint + soft-tissue skin weights
   trails.js         long-exposure motion trails (Line2 fat lines)
   ghost.js          translucent Target overlay
   floor.js          treadmills + tiled floor
@@ -94,7 +95,7 @@ ui/                 Vue components (template strings, compiled in the browser)
 
 data/
   params.js         parameter registry (MVP groups + disabled "coming soon" groups)
-  targets.js        5 Target presets
+  targets.js        10 Target presets (5 ♀, 5 ♂)
   config.js         thresholds, timer, score weights, spring tuning, trails, render settings
 
 tests/core.test.js  unit tests for core/
@@ -112,24 +113,25 @@ Each decision compared three approaches. The chosen one is marked ✅.
 
 | Approach | Pros | Cons |
 |---|---|---|
-| ✅ **Bone hierarchy of `Object3D`s with shaped meshes per bone** | Simple; segment lengths map directly to sliders; easy to debug | Small seams at joints (hidden by overlap) |
-| One procedural `SkinnedMesh` | Smooth body; closest to final art | Fiddly weights; expensive to rebuild when proportions change |
+| Bone hierarchy with a rigid mesh per bone (used first) | Simple; easy to debug | Joints crease like a mannequin; nothing deforms |
+| ✅ **Procedural `SkinnedMesh` on the canonical skeleton** | One continuous skin that bends smoothly; soft tissue can bounce | Skin weights to design; rebuilt when proportions change (cheap: ~5k vertices) |
 | `InstancedMesh` primitives | Fewest draw calls | Over-engineered for 2–3 characters |
 
-**Look:** the bodies started as rounded "Sims-lite" capsules and were later made more realistic. I compared three ways to do that:
+**How the look evolved:** rounded "Sims-lite" capsules came first, then shaped rigid pieces. Those still looked stiff, so the body is now a skinned mesh. I compared three ways to fix the stiffness:
 
 | Approach | Verdict |
 |---|---|
-| Rigged glTF model from the web | Most realistic, but needs an external asset, retargeting onto this skeleton, and per-bone scaling for the proportion sliders |
-| Procedural skinned mesh | Smooth, but a large, risky rewrite |
-| ✅ **Shaped procedural body** | Big visual gain at low risk; keeps the sliders, the jiggle, and the glTF swap point |
+| Stronger springs on the rigid pieces | Still a mannequin |
+| Rigged glTF model from the web | Real skin, but needs an external asset and breaks the proportion sliders |
+| ✅ **Procedural skinned mesh + soft-tissue bones** | Continuous skin, real bounce, keeps every slider and the glTF swap point |
 
-The shaped body has:
-- **Limbs:** tapered lathe profiles with thigh, calf, deltoid and forearm shapes.
-- **Torso:** elliptical sections for the hips, waist and ribcage, plus trapezius slopes.
-- **Head:** realistic proportions (about 1/7.5 of height) with jaw, nose, ears and hair.
-- **Hands and feet:** mitt hands with a thumb, and shoes with soles.
-- **Clothing:** a short-sleeve shirt and long pants.
+The skinned body (`render/bodyMesh.js`) works like this:
+- **Bind pose:** every part (torso, legs, arms, neck, head) is built as a vertical tube, because in the bind pose the limbs hang straight down.
+- **Joint blending:** skin weights blend across each joint, so knees, hips, elbows and shoulders bend smoothly and the waist visibly twists against the hips.
+- **Soft tissue:** vertices near the belly, chest, glutes, thighs, upper arms and cheeks are partly weighted to **soft-tissue bones**. Core's springs move those bones, so the surrounding flesh jiggles.
+- **Shape:** depends on **sex** (hips, waist, bust or pecs, shoulders) and **body fat** (belly, love handles, thighs, upper arms; distributed differently by sex). It never changes the skeleton, so body type can't affect the score.
+- **Clothing:** per-vertex colours, all in one draw call.
+- **Rigid accessories:** mitt hands, shoes that bend at the ball of the foot (separate toes bone), hair (women get a spring-driven ponytail), eyes, brows and ears.
 - **Lighting:** a studio room environment with ACES tone mapping.
 
 **Swap-proofing:** `core/` outputs a renderer-agnostic **Pose** (`rot[bone] = [x, y, z]` Euler YXZ, `pos[bone]` = offset) on a canonical skeleton (`core/skeleton.js`). `render/characterView.js` implements `build(dims) · applyPose(pose) · setPosition · setVisible · setOpacity · dispose`. A glTF or skinned view only needs to implement the same contract plus a bone-name map. The test suite checks that core FK matches the Three.js scene to about 1e-16 m.
@@ -148,9 +150,13 @@ How it works (`core/gait.js`):
 - **Stance:** the ankle moves back at ground speed. It rocks on the heel at contact and on the ball at push-off.
 - **Swing:** a Hermite curve with clearance, with tangents matched to ground speed so the foot doesn't hitch.
 - **Pelvis:** sway, yaw, obliquity (the swing hip drops), and tilt.
-- **Vertical bob** comes from inverted-pendulum reach: the hip sinks just enough for the leading heel to touch down. Long strides on short legs therefore bounce more without a separate slider.
+- **Vertical bob** comes from inverted-pendulum reach: the hip sinks just enough for the leading heel to touch down, so long strides on short legs bounce more. The bob is capped at 7.5 cm; anything beyond that is absorbed by bending the knees, as real walkers do.
+- **Soft knees, not crouched:** the hip sits at 99% of leg length at mid-stance, giving about 11–21° of knee bend (real walking is about 5–20°). An earlier version sat at 93%, about 40°, which looked like walking with bent knees. A test now enforces 3–25°.
+- **Loading response:** the bob bottoms out just after heel strike, so the knee gives a little on impact.
+- **Toe-off roll:** if the trailing ankle is out of reach, the foot rolls further onto its ball (the heel lifts earlier and higher) instead of the hip dropping. The ball of the foot stays planted, within 3 mm, from foot-flat to toe-off, and the toes stay flat on the ground.
+- **Natural details:** about 7° of toe-out, elbows that bend more on the forward swing, wrist lag, and shoulders that roll forward and bob with each step.
 - **Trunk** counter-rotates so the head stays level. Arms counter-swing with a lag.
-- **Exact IK** (`core/ik.js`): planted feet slide 0.0 mm in mid-stance for every preset, and a test enforces this.
+- **Exact IK** (`core/ik.js`): the ankle always lands exactly on its (possibly toe-rolled) target.
 
 ### 3. Match scoring
 
@@ -177,8 +183,15 @@ Checked by tests: an exact match scores 100, and the default walker scores below
 | Verlet points | Good for chains and cloth | Overkill; harder to keep deterministic |
 | Sine-based fake | Trivial | Doesn't react; looks fake in slow motion |
 
-- **Belly, chest, and cheeks:** linear springs driven by their parent bone's acceleration in the parent's frame.
-- **Overlap:** arms, forearms, and chest roll chase their targets with lag, and the head nods and rolls against neck acceleration.
+- **Soft-tissue bones:** belly, left and right chest, left and right glutes, thighs, upper arms, cheeks and ponytail. Each is a linear spring driven by the acceleration of its own rest anchor, expressed in its parent bone's frame.
+- **Per-character tuning:** spring gain and range scale with `tissue` amounts from `core/body.js` (sex × body fat); more fat also means softer tissue.
+- **Measured peak bounce:**
+  - Big Earl's belly: about 3.3 cm. Lean Kenji's: 0.4 cm.
+  - Marisol's chest: about 3 cm.
+  - Glutes and thighs: about 1–1.5 cm.
+  - Ponytails: 4–8 cm.
+- **Overlap:** upper arms, forearms, wrists and chest roll chase their targets with lag, and the head nods and rolls against neck acceleration.
+- **Liveliness** (sim-only, not scored, so scoring stays deterministic): breathing, small head turns and nods, and ±10% stride-to-stride arm-swing variation, seeded per character so no two walkers move in lockstep.
 - **Frame step** advances exactly 1/60 s of sim time at any playback speed.
 
 ### 5. Making the motion readable
@@ -208,28 +221,39 @@ The sliders, scoring, breakdown, and hints are all generated from `data/params.j
 | Proportions | height, leg length, thigh/shin ratio, torso length, arm length |
 | Timing | cadence, stride length, double-support time |
 | Pelvis | hip sway, pelvic rotation, pelvic tilt |
+| Build | body fat (soft-tissue bounce, body shape, slightly wider stance) |
 
-The later groups are registered with `enabled: false`. They appear greyed out as "Coming soon" and are excluded from scoring. In priority order: **joint ranges → posture → arm swing → asymmetry/limp → body mass**.
+The later groups are registered with `enabled: false`. They appear greyed out as "Coming soon" and are excluded from scoring. In priority order: **joint ranges → posture → arm swing → asymmetry/limp → weight distribution**.
+
+**Body type (♀/♂)** isn't a registry slider. It rides along in each walker's params as `sex`, changes only body shape and where fat sits, and isn't scored.
 
 ## Targets
 
-| # | Name | Difficulty | Bio |
-|---|---|---|---|
-| 1 | Stretch | Easy | Basketball coach — tall, long-legged, covers ground without hurrying. |
-| 2 | Pip | Easy | Busy barista — short legs, always in a rush, tiny quick steps. |
-| 3 | Rosa | Normal | Retired dancer — long legs and a big, confident hip sway. |
-| 4 | Bo | Normal | Camp counselor — springy, long strides on short legs; bounces with every step. |
-| 5 | Mr. Grey | Hard | Night-shift accountant — stiff hips, shuffles, both feet linger on the ground. |
+| # | Name | Sex | Difficulty | Bio |
+|---|---|---|---|---|
+| 1 | Stretch | ♂ | Easy | Basketball coach — tall, long-legged, covers ground without hurrying. |
+| 2 | Pip | ♀ | Easy | Busy barista — short legs, always in a rush, tiny quick steps. |
+| 3 | Dana | ♀ | Easy | Track coach — lean and long-striding; powers along with brisk steps. |
+| 4 | Rosa | ♀ | Normal | Retired dancer — long legs and a big, confident hip sway. |
+| 5 | Bo | ♂ | Normal | Camp counselor — springy, long strides on short legs; bounces with every step. |
+| 6 | Marisol | ♀ | Normal | Night-shift nurse — curvy, comfy shoes, relaxed rolling hips at the end of a long shift. |
+| 7 | Big Earl | ♂ | Normal | Long-haul trucker — heavyset, wide stance, slow rolling gait that lingers on both feet. |
+| 8 | Kenji | ♂ | Hard | Marathoner — wiry, light quick steps, barely any hip motion; efficiency over flair. |
+| 9 | June | ♀ | Hard | Retired librarian, 78 — careful, slow, short steps with both feet down a long time. |
+| 10 | Mr. Grey | ♂ | Hard | Night-shift accountant — stiff hips, shuffles, both feet linger on the ground. |
+
+No two presets are close: the most similar pair, Dana and Kenji, scores 62% against each other, and the default walker scores 43% or less against every Target.
 
 ---
 
 ## Verification Done
 
-- `npm test` has 12 tests, all passing:
+- `npm test` has 12 tests, all passing (including the new posture and planting checks):
   - registry and preset validity
   - no NaN at slider extremes
-  - knees never bend backward
-  - zero mid-stance foot slide for all presets
+  - knees never bend backward, and mid-stance knee bend stays at a realistic 3–25°
+  - the ball of the foot stays planted (within 3 mm) from foot-flat to toe-off for all presets
+  - 10 presets, 5 per sex
   - exact match = 100, and the default walker scores below Easy for every Target
   - the score falls as a parameter moves away
   - hint escalation
@@ -252,8 +276,9 @@ The later groups are registered with `enabled: false`. They appear greyed out as
 ## Known Limitations
 
 - **Parameter equivalence:** some combinations look alike. For example, a longer stride with lower cadence can resemble the reverse at the same speed. The blended score softens this, but a hint can still name a factor you've compensated for with another slider.
-- **Reach limits:** for very long strides on short legs, the trailing foot at push-off can be up to about 1 cm out of reach. The IK clamps, so the foot doesn't hyperextend. Strides beyond 2.25× leg length are capped, with a warning in the UI.
-- **Procedural bodies:** shaped, but each body part is a rigid piece on its bone, so there's no skin deformation at the joints. A skinned glTF model is the next step for real realism.
+- **Long strides on short legs** (Bo, for example) bend the knees more at mid-stance (up to about 21°), because the bob is capped at 7.5 cm. That's realistic, but it's the most crouched walk in the set. Strides beyond 2.25× leg length are capped, with a warning in the UI.
+- **Procedural skin:** the body is one skinned mesh, but simple. There are no muscles that bulge, no clothing folds, and hands and feet are rigid. A sculpted glTF model would still look better.
+- **Not yet seen in motion on a real screen:** posture, foot planting and bounce amounts were checked numerically and with frame-by-frame screenshots, not at full speed on a GPU. Spring stiffness and gain (`data/config.js`) and the shape numbers (`render/bodyMesh.js`) are expected to need taste-tuning.
 - **Rendering cost:** the studio environment lighting is the most expensive effect. It's free on any real GPU, but with software rendering (no GPU) it roughly halves the frame rate. Trails and markers add a little more. If that matters, remove `scene.environment` in `render/scene.js`.
 - **Simplified biomechanics:** there are no forces or muscles. The heel and toe rockers and the arm swing are scripted from parameters. Good for cause and effect, not clinical accuracy.
 - **Arm swing amplitude** is currently derived from stride. It becomes its own slider when the Arm-swing group ships.
@@ -263,5 +288,5 @@ The later groups are registered with `enabled: false`. They appear greyed out as
 ## Next Steps
 
 1. **glTF swap:** add `render/gltfCharacterView.js` that implements the same view contract with a `BONE_MAP` from canonical bone names to the rig's bones, then pick the view in `render/index.js`.
-2. **Remaining parameters**, in priority order: joint ranges (clamp IK and arm angles), posture (trunk lean, head carriage, shoulder slump), arm swing (amplitude, asymmetry), asymmetry/limp (per-side stride and stance time), and body mass (scale spring stiffness, damping, and bob).
+2. **Remaining parameters**, in priority order: joint ranges (clamp IK and arm angles), posture (trunk lean, head carriage, shoulder slump), arm swing (amplitude, asymmetry), asymmetry/limp (per-side stride and stance time), and weight distribution.
 3. Score timing directly (absolute-time trajectories), so cadence doesn't need a parameter-weight boost.

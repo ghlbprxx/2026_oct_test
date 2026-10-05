@@ -26,13 +26,19 @@ export const CONFIG = {
   },
 
   springs: {
-    // Soft-body jiggle (linear, driven by parent acceleration). max = clamp (m).
-    belly: { k: 600, c: 18, gain: 1, max: 0.025 },
-    chest: { k: 800, c: 20, gain: 1, max: 0.018 },
-    cheek: { k: 1200, c: 22, gain: 1, max: 0.006 },
+    // Soft-tissue jiggle (linear, driven by the tissue anchor's acceleration). max = clamp (m).
+    // gain and max are scaled per character by body fat and sex (core/body.js `tissue`).
+    belly: { k: 230, c: 7, gain: 0.75, max: 0.04 },
+    chest: { k: 200, c: 6, gain: 0.6, max: 0.035 },
+    glute: { k: 260, c: 7, gain: 0.5, max: 0.025 },
+    thigh: { k: 380, c: 10, gain: 0.4, max: 0.012 },
+    arm: { k: 300, c: 8, gain: 0.8, max: 0.016 },
+    cheek: { k: 800, c: 16, gain: 0.45, max: 0.006 },
+    hair: { k: 45, c: 3.5, gain: 1, max: 0.09 },
     // Overlap (angular, follow-through on joints).
     upperArm: { k: 220, c: 22 },
     forearm: { k: 140, c: 14 },
+    hand: { k: 160, c: 10 },
     head: { k: 260, c: 20, accelGain: 0.8 },
     chestRoll: { k: 300, c: 24 },
     maxAccel: 40,        // clamp for finite-difference accelerations (m/s²)

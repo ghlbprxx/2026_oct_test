@@ -18,7 +18,7 @@ export default {
         <span>Target</span>
         <select :value="state.targetId" @change="game.selectTarget($event.target.value)">
           <option v-for="(t, i) in targets" :key="t.id" :value="t.id" :disabled="!game.isUnlocked(t.id)">
-            {{ game.isUnlocked(t.id) ? '' : '🔒 ' }}{{ i + 1 }}. {{ t.name }} · {{ t.difficulty }}
+            {{ game.isUnlocked(t.id) ? '' : '🔒 ' }}{{ i + 1 }}. {{ t.sex === 'F' ? '♀' : '♂' }} {{ t.name }} · {{ t.difficulty }}
           </option>
         </select>
       </label>
