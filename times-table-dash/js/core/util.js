@@ -8,5 +8,4 @@ export const range = (a, b) => { const r = []; for (let i = a; i <= b; i++) r.pu
 export const rint = (lo, hi) => lo + Math.floor(Math.random() * (hi - lo + 1));
 export const shuffle = (arr) => { for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; };
 export const sameSet = (a, b) => a.length === b.length && a.every(x => b.includes(x));
-export const labelTables = (t) => t.length === 12 ? 'All tables' : [...t].sort((a, b) => a - b).map(n => n + 's').join(', ');
 export const pick = (a) => a[Math.floor(Math.random() * a.length)];

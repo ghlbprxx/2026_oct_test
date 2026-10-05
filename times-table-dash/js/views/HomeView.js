@@ -1,5 +1,5 @@
 // Home: a greeting, Kazu, and two clear choices (stories or practice).
-import { settings, tablesLabel, kazu, kazuReact, go } from '../core/state.js';
+import { settings, setupLabel, kazu, kazuReact, go } from '../core/state.js';
 import { sfx } from '../core/audio.js';
 import { earnedCount } from '../core/game.js';
 import { storyHomeLine, storiesDone } from '../core/story.js';
@@ -11,14 +11,14 @@ export default {
   setup() {
     const homeLine = ref(0);
     function pokeKazu() { homeLine.value = (homeLine.value + 1) % HOME_LINES.length; kazuReact('happy', 700); sfx.tick(); }
-    return { settings, tablesLabel, kazu, go, earnedCount, badges: BADGES, storyHomeLine, storiesDone, openCheat, homeLines: HOME_LINES, homeLine, pokeKazu };
+    return { settings, setupLabel, kazu, go, earnedCount, badges: BADGES, storyHomeLine, storiesDone, openCheat, homeLines: HOME_LINES, homeLine, pokeKazu };
   },
   template: `
 <main class="stack">
   <section class="home-hero stack">
     <div>
       <h1 class="greet">Hi there! What shall we do today?</h1>
-      <p class="page-sub">Go on a story adventure, or practice your times tables.</p>
+      <p class="page-sub">Save the Sakura Festival in Story mode, or practice +, −, × and ÷ against the clock.</p>
     </div>
     <div class="scene">
       <sakura-scene></sakura-scene>
@@ -39,8 +39,8 @@ export default {
     </button>
     <button type="button" class="choice tone-accent" @click="go('practice')">
       <span class="choice-icon" aria-hidden="true">⏱️</span>
-      <span class="choice-title">Times table practice</span>
-      <span class="choice-sub">{{ settings.tables.length ? tablesLabel : 'Pick your tables' }} · {{ settings.duration }} sec rounds</span>
+      <span class="choice-title">Practice</span>
+      <span class="choice-sub">{{ setupLabel }} · {{ settings.duration }} sec rounds</span>
       <span class="choice-go">Practice <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></span>
     </button>
   </div>

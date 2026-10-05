@@ -1,158 +1,139 @@
-// Story mode content, told like a 16-bit adventure: each story is a "world", each page is a short
-// dialogue scene that ends in one math challenge.
+// Story mode: a short campaign told like a 16-bit adventure. Each chapter is a quick dialogue intro,
+// then a timed round with a point goal. Reach the goal to win the chapter; fall short and the story
+// tells you how close you got and lets you retry.
 //
-// To add a story, append to STORIES. Each beat has:
-//   op + number ranges   add/sub use `a` and `b` ranges; div uses divisor `d` and quotient `q` ranges
-//   lines(n)             dialogue before the challenge: [who, text] pairs; n = { a, b, ans }
-//   ask                  the question under the dialogue
-//   win(n)               one [who, text] line shown after a correct answer
-// `who` is a key of CAST, or 'narr' for narrator lines (no portrait).
-import { rint } from '../core/util.js';
+// To add a chapter, append to CHAPTERS:
+//   round    { ops, level, tables, from, to, duration, goal }; same shape as practice settings (see problems.js)
+//   foe      a CAST key for a boss fight (the meter shows its HP draining), or null for a quest (the meter fills)
+//   meter    label for the goal meter
+//   intro    [who, text] lines before the round; `who` is a CAST key or 'narr' (narrator, no portrait)
+//   win      lines after reaching the goal
+//   lose(r)  lines after falling short; r = { score, goal, need, pct, tries }
+//   tip      one line of advice shown on a loss
+import { range } from '../core/util.js';
 
-// Every problem is generated so its answer is a positive whole number:
-//   add: a, b >= 1                  -> a + b >= 2
-//   sub: b chosen in [1, a - 1]     -> a - b >= 1
-//   div: a = d * q with d, q >= 2   -> a / d = q, no remainder
-export const OP_SYM = { add: '+', sub: '−', div: '÷' };
-export const OP_NAME = { add: 'Addition', sub: 'Subtraction', div: 'Division' };
-export const OP_TIP = {
-  add: 'Tip: start at the bigger number and count on.',
-  sub: 'Tip: start at the first number and count back.',
-  div: 'Tip: share them out one at a time into equal groups.'
-};
-export function makeNums(spec) {
-  if (spec.op === 'add') { const a = rint(spec.a[0], spec.a[1]), b = rint(spec.b[0], spec.b[1]); return { a, b, ans: a + b }; }
-  if (spec.op === 'sub') {
-    const a = rint(Math.max(2, spec.a[0]), spec.a[1]);
-    const hi = Math.min(spec.b[1], a - 1), lo = Math.min(spec.b[0], hi);
-    const b = rint(Math.max(1, lo), hi);
-    return { a, b, ans: a - b };
-  }
-  const d = rint(spec.d[0], spec.d[1]), q = rint(spec.q[0], spec.q[1]);
-  return { a: d * q, b: d, ans: q };
-}
-
-// Characters. `art` is tried in order; if none load, the emoji is shown in a pixel frame.
+// Characters. `art` is tried in order (see ASSET_PROMPTS.md); if none load, the emoji is shown instead.
+const portrait = (id) => ['art/portraits/' + id + '.webp', 'art/portraits/' + id + '.png'];
 export const CAST = {
-  kazu: { name: 'Kazu', emoji: '🦊', color: '#f2b06a', art: ['art/portraits/kazu.webp', 'art/portraits/kazu.png', 'art/kazu-idle.webp'] },
-  mimi: { name: 'Mimi', emoji: '🐰', color: '#f2c4cf', art: ['art/portraits/mimi.webp', 'art/portraits/mimi.png'] },
-  tanuki: { name: 'Grandpa Tanuki', emoji: '🦝', color: '#b8a48c', art: ['art/portraits/tanuki.webp', 'art/portraits/tanuki.png'] },
-  gusty: { name: 'Gusty', emoji: '🌪️', color: '#bcd6e8', art: ['art/portraits/gusty.webp', 'art/portraits/gusty.png'] },
-  hoot: { name: 'Professor Hoot', emoji: '🦉', color: '#c9b38f', art: ['art/portraits/hoot.webp', 'art/portraits/hoot.png'] }
+  kazu: { name: 'Kazu', emoji: '🦊', color: '#f2b06a', art: [...portrait('kazu'), 'art/kazu-idle.webp'] },
+  mimi: { name: 'Mimi', emoji: '🐰', color: '#f2c4cf', art: portrait('mimi') },
+  tanuki: { name: 'Grandpa Tanuki', emoji: '🦝', color: '#b8a48c', art: portrait('tanuki') },
+  hoot: { name: 'Professor Hoot', emoji: '🦉', color: '#c9b38f', art: portrait('hoot') },
+  gusty: { name: 'Gusty', emoji: '🌪️', color: '#bcd6e8', art: portrait('gusty') },
+  golem: { name: 'Times Golem', emoji: '🗿', color: '#b9b2a6', art: portrait('golem') },
+  riku: { name: 'Riku', emoji: '🐦', color: '#8f9bb8', art: portrait('riku') },
+  calculo: { name: 'Count Calculo', emoji: '🕰️', color: '#c7a0d8', art: portrait('calculo') }
 };
-// Per-story backdrop and music: art/story/<id>.webp (or .png) and audio/story/<id>.mp3 (both optional).
+// Optional chapter backdrop: art/story/<id>.webp or .png
 export const sceneArt = (id) => ['art/story/' + id + '.webp', 'art/story/' + id + '.png'];
-export const storyMusic = (id) => 'audio/story/' + id + '.mp3';
+// Optional music: one theme for story screens, one for quest rounds, one for boss rounds, one for the final boss.
+export const STORY_MUSIC = { theme: 'audio/story/theme.mp3', quest: 'audio/story/quest.mp3', boss: 'audio/story/boss.mp3', final: 'audio/story/final-boss.mp3' };
 
-export const STORIES = [
+const T2_9 = range(2, 9), T2_12 = range(2, 12);
+
+export const CHAPTERS = [
   {
-    id: 'picnic', world: 'World 1', title: 'The Spring Picnic', kind: 'Addition', icon: '🧺', tone: 'accent', ops: ['add'],
+    id: 'bridge', title: 'The Broken Bridge', icon: '🌉', foe: null, meter: 'Bridge rebuilt', tone: 'accent',
     sky: ['#bfe3f2', '#fbe7ee'], ground: '#cfe6bf',
+    round: { ops: ['add'], level: 'easy', tables: T2_9, from: 1, to: 10, duration: 30, goal: 80 },
     intro: [
-      ['narr', 'WORLD 1: Sakura Park. The sun is up and the birds are singing.'],
-      ['mimi', 'Kazu! The Big Picnic starts at noon!'],
-      ['kazu', "Then let's pack! Adding things up is my specialty."]
+      ['narr', 'The night before the Sakura Festival, the town clock stopped at 11:59.'],
+      ['calculo', 'Mwa-ha-ha! I am COUNT CALCULO! No clock, no festival!'],
+      ['hoot', 'Kazu! To reach the clock tower you must cross the river, but the storm broke the bridge.'],
+      ['kazu', "Then we'll ADD it back together, one plank at a time!"]
     ],
-    outro: [
-      ['narr', 'WORLD 1 CLEAR!'],
-      ['kazu', 'Full tummy... time for a little nap...'],
-      ['mimi', 'Wait. What is that whooshing sound?']
-    ],
-    beats: [
-      { op: 'add', a: [2, 6], b: [2, 5], icon: '🍙', lines: n => [['mimi', `I made ${n.a} rice balls!`], ['kazu', `And I brought ${n.b} more!`]], ask: 'How many rice balls are in the basket?', win: n => ['kazu', `${n.ans} rice balls! Basket power: MAX!`] },
-      { op: 'add', a: [3, 8], b: [2, 6], icon: '🌸', lines: n => [['narr', 'A trail of blossoms leads into the park.'], ['kazu', `${n.a} blossoms on this branch... and ${n.b} on that one!`]], ask: 'How many blossoms are there in all?', win: n => ['mimi', `${n.ans}! So pretty!`] },
-      { op: 'add', a: [4, 9], b: [3, 8], icon: '🦆', lines: n => [['narr', 'QUACK! A duck parade blocks the bridge!'], ['mimi', `${n.a} ducks are swimming... oh! ${n.b} more just flew in!`]], ask: 'How many ducks are on the pond now?', win: n => ['kazu', `${n.ans} ducks. After you, ducks!`] },
-      { op: 'add', a: [5, 10], b: [4, 8], icon: '🍵', lines: n => [['kazu', 'Picnic blanket: deployed!'], ['mimi', `I poured ${n.a} cups of tea, and you poured ${n.b} cups of juice.`]], ask: 'How many cups are on the blanket?', win: n => ['mimi', `${n.ans} cups. Cheers!`] },
-      { op: 'add', a: [6, 12], b: [5, 8], icon: '🍓', lines: n => [['narr', 'BONUS STAGE! Dessert time!'], ['kazu', `${n.a} strawberries in the red bowl. ${n.b} in the blue bowl!`]], ask: 'How many strawberries are there altogether?', win: n => ['mimi', `${n.ans} strawberries! Best. Picnic. Ever.`] }
-    ]
+    win: [['narr', 'The last plank clicks into place!'], ['mimi', "The bridge is fixed! Kazu, wait for me!"]],
+    lose: r => [['narr', `The bridge is ${r.pct}% rebuilt... but the river is rising!`], ['hoot', `You scored ${r.score}. You need ${r.goal}. Only ${r.need} more points!`]],
+    tip: 'Add the ones first, then the tens. 47 + 8 → 47 + 3 = 50, then + 5 = 55.'
   },
   {
-    id: 'windy', world: 'World 2', title: 'The Windy Walk', kind: 'Subtraction', icon: '🍃', tone: 'blue', ops: ['sub'],
+    id: 'gale', title: "Gusty's Gale", icon: '🌪️', foe: 'gusty', meter: "Gusty's wind", tone: 'blue',
     sky: ['#a9cfe6', '#e8eef5'], ground: '#bfd8b4',
+    round: { ops: ['sub'], level: 'easy', tables: T2_9, from: 1, to: 10, duration: 30, goal: 80 },
     intro: [
-      ['narr', 'WORLD 2: Breezy Hill.'],
-      ['gusty', "Whoosh-whoosh! I'm Gusty, and I LOVE taking things away!"],
-      ['kazu', 'Uh-oh. Mimi, hold on to everything!']
+      ['narr', 'On Breezy Hill, a whirlwind blocks the path.'],
+      ['gusty', "Whoosh! The Count says I can take away ANYTHING I want. Starting with your snacks!"],
+      ['mimi', "Kazu, every time you subtract, you weaken Gusty's wind!"],
+      ['kazu', "Let's take away your wind power, then!"]
     ],
-    outro: [
-      ['narr', 'WORLD 2 CLEAR!'],
-      ['gusty', 'Okay, okay. Maybe helping is more fun than taking.'],
-      ['kazu', 'Deal! Come to the bakery with us tomorrow!']
-    ],
-    beats: [
-      { op: 'sub', a: [5, 9], b: [1, 4], icon: '🪁', lines: n => [['narr', 'Gusty swoops down from the clouds!'], ['gusty', `Ha! I'll take ${n.b} of your ${n.a} kites!`]], ask: 'How many kites does Kazu still have?', win: n => ['kazu', `${n.ans} left. I'm holding on tight!`] },
-      { op: 'sub', a: [8, 12], b: [2, 6], icon: '🍂', lines: n => [['mimi', `We stacked ${n.a} leaves on the bench...`], ['gusty', `Puff! ${n.b} blown away!`]], ask: 'How many leaves are left on the bench?', win: n => ['mimi', `Still ${n.ans}. Nice try, Gusty!`] },
-      { op: 'sub', a: [9, 14], b: [3, 8], icon: '🐦', lines: n => [['narr', `${n.a} birds rest on the fence.`], ['gusty', 'BOO!'], ['narr', `${n.b} birds fly off in a flutter.`]], ask: 'How many birds stayed on the fence?', win: n => ['kazu', `${n.ans} brave birds. Respect!`] },
-      { op: 'sub', a: [10, 16], b: [4, 9], icon: '🌰', lines: n => [['kazu', `I found ${n.a} acorns!`], ['gusty', 'Roll, little acorns, roll!'], ['narr', `${n.b} acorns tumble down the hill.`]], ask: 'How many acorns does Kazu have left?', win: n => ['kazu', `${n.ans} acorns. Still a good haul!`] },
-      { op: 'sub', a: [12, 20], b: [5, 11], icon: '🏠', lines: n => [['narr', `FINAL STRETCH! Home is ${n.a} steps away.`], ['mimi', `We already walked ${n.b} steps!`]], ask: 'How many steps are left?', win: n => ['gusty', `Only ${n.ans}?! Huff... puff... I'm out of wind!`] }
-    ]
+    win: [['gusty', "Huff... puff... I'm out of wind! Okay, okay. The Count isn't even nice to me."], ['kazu', 'Then come with us! We could use a friend who can fly.'], ['gusty', '...Really? Whoosh! Deal!']],
+    lose: r => [['gusty', `Ha! You only blew away ${r.pct}% of my wind!`], ['mimi', `${r.score} points. ${r.need} more and Gusty is grounded. Try again!`]],
+    tip: 'Count up instead of back: 52 − 7 → 7 + 3 = 10, 10 + 42 = 52, so the answer is 3 + 42 = 45.'
   },
   {
-    id: 'bakery', world: 'World 3', title: 'The Bakery Morning', kind: 'Mixed: + and −', icon: '🥐', tone: 'sun', ops: ['add', 'sub'],
+    id: 'market', title: 'Market Mix-Up', icon: '🏮', foe: null, meter: 'Orders filled', tone: 'sun',
     sky: ['#f6dcb8', '#fbf0e2'], ground: '#e7cfae',
+    round: { ops: ['add', 'sub'], level: 'medium', tables: T2_9, from: 1, to: 10, duration: 60, goal: 120 },
     intro: [
-      ['narr', 'WORLD 3: Tanuki Bakery. It smells like melon buns!'],
-      ['tanuki', 'Ho ho! Today you are my helpers. Baking ADDS buns. Selling TAKES them away.'],
-      ['gusty', "And I'll cool them down! Gentle whoosh!"]
+      ['narr', 'Town Market. Count Calculo scrambled every price tag!'],
+      ['tanuki', "Ho ho, what a mess! Customers are waiting and my register only counts nonsense."],
+      ['tanuki', 'Add up what they buy, subtract what they pay. Can you keep up?'],
+      ['gusty', "I'll blow the receipts over to you. Fast ones!"]
     ],
-    outro: [
-      ['narr', 'WORLD 3 CLEAR!'],
-      ['tanuki', 'A warm melon bun for each of you. Ho ho!'],
-      ['narr', 'A letter flutters in. It is sealed with a lantern stamp...']
-    ],
-    beats: [
-      { op: 'add', a: [4, 9], b: [3, 8], icon: '🍞', lines: n => [['tanuki', `First batch: ${n.a} melon buns.`], ['kazu', `Second batch: ${n.b} more! Ding!`]], ask: 'How many melon buns are there now?', win: n => ['tanuki', `${n.ans}! A fine start.`] },
-      { op: 'sub', a: [8, 14], b: [2, 6], icon: '🍞', lines: n => [['narr', 'The door chimes. Customers!'], ['mimi', `There were ${n.a} buns on the tray, and they bought ${n.b}!`]], ask: 'How many buns are still on the tray?', win: n => ['kazu', `${n.ans} left. Business is booming!`] },
-      { op: 'add', a: [5, 10], b: [4, 9], icon: '🧁', lines: n => [['gusty', `Whoosh! ${n.a} cream puffs, cooled!`], ['mimi', `And ${n.b} cupcakes, frosted!`]], ask: 'How many treats are on the new tray?', win: n => ['tanuki', `${n.ans} treats. Splendid teamwork!`] },
-      { op: 'sub', a: [10, 18], b: [3, 9], icon: '🛍️', lines: n => [['tanuki', `We started with ${n.a} paper bags.`], ['kazu', `And we've used ${n.b} already.`]], ask: 'How many bags are left?', win: n => ['tanuki', `${n.ans}. Enough until closing!`] },
-      { op: 'add', a: [6, 12], b: [3, 8], icon: '🪙', lines: n => [['narr', 'Tip jar check!'], ['mimi', `${n.a} coins this morning, ${n.b} coins after lunch!`]], ask: 'How many coins are in the tip jar?', win: n => ['kazu', `${n.ans} coins! We're rich! ...In coins.`] },
-      { op: 'sub', a: [9, 15], b: [2, 7], icon: '🥐', lines: n => [['narr', `Closing time. ${n.a} croissants are left.`], ['tanuki', `Take ${n.b} to the neighbors, would you?`]], ask: 'How many croissants stay at the bakery?', win: n => ['mimi', `${n.ans} for tomorrow's breakfast!`] }
-    ]
+    win: [['tanuki', 'Every order filled! Here, take these melon buns for the road.'], ['tanuki', 'And a tip: the Count hides in the Times Tower. Something big guards the door...']],
+    lose: r => [['narr', `The line is still out the door. Orders filled: ${r.pct}%.`], ['tanuki', `${r.score} out of ${r.goal}. Close! Take a deep breath and try again.`]],
+    tip: 'Make a ten: 38 + 27 → 38 + 2 = 40, then + 25 = 65.'
   },
   {
-    id: 'lanterns', world: 'World 4', title: 'Lantern Night', kind: 'Division', icon: '🏮', tone: 'rose', ops: ['div'],
+    id: 'tower', title: 'The Times Tower', icon: '🗿', foe: 'golem', meter: "Golem's armor", tone: 'rose',
+    sky: ['#c9c3e6', '#efe8f5'], ground: '#cbc2b4',
+    round: { ops: ['mul'], level: 'medium', tables: T2_9, from: 1, to: 10, duration: 30, goal: 120 },
+    intro: [
+      ['narr', 'At the Times Tower, a stone giant blocks the door.'],
+      ['golem', 'NONE... SHALL... PASS. UNLESS... YOU... KNOW... YOUR... TIMES... TABLES.'],
+      ['hoot', 'Its armor is made of multiplication facts. Answer fast and it will crumble!'],
+      ['kazu', 'Times tables? I practice those every day!']
+    ],
+    win: [['narr', 'CRASH! The armor crumbles into a pile of number blocks.'], ['golem', '...Correct. Very... correct. You... may... pass.']],
+    lose: r => [['golem', `ARMOR... STILL... AT... ${100 - r.pct}%.`], ['hoot', `${r.score} points, and you need ${r.goal}. Speed bonuses help: try to answer in under 2 seconds!`]],
+    tip: 'Stuck on 7 × 8? Remember 5, 6, 7, 8: 56 = 7 × 8.'
+  },
+  {
+    id: 'lanterns', title: 'The Lantern Stairs', icon: '🕯️', foe: null, meter: 'Lanterns lit', tone: 'sun',
     sky: ['#3b3f6b', '#7a5a7e'], ground: '#4a4560', night: true,
+    round: { ops: ['div'], level: 'medium', tables: T2_9, from: 1, to: 10, duration: 60, goal: 220 },
     intro: [
-      ['narr', 'WORLD 4: Riverside, at dusk.'],
-      ['hoot', 'Hoo-hoo! Tonight is the Lantern Festival. Everything must be shared FAIRLY.'],
-      ['kazu', 'Equal groups, same amount in each. Got it!']
+      ['narr', "Inside the tower, it's pitch dark. A long staircase winds up into the shadows."],
+      ['hoot', 'Each lantern needs an EQUAL share of oil, or it will not light.'],
+      ['mimi', 'So we divide the oil evenly. Every answer lights another lantern!'],
+      ['gusty', "I'll keep the flames steady. Gently. Very gently."]
     ],
-    outro: [
-      ['narr', 'WORLD 4 CLEAR!'],
-      ['narr', 'The lanterns float up, and the sky glows gold.'],
-      ['hoot', 'You know three powers now: add, take away, and share. Next stop... the Festival!']
-    ],
-    beats: [
-      { op: 'div', d: [2, 3], q: [2, 5], icon: '🏮', lines: n => [['hoot', `We have ${n.a} lanterns and ${n.b} trees.`], ['kazu', 'The same number on every tree!']], ask: 'How many lanterns go on each tree?', win: n => ['hoot', `${n.ans} per tree. Fair and bright!`] },
-      { op: 'div', d: [2, 4], q: [2, 5], icon: '✨', lines: n => [['mimi', `${n.a} glow sticks for ${n.b} friends!`], ['gusty', 'Everyone gets the same. No grabbing!']], ask: 'How many glow sticks does each friend get?', win: n => ['mimi', `${n.ans} each. So glowy!`] },
-      { op: 'div', d: [2, 5], q: [2, 6], icon: '🍡', lines: n => [['tanuki', `I brought ${n.a} mochi for ${n.b} plates.`], ['kazu', 'Equal plates, coming right up!']], ask: 'How many mochi go on each plate?', win: n => ['tanuki', `${n.ans} per plate. Ho ho!`] },
-      { op: 'div', d: [3, 5], q: [2, 6], icon: '🧒', lines: n => [['narr', `Fireworks soon! ${n.a} kids line up in ${n.b} equal rows.`], ['hoot', 'Hoo! Neat rows, please!']], ask: 'How many kids are in each row?', win: n => ['kazu', `${n.ans} in each row. Perfect view!`] },
-      { op: 'div', d: [2, 5], q: [3, 8], icon: '🕊️', lines: n => [['narr', `FINAL WISH! Kazu folded ${n.a} paper cranes.`], ['hoot', `Place them in ${n.b} wish boxes, the same number in each.`]], ask: 'How many cranes go in each box?', win: n => ['hoot', `${n.ans} cranes per box. Your wish will fly!`] }
-    ]
+    win: [['narr', 'One by one, the lanterns glow all the way to the top.'], ['kazu', "I can see a door... and someone's waiting in front of it."]],
+    lose: r => [['narr', `Only ${r.pct}% of the lanterns are lit. The stairs are still too dark.`], ['hoot', `${r.score} points. ${r.need} more to light the way. Try again!`]],
+    tip: 'Division is multiplication backwards: 56 ÷ 8 asks "8 times what is 56?" The answer is 7.'
   },
   {
-    id: 'festival', world: 'World 5', title: 'The School Festival', kind: 'Mixed: +, − and ÷', icon: '🎪', tone: 'accent', ops: ['add', 'sub', 'div'],
-    sky: ['#ffd7a8', '#fde9f0'], ground: '#d9e7c4',
+    id: 'rival', title: "Riku's Challenge", icon: '🐦', foe: 'riku', meter: "Riku's confidence", tone: 'blue',
+    sky: ['#8fa7c9', '#e3d9ef'], ground: '#9aa3b5',
+    round: { ops: ['mul', 'div'], level: 'medium', tables: T2_12, from: 1, to: 12, duration: 60, goal: 260 },
     intro: [
-      ['narr', 'FINAL WORLD: The Sakura School Festival!'],
-      ['kazu', 'Everyone is here! Mimi, Grandpa, Gusty, Professor Hoot!'],
-      ['hoot', 'Use every power you have learned. Hoo-hoo, good luck!']
+      ['riku', "Well, well. Kazu. The Count hired me to stop you. I'm the fastest math brain in town."],
+      ['kazu', 'Riku? We used to practice together!'],
+      ['riku', 'And I always won. Multiplication AND division, all the way to 12s. Ready to lose?'],
+      ['mimi', "Don't let Riku rattle you, Kazu. Just one fact at a time!"]
     ],
-    outro: [
-      ['narr', 'ALL WORLDS CLEAR!'],
-      ['kazu', 'We did it, together!'],
-      ['mimi', 'Same time next year?'],
-      ['narr', 'THE END. Thanks for playing! ★']
+    win: [['riku', "...You've gotten really good."], ['riku', "Fine. The Count promised me a trophy, but he never keeps promises. Go. He's at the top."], ['kazu', 'Thanks, Riku. Come watch the festival with us after!']],
+    lose: r => [['riku', `Ha! ${r.score} points? I told you I'm faster.`], ['kazu', `Only ${r.need} more... I know these facts. One more try!`]],
+    tip: 'For 11s and 12s: 12 × 7 = 10 × 7 + 2 × 7 = 70 + 14 = 84.'
+  },
+  {
+    id: 'clock', title: "Count Calculo's Clock", icon: '🕰️', foe: 'calculo', meter: "Count Calculo's power", tone: 'rose', final: true,
+    sky: ['#4b3b6b', '#c58aa6'], ground: '#5b4a6e', night: true,
+    round: { ops: ['add', 'sub', 'mul', 'div'], level: 'medium', tables: T2_12, from: 1, to: 12, duration: 60, goal: 220 },
+    intro: [
+      ['narr', 'The top of the clock tower. Gears grind. The hands are frozen at 11:59.'],
+      ['calculo', "You made it this far? Impressive. But can you handle ALL FOUR operations at once?"],
+      ['hoot', "This is what you've trained for, Kazu. Adding, subtracting, multiplying, dividing."],
+      ['kazu', "Everyone helped me get here. Let's restart that clock!"]
     ],
-    beats: [
-      { op: 'add', a: [5, 12], b: [4, 9], icon: '🖼️', lines: n => [['mimi', `We painted ${n.a} posters on Monday and ${n.b} on Tuesday!`]], ask: 'How many posters did they paint in all?', win: n => ['mimi', `${n.ans} posters. The halls look amazing!`] },
-      { op: 'div', d: [2, 5], q: [2, 6], icon: '🎈', lines: n => [['gusty', `I blew up ${n.a} balloons!`], ['kazu', `Let's tie them to ${n.b} booths, the same number at each.`]], ask: 'How many balloons go at each booth?', win: n => ['gusty', `${n.ans} each! Best job ever!`] },
-      { op: 'sub', a: [10, 20], b: [3, 9], icon: '🥤', lines: n => [['tanuki', `The lemonade stand had ${n.a} cups. We sold ${n.b}!`]], ask: 'How many cups are left?', win: n => ['tanuki', `${n.ans} left. Better make more!`] },
-      { op: 'add', a: [6, 14], b: [5, 10], icon: '👪', lines: n => [['narr', `Families arrive! ${n.a} in the morning, ${n.b} after lunch.`]], ask: 'How many families came to the festival?', win: n => ['kazu', `${n.ans} families! Full house!`] },
-      { op: 'sub', a: [12, 20], b: [4, 10], icon: '🎟️', lines: n => [['kazu', `I have ${n.a} game tickets.`], ['mimi', `And you spent ${n.b} on the ring toss!`]], ask: 'How many tickets does Kazu have left?', win: n => ['kazu', `${n.ans} left... and I won a tiny hat!`] },
-      { op: 'div', d: [2, 4], q: [3, 7], icon: '🎀', lines: n => [['narr', 'BOSS STAGE: The Grand Prize!'], ['hoot', `${n.a} prize ribbons for ${n.b} teams. Share them fairly!`]], ask: 'How many ribbons does each team get?', win: n => ['hoot', `${n.ans} each. Everyone wins!`] }
-    ]
+    win: [
+      ['calculo', 'No... NO! My beautiful frozen clock!'],
+      ['narr', 'TICK. TOCK. The hands move to 12:00, and the whole town cheers.'],
+      ['calculo', '...Fine. I only stopped it because nobody ever invited me to the festival.'],
+      ['kazu', "Then you're invited! Everyone is."],
+      ['narr', 'THE END. The Sakura Festival is saved! ★']
+    ],
+    lose: r => [['calculo', `Mwa-ha-ha! Only ${r.pct}% of my power is gone!`], ['mimi', `${r.score} points, Kazu! You need ${r.need} more. We believe in you!`]],
+    tip: 'Read the sign first! A quick look at + − × ÷ saves you from the most common mistakes.'
   }
 ];
-// split text so numbers can be shown in bold without v-html
-export const toParts = (s) => s.split(/(\d+)/).filter(Boolean).map(t => ({ t, n: /^\d+$/.test(t) }));

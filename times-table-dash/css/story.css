@@ -20,42 +20,11 @@
 .story-head-title{text-align:center;min-width:0}
 .story-head-title strong{display:block;font-family:var(--f-display);font-weight:600;font-size:1.1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .story-head-title span{font-size:.82rem;font-weight:800;color:var(--muted)}
-.story-switch{display:flex;gap:2px}
-.dots{display:flex;justify-content:center;gap:8px;flex-wrap:wrap}
-.dot-btn{width:12px;height:12px;border-radius:50%;border:0;padding:0;background:var(--line);transition:background var(--t-med) var(--ease),transform var(--t-med) var(--ease),width var(--t-med) var(--ease)}
-.dot-btn.done{background:var(--accent)}
-.dot-btn.shown{background:var(--sun)}
-.dot-btn.cur{width:28px;border-radius:999px;background:var(--ink)}
-.dot-btn:disabled{cursor:default;opacity:.7}
-.dot-wrap{display:inline-grid;place-items:center;width:28px;height:28px}
-.dot-wrap:has(.cur){width:40px}
 .page{background:var(--card);border-radius:22px;padding:22px 20px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:14px}
-.page-icon{font-size:2.2rem;line-height:1}
-.story-text{margin:0;font-size:1.18rem;line-height:1.6}
-.story-text b{font-family:var(--f-display);font-weight:600;color:var(--accent-deep);font-size:1.12em}
-.story-ask{margin:0;font-weight:800;font-size:1.08rem}
-.picture{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:12px;border-radius:14px;background:var(--card-2);animation:fadeUp var(--t-slow) var(--ease) both}
-.picture .grp{display:flex;flex-wrap:wrap;gap:2px;padding:6px 8px;border-radius:12px;background:var(--card);max-width:100%}
-.picture .it{font-size:1.25rem;line-height:1.2}
-.picture .it.gone{opacity:.25;filter:grayscale(1)}
-.picture .sym{font-family:var(--f-display);font-weight:600;font-size:1.4rem;color:var(--muted)}
-.eq{font-family:var(--f-display);font-weight:600;font-size:1.6rem;font-variant-numeric:tabular-nums;color:var(--ink)}
-.eq .op{color:var(--accent)}
-.answer-row{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap}
-.answer-row .answer-box{width:160px}
-.feedback{margin:0;text-align:center;font-weight:800;min-height:1.5em;color:var(--muted)}
-.feedback.right{color:var(--ok)}
-.feedback.shown{color:var(--sun)}
-.helper-row{display:flex;justify-content:center}
-.story-nav{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.story-nav .btn{width:100%}
-.finish{text-align:center;align-items:center}
-.finish .stars{font-size:2.4rem}
 
 @media (max-width:600px){
   .story-card{grid-template-columns:auto minmax(0,1fr);}
   .story-status{grid-column:2;flex-direction:row;align-items:center;gap:8px}
-  .story-text{font-size:1.08rem}
 }
 
 /* ---------- 16-bit adventure presentation ---------- */
@@ -88,7 +57,6 @@
 .more{position:absolute;right:12px;bottom:6px;color:#ffe08a;font-size:.9rem;animation:blinkMore 1s steps(1) infinite}
 .tap-hint{margin:0;text-align:center;font-family:var(--f-pixel);color:var(--muted);animation:fadeUp var(--t-slow) var(--ease) both}
 .page.center{align-items:center;text-align:center}
-.challenge-tag{display:inline-block;font-family:var(--f-pixel);font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;background:var(--sun-soft);color:var(--sun);border-radius:4px;padding:1px 7px;margin-right:4px;vertical-align:2px}
 .btn.pixel{font-family:var(--f-pixel);letter-spacing:.04em}
 
 @keyframes hop8{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-6px)}}
@@ -99,3 +67,30 @@
   .portrait-emoji{font-size:1.9rem}
   .dialog-text{font-size:1.04rem}
 }
+
+/* ---------- chapters, goal meter, battle ---------- */
+.story-card.locked{opacity:.55;cursor:not-allowed;box-shadow:none}
+.story-card.locked:hover{transform:none;box-shadow:none}
+.goal-chip{font-family:var(--f-body);font-weight:800;font-size:.78rem}
+.sprite img{width:clamp(72px,22vw,110px);height:auto;image-rendering:pixelated}
+.title-card.lose .tc-small{color:#ffb3a6}
+.skip-row{display:flex;justify-content:center;align-items:center;gap:14px}
+.goal-line{margin:0;font-size:1.15rem;font-weight:800}
+.goal-line b{font-family:var(--f-display);color:var(--accent-deep);font-size:1.15em}
+
+/* goal meter: a quest fills up, a boss's HP drains */
+.goal{display:flex;flex-direction:column;gap:4px}
+.goal-head{display:flex;justify-content:space-between;font-family:var(--f-pixel);font-weight:700;font-size:.9rem;color:var(--muted)}
+.goal-bar{height:14px;border-radius:4px;background:var(--line);overflow:hidden;box-shadow:inset 0 0 0 2px rgba(0,0,0,.06)}
+.goal-fill{height:100%;background:var(--accent);transition:width .45s var(--ease)}
+.goal.boss .goal-fill{background:var(--rose)}
+
+/* battle scene: Kazu on the left, the foe on the right */
+.play .mascot.left{left:28%}
+.foe{position:absolute;right:10%;bottom:6px;z-index:3;width:96px;height:96px;display:grid;place-items:center;transition:opacity .6s var(--ease),transform .6s var(--ease)}
+.foe-body{display:grid;place-items:center;width:100%;height:100%;font-size:4rem;line-height:1;filter:drop-shadow(0 4px 0 rgba(0,0,0,.15))}
+.foe-body img{width:100%;height:100%;object-fit:contain;image-rendering:pixelated}
+.foe-body.hit{animation:foeHit .35s steps(4)}
+.foe.down{opacity:0;transform:translateY(16px) rotate(12deg)}
+.ko{position:absolute;inset:0;z-index:5;display:grid;place-items:center;font-family:var(--f-pixel);font-weight:700;font-size:clamp(2rem,9vw,3rem);color:#fff;text-shadow:3px 3px 0 #1b2142;animation:dropIn .4s steps(4) both}
+@keyframes foeHit{0%,100%{transform:none}25%{transform:translateX(6px)}50%{transform:translateX(-4px);filter:brightness(1.6)}75%{transform:translateX(2px)}}

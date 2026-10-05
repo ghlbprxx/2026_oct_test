@@ -1,11 +1,13 @@
 // Cheat sheet: the times table grid.
 import { settings } from '../core/state.js';
 import { startGame } from '../core/game.js';
+// the grid is times tables, so its practice button starts a × round with your tables
 import { cheat, cheatRows, cheatCols, focus, isCovered, cellClass, pickCell, skipCount } from '../core/cheat.js';
 
 export default {
   setup() {
-    return { settings, startGame, cheat, cheatRows, cheatCols, focus, isCovered, cellClass, pickCell, skipCount };
+    function practiceTables() { settings.ops = ['mul']; startGame(); }
+    return { settings, practiceTables, cheat, cheatRows, cheatCols, focus, isCovered, cellClass, pickCell, skipCount };
   },
   template: `
 <main class="stack">
@@ -58,7 +60,7 @@ export default {
     <span><span class="sq-key">Blue numbers</span> are square numbers (same number twice)</span>
   </p>
   <div class="actions">
-    <button type="button" class="btn go big" @click="startGame" :disabled="!settings.tables.length">Practice my tables</button>
+    <button type="button" class="btn go big" @click="practiceTables" :disabled="!settings.tables.length">Practice my tables</button>
   </div>
 </main>`
 };

@@ -46,14 +46,14 @@ export default {
   <section class="panel">
     <h2 class="label">Practice these</h2>
     <div class="facts" v-if="result.missed.length">
-      <span class="fact" v-for="m in result.missed" :key="m.key">{{ m.t }} × {{ m.n }} = {{ m.t * m.n }}<small v-if="m.count > 1"> ×{{ m.count }}</small></span>
+      <span class="fact" v-for="m in result.missed" :key="m.key">{{ m.text }}<small v-if="m.count > 1"> (missed {{ m.count }}×)</small></span>
     </div>
     <p v-else class="good-news">No misses this round. Every answer was right!</p>
   </section>
 
   <div class="actions">
-    <button type="button" class="btn go big" @click="startGame">Play again</button>
-    <button type="button" class="btn" @click="go('practice')">Change tables</button>
+    <button type="button" class="btn go big" @click="startGame()">Play again</button>
+    <button type="button" class="btn" @click="go('practice')">Change settings</button>
     <button type="button" class="btn soft" @click="go('home')">Home</button>
   </div>
 </main>`

@@ -8,7 +8,7 @@ export const AUDIO = {
   music: { menu: 'audio/menu.mp3', play: 'audio/play.mp3', results: 'audio/results.mp3' },
   sfx: { tap: 'audio/tap.mp3', count: 'audio/count.mp3', go: 'audio/go.mp3', correct: 'audio/correct.mp3', fast: 'audio/fast.mp3', combo: 'audio/combo.mp3', wrong: 'audio/wrong.mp3', end: 'audio/end.mp3' },
   // story-mode sounds, loaded the first time a story opens; each has a chiptune synth fallback
-  storySfx: { blip: 'audio/story/text-blip.mp3', start: 'audio/story/world-start.mp3', item: 'audio/story/item-get.mp3', clear: 'audio/story/stage-clear.mp3' }
+  storySfx: { blip: 'audio/story/text-blip.mp3', start: 'audio/story/chapter-start.mp3', hit: 'audio/story/hit.mp3', clear: 'audio/story/victory.mp3', lose: 'audio/story/defeat.mp3' }
 };
 
 // which art files actually loaded

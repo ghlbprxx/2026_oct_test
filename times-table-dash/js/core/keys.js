@@ -2,19 +2,14 @@
 import { view, game } from './state.js';
 import { syncMusic, unlockAudio } from './audio.js';
 import { press, backspace, clearInput, submit, pauseGame, resumeGame } from './game.js';
-import { story, beat, talkDone, talkAdvance, storyPress, storyBack, storyCheck, storyGo } from './story.js';
+import { talkDone, talkAdvance, storyPrimary } from './story.js';
 
 function onKey(e) {
   if (e.target && /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
   if (view.value === 'story') {
-    // dialogue first: Enter / Space finish the line, then show the next one
+    // Enter / Space finish the line, then show the next one; once the dialogue is done, Enter starts the round
     if (!talkDone.value) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); talkAdvance(); } return; }
-    const onBeat = story.page >= 1 && story.page <= story.beats.length;
-    if (onBeat && !beat.value.status) {
-      if (/^[0-9]$/.test(e.key)) { e.preventDefault(); storyPress(e.key); }
-      else if (e.key === 'Backspace') { e.preventDefault(); storyBack(); }
-      else if (e.key === 'Enter') { e.preventDefault(); storyCheck(); }
-    } else if (e.key === 'Enter' && e.target === document.body && story.page <= story.beats.length) { e.preventDefault(); storyGo(story.page + 1); }
+    if (e.key === 'Enter' && (e.target === document.body || e.target.classList.contains('dialog'))) { e.preventDefault(); storyPrimary(); }
     return;
   }
   if (view.value !== 'play') return;

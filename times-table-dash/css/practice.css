@@ -90,3 +90,11 @@ details.custom[open] summary svg{transform:rotate(90deg)}
   .play .mascot{width:96px;height:96px}
   .qcard{min-height:176px}
 }
+
+/* ---------- problem types ---------- */
+.op-toggles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.chip.op{height:auto;padding:8px 6px;font-size:.95rem;display:flex;flex-direction:column;align-items:center;gap:0;line-height:1.2}
+.op-sym{font-size:1.5rem;line-height:1.1}
+.block{margin-top:18px}
+.small{font-size:.86rem;margin:6px 0 0}
+@media (max-width:600px){ .op-toggles{grid-template-columns:repeat(2,minmax(0,1fr))} }
