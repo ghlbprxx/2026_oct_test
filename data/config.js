@@ -38,10 +38,21 @@ export const CONFIG = {
     maxAccel: 40,        // clamp for finite-difference accelerations (m/s²)
   },
 
+  // Motion trails (history is recorded in core at the fixed sim rate; drawn by render/trails.js).
+  trails: {
+    cycles: 1.0,           // strides of history per trail
+    width: 3,              // px
+    points: [              // [point name, side] — see core/skeleton.js pointSpec
+      ['toe_L', 'L'], ['toe_R', 'R'], ['hand_L', 'L'], ['hand_R', 'R'], ['headTop', 'C'], ['pelvis', 'C'],
+    ],
+  },
+
   render: {
     laneOffset: 0.8,     // ±x of Target / Player lanes (m)
     floorSpan: 8,        // looping-floor length (m)
     ghostOpacity: 0.35,
+    // Marker/trail colors by body side.
+    sideColors: { L: '#ff9f1c', R: '#7b61ff', C: '#1d3557' },
     cameras: [ // positions live in render/camera.js
       { id: 'threeQuarter', label: '3/4' },
       { id: 'side', label: 'Side' },

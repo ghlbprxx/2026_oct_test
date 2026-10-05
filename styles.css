@@ -51,6 +51,7 @@ button, select, input { font: inherit; color: inherit; }
 .overlay--tl { top: 12px; left: 12px; max-width: 320px; }
 .overlay--bl { bottom: 12px; left: 12px; max-width: 420px; }
 .overlay--tr { top: 12px; right: 12px; }
+.overlay--br { bottom: 12px; right: 12px; max-width: 260px; }
 .overlay--tc { top: 12px; left: 50%; transform: translateX(-50%); }
 
 .card {
@@ -175,3 +176,9 @@ button, select, input { font: inherit; color: inherit; }
 }
 .error-overlay pre { white-space: pre-wrap; background: #fbeaea; padding: 12px; border-radius: var(--radius-sm); font-size: 12px; }
 .error-overlay code { background: var(--panel-2); padding: 1px 4px; border-radius: 4px; }
+
+/* Motion legend */
+.legend { font-size: 12px; }
+.legend__row { display: flex; gap: 12px; flex-wrap: wrap; font-weight: 600; }
+.legend__dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; vertical-align: -1px; box-shadow: 0 0 0 2px #fff, 0 0 0 3px rgba(0,0,0,.15); }
+.legend p { margin: 6px 0 0; color: var(--ink-soft); }

@@ -6,10 +6,11 @@ import FeedbackPanel from './FeedbackPanel.js';
 import PlaybackBar from './PlaybackBar.js';
 import ParamSidebar from './ParamSidebar.js';
 import ResultModal from './ResultModal.js';
+import MotionLegend from './MotionLegend.js';
 
 export default {
   name: 'App',
-  components: { ModePicker, ScorePanel, TargetCard, FeedbackPanel, PlaybackBar, ParamSidebar, ResultModal },
+  components: { ModePicker, ScorePanel, TargetCard, FeedbackPanel, PlaybackBar, ParamSidebar, ResultModal, MotionLegend },
   setup() {
     const game = inject('game');
     return { state: game.state };
@@ -26,6 +27,7 @@ export default {
           <TargetCard class="overlay overlay--tl" />
           <ScorePanel class="overlay overlay--tr card" />
           <FeedbackPanel class="overlay overlay--bl" />
+          <MotionLegend v-if="state.playback.markers || state.playback.trails" class="overlay overlay--br" />
           <div v-if="!state.storageOk" class="overlay overlay--tc notice">Storage unavailable — progress won't be saved.</div>
         </section>
         <PlaybackBar />

@@ -40,6 +40,8 @@ window.addEventListener('keydown', (e) => {
   else if (e.key === '.') game.frameStep();
   else if (e.key === 'g' || e.key === 'G') game.toggleGhost();
   else if (e.key === 'f' || e.key === 'F') game.toggleFloor();
+  else if (e.key === 'j' || e.key === 'J') game.toggleMarkers();
+  else if (e.key === 't' || e.key === 'T') game.toggleTrails();
 });
 
 let last = performance.now();

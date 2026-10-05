@@ -29,6 +29,20 @@ export function buildSkeleton(d) {
   return bones.map(([name, parent, offset]) => ({ name, parent, offset }));
 }
 
+// Visualization points that aren't bone origins: [bone, offset in that bone's frame].
+export function pointSpec(name, d) {
+  if (name === 'headTop') return ['head', [0, 2 * d.headR, 0]];
+  if (name === 'toe_L' || name === 'toe_R') {
+    return [`foot_${name.slice(-1)}`, [0, -d.ankleHeight + 0.012 * d.H, d.footLen - d.heelDist - 0.01 * d.H]];
+  }
+  return [name, [0, 0, 0]];
+}
+
+export function pointWorld(world, spec) {
+  const w = world[spec[0]];
+  return vAdd(w.p, qRotate(w.q, spec[1]));
+}
+
 // pose = { rot: { bone: [x, y, z] Euler YXZ }, pos: { bone: [dx, dy, dz] added to offset } }
 export function forwardKinematics(skeleton, pose) {
   const world = {};

@@ -16,6 +16,8 @@ export default {
         <button v-for="s in speeds" :key="s" :class="{ active: state.playback.speed === s }" @click="game.setSpeed(s)">{{ s }}×</button>
       </div>
       <span class="spacer"></span>
+      <button class="btn toggle" :class="{ on: state.playback.markers }" title="Dots on the joints (J)" @click="game.toggleMarkers()">● Joints</button>
+      <button class="btn toggle" :class="{ on: state.playback.trails }" title="Motion trails for feet, hands, head and hips (T)" @click="game.toggleTrails()">〰 Trails</button>
       <button class="btn toggle" :class="{ on: state.playback.ghost }" title="Overlay the Target on your character (G)" @click="game.toggleGhost()">👻 Ghost</button>
       <button class="btn toggle" :class="{ on: state.playback.floor }" title="Treadmill or walk across the floor (F)" @click="game.toggleFloor()">
         {{ state.playback.floor ? '🚶 Floor' : '🏃 Treadmill' }}

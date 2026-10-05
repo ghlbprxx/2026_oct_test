@@ -166,3 +166,17 @@ test('timed mode ends and records the best score', () => {
   game.setParam('height', 1.9); // ignored after time is up
   assert.equal(game.state.params.height, 1.7);
 });
+
+test('trail history is dense, bounded to the configured window, and sits on the ground at stance', () => {
+  const game = createGame({ registry: PARAMS, targets: TARGETS, config: CONFIG, storage: createStorage('tr', memoryStore()) });
+  for (let i = 0; i < 240; i++) game.tick(1 / 60);
+  const { trail, cycles } = game.getFrame().player;
+  assert.ok(trail.length > 60, `only ${trail.length} samples`);
+  assert.ok(cycles - trail[0].cycles <= CONFIG.trails.cycles + 1e-9);
+  for (let i = 1; i < trail.length; i++) assert.ok(trail[i].cycles - trail[i - 1].cycles < 0.02, 'gap in trail');
+  const toe = CONFIG.trails.points.findIndex(([n]) => n === 'toe_L');
+  const minToeY = Math.min(...trail.map((s) => s.pts[toe][1]));
+  assert.ok(minToeY > -0.01 && minToeY < 0.04, `toe min height ${minToeY}`);
+  game.restart();
+  assert.equal(game.getFrame().player.trail.length, 0);
+});

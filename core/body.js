@@ -9,8 +9,9 @@ export function computeBody(p) {
   const thigh = (legChain * p.thighShinRatio) / (1 + p.thighShinRatio);
   const shin = legChain - thigh;
   const torso = p.torsoLength * H;
-  const neck = 0.045 * H;
-  const headR = clamp((H - legM - torso - neck) / 2, 0.06 * H, 0.1 * H);
+  // Realistic head (about 1/7.5 of height); the neck absorbs what's left up to the top of the head.
+  const headR = 0.066 * H;
+  const neck = clamp(H - legM - torso - 2 * headR, 0.04 * H, 0.08 * H);
   const arm = p.armLength * H;
   const footLen = 0.15 * H;
 
@@ -28,10 +29,11 @@ export function computeBody(p) {
     footLen,
     heelDist: 0.25 * footLen,   // ankle → heel
     ballDist: 0.5 * footLen,    // ankle → ball of foot
+    // Anatomical half-widths (torso) and limb radii, as fractions of height.
     radii: {
-      pelvis: 0.068 * H, spine: 0.075 * H, chest: 0.095 * H, neck: 0.03 * H,
-      upperArm: 0.03 * H, forearm: 0.025 * H, hand: 0.03 * H,
-      thigh: 0.047 * H, shin: 0.036 * H, foot: 0.024 * H,
+      hip: 0.095 * H, spine: 0.078 * H, chest: 0.09 * H, neck: 0.034 * H,
+      upperArm: 0.029 * H, elbow: 0.021 * H, forearm: 0.023 * H, wrist: 0.016 * H, hand: 0.03 * H,
+      thigh: 0.052 * H, knee: 0.034 * H, calf: 0.036 * H, ankle: 0.02 * H, foot: 0.026 * H,
     },
   };
 }

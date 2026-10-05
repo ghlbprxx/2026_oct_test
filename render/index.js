@@ -5,10 +5,11 @@ import { createCharacterView } from './characterView.js';
 import { createGhost } from './ghost.js';
 import { createStage } from './floor.js';
 import { createCameraRig } from './camera.js';
+import { createTrails } from './trails.js';
 
 const PALETTES = {
-  target: { skin: '#f2c6a0', shirt: '#ff7a59', pants: '#3b4466', shoe: '#2a2a33', hair: '#5a3b2a', cheek: '#ff9c9c' },
-  player: { skin: '#e8b48f', shirt: '#2bb3a3', pants: '#4a3f6b', shoe: '#f5f5f5', hair: '#1f1f2a', cheek: '#ff9c9c' },
+  target: { skin: '#e3b08e', cheek: '#e2a487', shirt: '#e0674a', pants: '#3c4f75', shoe: '#2b2b30', sole: '#d9d4cc', hair: '#4a3020' },
+  player: { skin: '#b9825c', cheek: '#b77b58', shirt: '#2a9d8f', pants: '#45414f', shoe: '#f2f2f2', sole: '#6b6b70', hair: '#17141a' },
 };
 const GHOST_COLOR = '#ffb08f';
 
@@ -25,9 +26,10 @@ export function createRenderLayer(container, game, config) {
   const stage = createStage(scene, [LAYOUTS.across.target[0], LAYOUTS.across.player[0]]);
   const rig = createCameraRig(camera, renderer.domElement);
   const views = {
-    target: createCharacterView(scene, { palette: PALETTES.target }),
-    player: createCharacterView(scene, { palette: PALETTES.player }),
+    target: createCharacterView(scene, { palette: PALETTES.target, sideColors: config.render.sideColors }),
+    player: createCharacterView(scene, { palette: PALETTES.player, sideColors: config.render.sideColors }),
   };
+  const trails = createTrails(scene, config.trails, config.render.sideColors);
   const ghost = createGhost(scene, { color: GHOST_COLOR, opacity: config.render.ghostOpacity });
   const built = { target: -1, player: -1 };
 
@@ -47,7 +49,7 @@ export function createRenderLayer(container, game, config) {
 
   function frame(dt) {
     const f = game.getFrame();
-    const { floor, ghost: showGhost, camera: camName } = game.state.playback;
+    const { floor, ghost: showGhost, camera: camName, markers, trails: showTrails } = game.state.playback;
     const wanted = camName === 'side' && !floor ? 'staggered' : 'across';
     if (wanted !== layoutName) {
       layoutName = wanted;
@@ -61,6 +63,8 @@ export function createRenderLayer(container, game, config) {
       views[key].applyPose(c.pose);
       at[key] = [lanes[key][0], lanes[key][1] + (floor ? travelZ(c.distance) : 0)];
       views[key].setPosition(at[key][0], at[key][1]);
+      views[key].setMarkersVisible(markers);
+      trails.update(key, c, lanes[key], floor ? travelZ : null, showTrails);
     }
     ghost.update(showGhost, f.target, at.player[0], at.player[1]);
     stage.update(floor, [f.target.distance, f.player.distance]);
@@ -91,6 +95,7 @@ export function createRenderLayer(container, game, config) {
     dispose() {
       Object.values(views).forEach((v) => v.dispose());
       ghost.dispose();
+      trails.dispose();
       Object.values(labels).forEach((el) => el.remove());
       disposeScene();
     },

@@ -1,7 +1,7 @@
 // Per-character simulation: gait phase, travel distance, overlap and jiggle springs.
 import { computeBody } from './body.js';
 import { gaitInfo, poseAt } from './gait.js';
-import { buildSkeleton, forwardKinematics } from './skeleton.js';
+import { buildSkeleton, forwardKinematics, pointSpec, pointWorld } from './skeleton.js';
 import { vSub, vScale, vLen, qRotate, qConj } from './math3.js';
 import {
   createLinearSpring, stepLinearSpring, createAngularSpring, stepAngularSpring,
@@ -32,6 +32,7 @@ export function createBody(params) {
 export function createCharacterSim() {
   return {
     phase: 0,
+    cycles: 0,     // total strides walked (never wraps); used for trail timing
     distance: 0,
     pose: null,
     jiggle: Object.fromEntries(JIGGLE.map(([n]) => [n, createLinearSpring()])),
@@ -39,6 +40,7 @@ export function createCharacterSim() {
     headPitch: createAngularSpring(),
     headRoll: createAngularSpring(),
     track: {},
+    trail: [],     // [{ cycles, distance, pts: [[x,y,z] per trail point] }], oldest first
   };
 }
 
@@ -59,9 +61,13 @@ function accelOf(sim, key, p, dt, maxAccel) {
   return a;
 }
 
+const TRAIL_SAMPLES_PER_CYCLE = 90;
+
 // Advances phase by dt, then computes the pose with secondary motion applied.
-export function stepCharacterSim(sim, body, dt, springCfg) {
+// trailCfg (optional) = { cycles, points: [[name, side]] } records motion-trail history.
+export function stepCharacterSim(sim, body, dt, springCfg, trailCfg = null) {
   sim.phase = (sim.phase + body.info.f * dt) % 1;
+  sim.cycles += body.info.f * dt;
   sim.distance += body.info.speed * dt;
 
   const pose = poseAt(body.params, body.dims, sim.phase, body.info);
@@ -85,6 +91,18 @@ export function stepCharacterSim(sim, body, dt, springCfg) {
     pose.pos[node] = stepLinearSpring(sim.jiggle[node], local, springCfg[key], dt).slice();
   }
 
+  if (trailCfg) recordTrail(sim, body, pose, trailCfg);
   sim.pose = pose;
   return pose;
+}
+
+// Samples trail points from the final pose at a fixed density per stride, independent of frame rate.
+function recordTrail(sim, body, pose, trailCfg) {
+  const last = sim.trail[sim.trail.length - 1];
+  if (!last || sim.cycles - last.cycles >= 1 / TRAIL_SAMPLES_PER_CYCLE) {
+    const world = forwardKinematics(body.skeleton, pose);
+    const pts = trailCfg.points.map(([name]) => pointWorld(world, pointSpec(name, body.dims)));
+    sim.trail.push({ cycles: sim.cycles, distance: sim.distance, pts });
+  }
+  while (sim.trail.length && sim.trail[0].cycles < sim.cycles - trailCfg.cycles) sim.trail.shift();
 }

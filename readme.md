@@ -30,13 +30,15 @@ npm test
 1. Pick a **mode** (Sandbox / Challenge / Timed), a **Target**, and a **difficulty**.
 2. Watch the Target (orange) and your walker (teal). Read the Target's bio for clues.
 3. Drag the sliders on the right. The **match score** updates live.
-4. Use **Biggest differences**, **Hint** (it gets more specific each time you click), and the **👻 Ghost** overlay to close the gap.
+4. Use **Biggest differences**, **Hint** (it gets more specific each time you click), the **👻 Ghost** overlay, and the **joint dots and trails** to close the gap.
 
 | Control | Action |
 |---|---|
 | `Space` / ⏸ | Pause / play |
 | `.` / ⏭ | Step one frame (while paused) |
 | 0.1×–2× | Playback speed (slow motion) |
+| `J` / ● Joints | Dots on the joints (amber = left, violet = right, navy = head and hips) |
+| `T` / 〰 Trails | Long-exposure trails for toes, hands, head and hips |
 | `G` / 👻 Ghost | Overlay the Target on your walker |
 | `F` / Treadmill ↔ Floor | Walk in place, or walk across a looping floor |
 | 3/4 · Side · Front | Camera presets. Drag to orbit, scroll to zoom |
@@ -65,11 +67,11 @@ package.json        only so Node treats .js as ES modules for tests (no dependen
 core/               pure JS — no Three.js, no Vue, runs in Node
   math3.js          vectors, quaternions (Euler YXZ, same convention as Three.js)
   body.js           parameters → body dimensions
-  skeleton.js       canonical bone list + forward kinematics
+  skeleton.js       canonical bone list, forward kinematics, marker/trail point definitions
   ik.js             exact analytic two-bone leg IK
   gait.js           parametric gait cycle → Pose
   springs.js        damped linear + angular springs (fixed step)
-  character.js      per-character sim: phase, travel, overlap + jiggle springs
+  character.js      per-character sim: phase, travel, overlap + jiggle springs, trail history
   scoring.js        trajectory sampling, blended score, plain-language breakdown
   hints.js          progressive hints
   modes.js          Sandbox / Challenge / Timed rules
@@ -80,19 +82,20 @@ core/               pure JS — no Three.js, no Vue, runs in Node
 render/             Three.js only
   index.js          render-layer facade: syncs scene to game frames, lane layout, name tags
   scene.js          renderer, lights, shadows, resize
-  characterView.js  capsule/sphere character (the swappable view)
+  characterView.js  procedural human + joint markers (the swappable view)
+  trails.js         long-exposure motion trails (Line2 fat lines)
   ghost.js          translucent Target overlay
   floor.js          treadmills + tiled floor
   camera.js         presets, tweening, OrbitControls
 
 ui/                 Vue components (template strings, compiled in the browser)
   App.js · ModePicker.js · ScorePanel.js · TargetCard.js · FeedbackPanel.js
-  HintButton.js · PlaybackBar.js · ParamSidebar.js · ParamSlider.js · ResultModal.js
+  HintButton.js · PlaybackBar.js · ParamSidebar.js · ParamSlider.js · ResultModal.js · MotionLegend.js
 
 data/
   params.js         parameter registry (MVP groups + disabled "coming soon" groups)
   targets.js        5 Target presets
-  config.js         thresholds, timer, score weights, spring tuning, render settings
+  config.js         thresholds, timer, score weights, spring tuning, trails, render settings
 
 tests/core.test.js  unit tests for core/
 ```
@@ -109,9 +112,25 @@ Each decision compared three approaches. The chosen one is marked ✅.
 
 | Approach | Pros | Cons |
 |---|---|---|
-| ✅ **Bone hierarchy of `Object3D`s with capsule/sphere meshes** | Simple; segment lengths map directly to sliders; easy to debug | Joint seams (hidden by capsule caps) |
+| ✅ **Bone hierarchy of `Object3D`s with shaped meshes per bone** | Simple; segment lengths map directly to sliders; easy to debug | Small seams at joints (hidden by overlap) |
 | One procedural `SkinnedMesh` | Smooth body; closest to final art | Fiddly weights; expensive to rebuild when proportions change |
 | `InstancedMesh` primitives | Fewest draw calls | Over-engineered for 2–3 characters |
+
+**Look:** the bodies started as rounded "Sims-lite" capsules and were later made more realistic. I compared three ways to do that:
+
+| Approach | Verdict |
+|---|---|
+| Rigged glTF model from the web | Most realistic, but needs an external asset, retargeting onto this skeleton, and per-bone scaling for the proportion sliders |
+| Procedural skinned mesh | Smooth, but a large, risky rewrite |
+| ✅ **Shaped procedural body** | Big visual gain at low risk; keeps the sliders, the jiggle, and the glTF swap point |
+
+The shaped body has:
+- **Limbs:** tapered lathe profiles with thigh, calf, deltoid and forearm shapes.
+- **Torso:** elliptical sections for the hips, waist and ribcage, plus trapezius slopes.
+- **Head:** realistic proportions (about 1/7.5 of height) with jaw, nose, ears and hair.
+- **Hands and feet:** mitt hands with a thumb, and shoes with soles.
+- **Clothing:** a short-sleeve shirt and long pants.
+- **Lighting:** a studio room environment with ACES tone mapping.
 
 **Swap-proofing:** `core/` outputs a renderer-agnostic **Pose** (`rot[bone] = [x, y, z]` Euler YXZ, `pos[bone]` = offset) on a canonical skeleton (`core/skeleton.js`). `render/characterView.js` implements `build(dims) · applyPose(pose) · setPosition · setVisible · setOpacity · dispose`. A glTF or skinned view only needs to implement the same contract plus a bone-name map. The test suite checks that core FK matches the Three.js scene to about 1e-16 m.
 
@@ -162,6 +181,20 @@ Checked by tests: an exact match scores 100, and the default walker scores below
 - **Overlap:** arms, forearms, and chest roll chase their targets with lag, and the head nods and rolls against neck acceleration.
 - **Frame step** advances exactly 1/60 s of sim time at any playback speed.
 
+### 5. Making the motion readable
+
+| Approach | Verdict |
+|---|---|
+| Joint dots only | Shows where joints are, not how they move |
+| World-space trails | On a treadmill every point just traces a small loop |
+| ✅ **Joint dots + trails that slide back with the ground** | Foot clearance arcs, head-bob waves, hand arcs and stride spacing become directly comparable, the way gait is shown in labs |
+| X-ray stick figure | Clear, but hides the body you're matching |
+
+- **Where the trail data comes from:** core records each trail point (toes, hands, head top, pelvis) at the fixed 120 Hz sim rate, so trails are smooth even at low frame rates.
+- **How it's drawn:** `render/trails.js` shifts each sample back by the distance walked since it was taken and fades it out over one stride.
+- **Markers:** they draw on top of the bodies, so the far leg's joints stay visible.
+- **Colours:** left = amber, right = violet, centre = navy. This makes it easy to tell which leg is which.
+
 ---
 
 ## Parameter Registry
@@ -192,7 +225,7 @@ The later groups are registered with `enabled: false`. They appear greyed out as
 
 ## Verification Done
 
-- `npm test` has 11 tests, all passing:
+- `npm test` has 12 tests, all passing:
   - registry and preset validity
   - no NaN at slider extremes
   - knees never bend backward
@@ -204,6 +237,7 @@ The later groups are registered with `enabled: false`. They appear greyed out as
   - storage fallback with corrupt or blocked storage
   - the Challenge win → unlock → save → reload flow
   - Timed mode ending and recording the best score
+  - trail history: dense, bounded to one stride, toes reaching the ground, cleared on restart
 - Headless Chromium end-to-end (Vue and Three.js loaded from the exact pinned package versions):
   - no console errors or warnings
   - core FK matches the Three.js scene
@@ -219,7 +253,8 @@ The later groups are registered with `enabled: false`. They appear greyed out as
 
 - **Parameter equivalence:** some combinations look alike. For example, a longer stride with lower cadence can resemble the reverse at the same speed. The blended score softens this, but a hint can still name a factor you've compensated for with another slider.
 - **Reach limits:** for very long strides on short legs, the trailing foot at push-off can be up to about 1 cm out of reach. The IK clamps, so the foot doesn't hyperextend. Strides beyond 2.25× leg length are capped, with a warning in the UI.
-- **Primitive bodies:** visible capsule seams and no real skin deformation.
+- **Procedural bodies:** shaped, but each body part is a rigid piece on its bone, so there's no skin deformation at the joints. A skinned glTF model is the next step for real realism.
+- **Rendering cost:** the studio environment lighting is the most expensive effect. It's free on any real GPU, but with software rendering (no GPU) it roughly halves the frame rate. Trails and markers add a little more. If that matters, remove `scene.environment` in `render/scene.js`.
 - **Simplified biomechanics:** there are no forces or muscles. The heel and toe rockers and the arm swing are scripted from parameters. Good for cause and effect, not clinical accuracy.
 - **Arm swing amplitude** is currently derived from stride. It becomes its own slider when the Arm-swing group ships.
 - **Floor mode** wraps each walker back to the start of an 8 m walkway, which is a visible teleport. In floor mode the Side camera keeps the side-by-side layout, so one walker can partly block the other.
