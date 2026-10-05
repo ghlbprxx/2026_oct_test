@@ -1,0 +1,82 @@
+/* Base: reset, layout, header, buttons, panels, view/page transitions, keyframes, reduced motion. */
+*{box-sizing:border-box}
+[v-cloak]{display:none}
+html{-webkit-text-size-adjust:100%;background:var(--bg-2)}
+body{
+  margin:0;font-family:var(--f-body);color:var(--ink);font-size:16px;line-height:1.55;
+  background:linear-gradient(180deg,var(--bg),var(--bg-2)) fixed;background-color:var(--bg);
+  -webkit-tap-highlight-color:transparent;min-height:100vh;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+#app{max-width:760px;margin:0 auto;padding-inline:16px;padding-block:8px 56px}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid var(--blue);outline-offset:2px;border-radius:10px}
+.num{font-family:var(--f-display);font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+h1,h2,h3{text-wrap:balance}
+
+/* ---------- header ---------- */
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-block:8px 20px}
+.brand{display:flex;align-items:center;gap:10px;background:none;border:0;padding:0;font-family:var(--f-display);font-weight:600;font-size:1.25rem;color:var(--ink)}
+.brand-mark{display:grid;place-items:center;width:36px;height:36px;border-radius:11px;background:var(--accent-soft);color:var(--accent);font-size:1.4rem;line-height:1}
+.top-actions{display:flex;gap:6px;align-items:center}
+.icon-btn{width:40px;height:40px;border-radius:12px;border:0;background:transparent;display:grid;place-items:center;padding:0;color:var(--muted);transition:background var(--t-fast) var(--ease),color var(--t-fast) var(--ease)}
+.icon-btn:hover{background:var(--card);color:var(--ink)}
+.icon-btn svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.icon-btn:disabled{opacity:.4;cursor:not-allowed}
+.icon-btn.solid{background:var(--card);box-shadow:var(--shadow);color:var(--ink)}
+.back{display:inline-flex;align-items:center;gap:6px;background:none;border:0;padding:6px 8px 6px 2px;color:var(--muted);font-weight:800;border-radius:10px;transition:color var(--t-fast) var(--ease)}
+.back:hover{color:var(--ink)}
+.back svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+
+/* ---------- buttons ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1.5px solid var(--edge);border-radius:14px;padding:11px 20px;font-family:var(--f-display);font-weight:600;font-size:1.05rem;background:var(--card);transition:transform var(--t-fast) var(--ease),box-shadow var(--t-med) var(--ease),background var(--t-fast) var(--ease),opacity var(--t-fast)}
+.btn:hover:not(:disabled){transform:translateY(-1px);box-shadow:var(--shadow)}
+.btn:active:not(:disabled){transform:translateY(0) scale(.985)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.go{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.btn.soft{background:var(--accent-soft);border-color:transparent;color:var(--accent-deep)}
+.btn.big{font-size:1.15rem;padding:13px 28px}
+.btn svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.link{background:none;border:0;color:var(--accent);font-weight:800;padding:4px 6px;text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1.5px}
+
+/* ---------- cards & layout ---------- */
+.stack{display:flex;flex-direction:column;gap:18px}
+.panel{background:var(--card);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow)}
+.label{font-weight:900;font-size:.76rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 12px}
+.row-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.page-title{font-family:var(--f-display);font-weight:600;font-size:clamp(1.7rem,5vw,2.2rem);line-height:1.15;margin:0}
+.page-sub{margin:4px 0 0;color:var(--muted)}
+
+/* ---------- view + page transitions (gentle fade and lift) ---------- */
+.view-enter-active,.view-leave-active{transition:opacity var(--t-med) var(--ease),transform var(--t-med) var(--ease)}
+.view-enter-from{opacity:0;transform:translateY(10px)}
+.view-leave-to{opacity:0;transform:translateY(-6px)}
+.page-enter-active,.page-leave-active{transition:opacity .28s var(--ease),transform .28s var(--ease)}
+.page-enter-from{opacity:0;transform:translateX(var(--dir-in,14px))}
+.page-leave-to{opacity:0;transform:translateX(var(--dir-out,-14px))}
+.fade-enter-active,.fade-leave-active{transition:opacity var(--t-med) var(--ease)}
+.fade-enter-from,.fade-leave-to{opacity:0}
+.q-enter-active{transition:opacity .26s var(--ease),transform .26s var(--ease)}
+.q-enter-from{opacity:0;transform:translateY(6px)}
+
+#fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:50}
+.boot-error{max-width:560px;margin:40px auto;padding:18px;border:2px solid var(--warn);border-radius:14px;background:var(--card)}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+
+
+@keyframes breathe{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+@keyframes nod{0%{transform:translateY(0)}40%{transform:translateY(-6px)}100%{transform:translateY(0)}}
+@keyframes tilt{0%,100%{transform:rotate(0)}35%{transform:rotate(-4deg)}70%{transform:rotate(2deg)}}
+@keyframes blink{0%,94%,100%{transform:scaleY(1)}97%{transform:scaleY(.1)}}
+@keyframes drift{from{transform:translateX(-8px)}to{transform:translateX(10px)}}
+@keyframes petalFall{0%{transform:translate(0,0) rotate(0)}100%{transform:translate(-40px,200px) rotate(240deg)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes caret{50%{opacity:0}}
+@keyframes nudge{0%,100%{transform:none}30%{transform:translateX(-4px)}65%{transform:translateX(3px)}}
+@keyframes floatSoft{0%{transform:translate(-50%,6px);opacity:0}25%{opacity:1}100%{transform:translate(-50%,-34px);opacity:0}}
+@keyframes starIn{from{opacity:0;transform:translateY(6px) scale(.85)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}
+  .petal{display:none}
+}
