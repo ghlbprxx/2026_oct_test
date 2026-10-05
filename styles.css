@@ -182,3 +182,9 @@ button, select, input { font: inherit; color: inherit; }
 .legend__row { display: flex; gap: 12px; flex-wrap: wrap; font-weight: 600; }
 .legend__dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; vertical-align: -1px; box-shadow: 0 0 0 2px #fff, 0 0 0 3px rgba(0,0,0,.15); }
 .legend p { margin: 6px 0 0; color: var(--ink-soft); }
+
+/* Model loading / fallback notice (inside the viewport) */
+.model-notice:empty { display: none; }
+.model-notice { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); z-index: 3; background: rgba(255,255,255,.92); border-radius: var(--radius-sm); padding: 6px 12px; font-size: 12px; box-shadow: var(--shadow); }
+.model-credit:empty { display: none; }
+.model-credit { position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%); z-index: 1; font-size: 10px; color: var(--ink-soft); background: rgba(255,255,255,.7); padding: 1px 8px; border-radius: 99px; pointer-events: none; }

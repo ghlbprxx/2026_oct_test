@@ -84,6 +84,9 @@ render/             Three.js only
   scene.js          renderer, lights, shadows, resize
   characterView.js  skinned human + accessories + joint markers (the swappable view)
   bodyMesh.js       procedural skinned body: shape by sex/body fat, joint + soft-tissue skin weights
+  modelLoader.js    loads glTF models once (checks .bin buffers first for a clean failure)
+  autoRig.js        auto-rigs a static human mesh to the game skeleton (joints, skin weights, clothing, hair)
+  riggedView.js     walker drawn with an auto-rigged model (bones written straight from core's skeleton)
   trails.js         long-exposure motion trails (Line2 fat lines)
   ghost.js          translucent Target overlay
   floor.js          treadmills + tiled floor
@@ -92,6 +95,9 @@ render/             Three.js only
 ui/                 Vue components (template strings, compiled in the browser)
   App.js · ModePicker.js · ScorePanel.js · TargetCard.js · FeedbackPanel.js
   HintButton.js · PlaybackBar.js · ParamSidebar.js · ParamSlider.js · ResultModal.js · MotionLegend.js
+
+assets/
+  person_v2/        “Female base mesh” by AK_anna, CC BY 4.0 (scene.gltf + scene.bin)
 
 data/
   params.js         parameter registry (MVP groups + disabled "coming soon" groups)
@@ -135,6 +141,21 @@ The skinned body (`render/bodyMesh.js`) works like this:
 - **Lighting:** a studio room environment with ACES tone mapping.
 
 **Swap-proofing:** `core/` outputs a renderer-agnostic **Pose** (`rot[bone] = [x, y, z]` Euler YXZ, `pos[bone]` = offset) on a canonical skeleton (`core/skeleton.js`). `render/characterView.js` implements `build(dims) · applyPose(pose) · setPosition · setVisible · setOpacity · dispose`. A glTF or skinned view only needs to implement the same contract plus a bone-name map. The test suite checks that core FK matches the Three.js scene to about 1e-16 m.
+
+**Realistic female model (current):** female walkers use `assets/person_v2`, "Female base mesh" by [AK_anna](https://sketchfab.com/AK_anna) on Sketchfab, [CC BY 4.0](http://creativecommons.org/licenses/by/4.0/). Attribution is shown in the viewport whenever the model is on screen. The mesh ships with no skeleton, textures, clothes or hair, so `render/autoRig.js` rigs it at load time:
+
+1. **Normalise:** bake the node transforms, turn it to face +Z, put the feet on the floor, and scale it to 1.70 m.
+2. **Find the joints from the mesh:** the crotch (and so the hips), the arm axis (a principal-component fit of the arm vertices), the ankle and thigh centres from cross-sections, the toe tips, and the head bounds. Then fit the game's own parameters to it and build the bind skeleton.
+3. **Skin weights:** each vertex is classified as arm, leg, head or torso, and blended smoothly across the joints. Soft-tissue weights are added for the belly, chest, glutes, thighs, upper arms and cheeks, so core's springs make the flesh bounce.
+4. **Clothing:** a T-shirt and shorts drawn by a shader from per-vertex distance fields, giving crisp hems.
+5. **Hair:** a cap fitted to the head, plus a ponytail on the spring-driven hair bone.
+
+At runtime (`render/riggedView.js`), every bone's matrix is written straight from core's skeleton:
+- **Position and rotation:** each bone gets our joint's position and rotation, so the feet land exactly where the IK puts them. Measured lowest skinned vertex over a stride: within 1 mm of the floor.
+- **Length:** each segment stretches along its own axis to the walker's proportions.
+- **Size:** thickness scales with height, and torso and limb girth grow mildly with body fat.
+
+If the model can't load, the procedural body is used and a short notice appears. Male walkers still use the procedural body until a male model is added in `config.render.models.M`.
 
 ### 2. Animation and gait
 
@@ -277,7 +298,10 @@ No two presets are close: the most similar pair, Dana and Kenji, scores 62% agai
 
 - **Parameter equivalence:** some combinations look alike. For example, a longer stride with lower cadence can resemble the reverse at the same speed. The blended score softens this, but a hint can still name a factor you've compensated for with another slider.
 - **Long strides on short legs** (Bo, for example) bend the knees more at mid-stance (up to about 21°), because the bob is capped at 7.5 cm. That's realistic, but it's the most crouched walk in the set. Strides beyond 2.25× leg length are capped, with a warning in the UI.
-- **Procedural skin:** the body is one skinned mesh, but simple. There are no muscles that bulge, no clothing folds, and hands and feet are rigid. A sculpted glTF model would still look better.
+- **Realistic model limits:** the clothes are painted on, so they follow the body like a bodysuit (no cloth folds and no texture maps). The model is barefoot, and its hands stay in their open A-pose. Skin weights are computed automatically, so expect minor creasing at the armpits and groin at extreme poses. Body fat changes this model's girth only mildly.
+- **Only one realistic model:** male walkers still use the procedural body.
+- **Unused file:** `assets/scene.gltf` (the Character Creator model) isn't used. It needs its 74 MB `scene.bin` and textures, which aren't in the repo, so it can be deleted.
+- **Procedural skin** (male walkers and fallback): one skinned mesh, but simple. There are no muscles that bulge, no clothing folds, and hands and feet are rigid. A sculpted glTF model would still look better.
 - **Not yet seen in motion on a real screen:** posture, foot planting and bounce amounts were checked numerically and with frame-by-frame screenshots, not at full speed on a GPU. Spring stiffness and gain (`data/config.js`) and the shape numbers (`render/bodyMesh.js`) are expected to need taste-tuning.
 - **Rendering cost:** the studio environment lighting is the most expensive effect. It's free on any real GPU, but with software rendering (no GPU) it roughly halves the frame rate. Trails and markers add a little more. If that matters, remove `scene.environment` in `render/scene.js`.
 - **Simplified biomechanics:** there are no forces or muscles. The heel and toe rockers and the arm swing are scripted from parameters. Good for cause and effect, not clinical accuracy.

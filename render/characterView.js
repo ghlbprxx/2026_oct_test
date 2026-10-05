@@ -207,7 +207,7 @@ function makeMaterials(palette, ghost, opacity) {
 }
 
 // Markers draw on top of everything so joints stay visible through limbs and the other walker.
-function makeMarkerMaterials(sideColors) {
+export function makeMarkerMaterials(sideColors) {
   const flat = (color) => new THREE.MeshBasicMaterial({ color, depthTest: false, depthWrite: false, transparent: true });
   return { L: flat(sideColors.L), R: flat(sideColors.R), C: flat(sideColors.C), outline: flat('#ffffff') };
 }

@@ -57,6 +57,10 @@ export const CONFIG = {
     laneOffset: 0.8,     // ±x of Target / Player lanes (m)
     floorSpan: 8,        // looping-floor length (m)
     ghostOpacity: 0.35,
+    // Realistic models per body type: static (unrigged) glTF meshes, auto-rigged at load. null → procedural body.
+    // If a model fails to load (missing .bin/textures), the procedural body is used instead.
+    models: { F: 'assets/person_v2/scene.gltf', M: null },
+    modelCredits: { F: '“Female base mesh” by AK_anna (Sketchfab), CC BY 4.0' },
     // Marker/trail colors by body side.
     sideColors: { L: '#ff9f1c', R: '#7b61ff', C: '#1d3557' },
     cameras: [ // positions live in render/camera.js
