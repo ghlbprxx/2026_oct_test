@@ -1,0 +1,1385 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Pink Oyster Run</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: a grower's lab notebook on graph paper. Sticky tab strip; each tab is one tool (guide, drill, simulator, cheat sheet). Simulator = decision column + live vessel rail. */
+:root{
+  --bg:#f2eef4; --grid:#e4dce8; --panel:#fcfbfd; --ink:#2a1b2e; --muted:#6c5c72; --line:#ddd2e2;
+  --pink:#e2557a; --pink-deep:#b8325a; --pink-soft:#fbdde6; --gill:#fde9ee;
+  --myc:#fbf8f1; --agar:#ead7a8; --broth:#e9c98a; --grain:#a9763f; --straw:#d9b65a; --dust:#8a6040;
+  --trich:#2f9b55; --trich-dark:#14633a; --cooked:#b68a5e;
+  --good:#2b8a5d; --good-soft:#dcf0e5; --warn:#b07316; --warn-soft:#f8ecd2; --bad:#c0392b; --bad-soft:#f8dcd8;
+  --display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;
+  --body:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#18111a; --grid:#221a25; --panel:#221925; --ink:#f3eaf4; --muted:#b3a3b8; --line:#3a2d3f;
+  --pink:#ff7a9c; --pink-deep:#e2557a; --pink-soft:#4a2132; --gill:#ffd6e1;
+  --myc:#eee8dc; --agar:#8a7444; --broth:#8f733f; --grain:#8a5f33; --straw:#a88a3c; --dust:#6b4a31;
+  --trich:#45b56d; --trich-dark:#1f7a47; --cooked:#a07a52;
+  --good:#5cc995; --good-soft:#173528; --warn:#e2ac52; --warn-soft:#3a2c14; --bad:#ff7a6b; --bad-soft:#3e1d1a;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#18111a; --grid:#221a25; --panel:#221925; --ink:#f3eaf4; --muted:#b3a3b8; --line:#3a2d3f;
+  --pink:#ff7a9c; --pink-deep:#e2557a; --pink-soft:#4a2132; --gill:#ffd6e1;
+  --myc:#eee8dc; --agar:#8a7444; --broth:#8f733f; --grain:#8a5f33; --straw:#a88a3c; --dust:#6b4a31;
+  --trich:#45b56d; --trich-dark:#1f7a47; --cooked:#a07a52;
+  --good:#5cc995; --good-soft:#173528; --warn:#e2ac52; --warn-soft:#3a2c14; --bad:#ff7a6b; --bad-soft:#3e1d1a;
+  color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.55;
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:28px 28px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 48px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.wrap{max-width:1120px;margin:0 auto}
+h1,h2,h3,h4{font-family:var(--display);text-wrap:balance;margin:0;line-height:1.1}
+p{margin:0}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.label{font-family:var(--mono);font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.muted{color:var(--muted)}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible{outline:3px solid var(--pink);outline-offset:2px}
+.stack{display:grid;gap:14px}
+section.tab{display:grid;gap:22px;padding-top:22px}
+
+/* top */
+.masthead{display:flex;flex-wrap:wrap;gap:8px 20px;align-items:baseline;justify-content:space-between;padding-top:20px}
+.masthead .logo{font-family:var(--display);font-weight:800;font-size:26px;letter-spacing:-.02em}
+.masthead .logo em{font-style:normal;color:var(--pink)}
+.masthead .species{font-family:var(--mono);font-size:12.5px;color:var(--muted)}
+.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);display:flex;gap:4px;overflow-x:auto;padding-block:10px;border-bottom:1px solid var(--line);margin-top:10px}
+.tabs button{flex:0 0 auto;border:1.5px solid transparent;background:transparent;border-radius:999px;padding:7px 15px;font-family:var(--display);font-weight:600;font-size:15px;color:var(--muted);display:flex;gap:8px;align-items:center}
+.tabs button .n{font-family:var(--mono);font-size:11px;opacity:.75}
+.tabs button:hover{color:var(--ink)}
+.tabs button[aria-selected="true"]{background:var(--ink);color:var(--bg)}
+
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:22px}
+.btn{padding:11px 18px;border-radius:9px;border:none;background:var(--pink);color:#fff;font-weight:700;font-family:var(--display);font-size:16px}
+.btn:hover{background:var(--pink-deep)}
+.btn.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
+.btn.ghost:hover{border-color:var(--pink)}
+.btn.sm{padding:7px 12px;font-size:14px}
+.btn:disabled{opacity:.5;cursor:default}
+.actions{display:flex;flex-wrap:wrap;gap:10px}
+.chip{display:inline-block;font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:99px;font-weight:600;white-space:nowrap}
+.chip.best,.chip.good{background:var(--good);color:var(--panel)}
+.chip.ok{background:var(--warn);color:var(--panel)}
+.chip.bad{background:var(--bad);color:var(--panel)}
+.chip.plain{background:var(--line);color:var(--ink)}
+
+/* hero */
+.hero{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:24px;align-items:center}
+@media (max-width:820px){.hero{grid-template-columns:minmax(0,1fr)}}
+.hero h1{font-size:clamp(36px,6.2vw,66px);font-weight:800;letter-spacing:-.025em}
+.hero h1 span{color:var(--pink)}
+.hero .lede{font-size:18px;max-width:52ch;margin-top:14px}
+.hero .art{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:10px;display:grid;gap:8px}
+.toggle{display:inline-flex;border:1.5px solid var(--line);border-radius:999px;padding:3px;gap:2px;justify-self:center}
+.toggle button{border:none;background:transparent;border-radius:999px;padding:5px 14px;font-family:var(--mono);font-size:12px}
+.toggle button[aria-pressed="true"]{background:var(--pink);color:#fff}
+.facts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:20px}
+@media (max-width:620px){.facts{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.fact{border-left:3px solid var(--pink);padding:2px 0 2px 10px}
+.fact b{display:block;font-family:var(--mono);font-size:20px;font-weight:600}
+.fact span{font-size:13px;color:var(--muted)}
+
+/* pipeline */
+.pipeline{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}
+@media (max-width:720px){.pipeline{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.pnode{position:relative;display:grid;justify-items:center;gap:4px;padding:12px 6px 10px;border:1.5px solid var(--line);border-radius:10px;background:var(--panel);text-align:center}
+.pnode:hover{border-color:var(--pink)}
+.pnode[aria-pressed="true"]{border-color:var(--pink);background:var(--pink-soft)}
+.pnode svg{width:44px;height:44px}
+.pnode b{font-family:var(--display);font-size:14.5px}
+.pnode .mono{font-size:10.5px;color:var(--muted)}
+.ico .s{fill:none;stroke:var(--ink);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ico .f{fill:var(--pink)} .ico .m{fill:var(--myc);stroke:var(--ink);stroke-width:1.2} .ico .a{fill:var(--agar)}
+
+.stagepanel{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px}
+@media (max-width:820px){.stagepanel{grid-template-columns:minmax(0,1fr)}}
+.stagepanel h2{font-size:clamp(26px,3.6vw,36px)}
+.target{background:var(--pink-soft);border-radius:10px;padding:12px 14px}
+.picks{list-style:none;margin:0;padding:0;display:grid;gap:8px;counter-reset:p}
+.picks li{display:grid;grid-template-columns:28px minmax(0,1fr);gap:10px;align-items:start}
+.picks li::before{counter-increment:p;content:counter(p);font-family:var(--mono);font-size:13px;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;border:1.5px solid var(--line)}
+.picks b{font-family:var(--display)}
+.mist{display:grid;gap:10px}
+.mistake{border:1px solid var(--line);border-left:4px solid var(--bad);border-radius:8px;padding:11px 13px;background:var(--panel);display:grid;gap:4px}
+.mistake h4{font-size:16.5px}
+.mistake .fix{font-size:14.5px}
+.mistake .fix b{color:var(--good)}
+.mistake .why{font-size:14.5px;color:var(--muted)}
+.addrow{display:flex;flex-wrap:wrap;gap:8px}
+.add{border:1px dashed var(--line);border-radius:8px;padding:6px 10px;font-size:13.5px}
+.add b{font-family:var(--mono);font-size:12.5px}
+
+/* chart */
+.chartwrap{overflow-x:auto}
+.chartwrap svg{width:100%;min-width:520px;height:auto;display:block}
+.ch-axis{stroke:var(--muted);stroke-width:1}
+.ch-grid{stroke:var(--line);stroke-width:1}
+.ch-yield{fill:none;stroke:var(--pink);stroke-width:3}
+.ch-risk{fill:none;stroke:var(--trich);stroke-width:3;stroke-dasharray:7 5}
+.ch-zone{fill:var(--warn-soft);opacity:.7}
+.ch-t{fill:var(--muted);font-family:var(--mono);font-size:11px}
+.ch-tb{fill:var(--ink);font-family:var(--body);font-size:12.5px;font-weight:700}
+.ch-dot{fill:var(--panel);stroke:var(--pink);stroke-width:2.5}
+.ch-lab-y{fill:var(--pink-deep);font-family:var(--mono);font-size:12px;font-weight:600}
+.ch-lab-r{fill:var(--trich-dark);font-family:var(--mono);font-size:12px;font-weight:600}
+
+/* cases */
+.filters{display:flex;flex-wrap:wrap;gap:6px}
+.filters button{border:1.5px solid var(--line);background:var(--panel);border-radius:999px;padding:5px 12px;font-size:13.5px}
+.filters button[aria-pressed="true"]{border-color:var(--ink);background:var(--ink);color:var(--bg)}
+.cases{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.case{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;display:grid;gap:10px;align-content:start}
+.case .see{font-family:var(--display);font-size:17.5px;font-weight:600;text-wrap:pretty}
+.case .hd{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.copts{display:grid;gap:6px}
+.copt{text-align:left;border:1.5px solid var(--line);border-radius:8px;background:var(--bg);padding:8px 10px;font-size:14.5px}
+.copt:hover:not(:disabled){border-color:var(--pink)}
+.copt:disabled{cursor:default}
+.copt.right{border-color:var(--good);background:var(--good-soft)}
+.copt.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.copt.fade{opacity:.5}
+.reveal{border-top:1px dashed var(--line);padding-top:10px;font-size:14.5px;display:grid;gap:4px}
+.reveal b{color:var(--good)}
+.score{font-family:var(--mono);font-size:13px}
+.myth{font-family:var(--display);font-size:clamp(21px,3vw,27px);font-weight:600;text-wrap:balance}
+.tf{display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:420px}
+.tf .btn{font-size:18px;padding:14px}
+
+/* sim */
+.simgrid{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:20px;align-items:start}
+@media (max-width:880px){.simgrid{grid-template-columns:minmax(0,1fr)}.rail{order:-1}}
+.track{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
+.track .node{flex:1 0 84px;padding:7px 9px;border:1px solid var(--line);border-radius:7px;background:var(--panel);font-family:var(--mono);font-size:11px;color:var(--muted)}
+.track .node b{display:block;font-family:var(--display);font-size:14px;color:var(--ink)}
+.track .node.now{border-color:var(--pink);box-shadow:inset 0 -3px 0 var(--pink)}
+.track .node.done{background:var(--pink-soft);border-color:transparent}
+.stagehead{display:grid;gap:6px;margin-bottom:14px}
+.stagehead h2{font-size:clamp(24px,3.4vw,32px)}
+.q{font-family:var(--display);font-size:20px;font-weight:600;margin:2px 0 14px;text-wrap:balance}
+.event{background:var(--warn-soft);border-left:4px solid var(--warn);padding:10px 14px;border-radius:6px;margin-bottom:12px;display:grid;gap:2px}
+.opts{display:grid;gap:9px}
+.opt{text-align:left;display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border:1.5px solid var(--line);border-radius:9px;background:var(--bg);transition:border-color .15s,transform .15s}
+.opt:hover:not(:disabled){border-color:var(--pink);transform:translateX(2px)}
+.opt:disabled{cursor:default}
+.opt .key{flex:0 0 26px;height:26px;border-radius:50%;display:grid;place-items:center;border:1.5px solid var(--line);font-family:var(--mono);font-size:12px}
+.opt .txt{min-width:0}
+.opt small{display:block;color:var(--muted);font-size:13.5px;margin-top:2px}
+.opt.picked.best,.opt.picked.good{border-color:var(--good);background:var(--good-soft)}
+.opt.picked.ok{border-color:var(--warn);background:var(--warn-soft)}
+.opt.picked.bad{border-color:var(--bad);background:var(--bad-soft)}
+.opt.dim{opacity:.5}
+.verdict{margin-top:14px;padding:13px 15px;border-radius:9px;display:grid;gap:6px}
+.verdict.best,.verdict.good{background:var(--good-soft)}
+.verdict.ok{background:var(--warn-soft)}
+.verdict.bad{background:var(--bad-soft)}
+.fx{font-family:var(--mono);font-size:12.5px;display:flex;flex-wrap:wrap;gap:4px 14px;color:var(--muted)}
+.fx .up{color:var(--good)} .fx .dn{color:var(--bad)}
+.rail{display:grid;gap:14px}
+.vessel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px;display:grid;gap:6px}
+canvas.vc{width:100%;height:auto;display:block;border-radius:8px}
+.vessel .cap{font-family:var(--mono);font-size:12px;color:var(--muted);text-align:center}
+.meters{display:grid;gap:13px}
+.meter .row{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:14.5px}
+.meter .row b{font-family:var(--mono);font-size:14px}
+.bar{height:8px;border-radius:99px;background:var(--line);overflow:hidden;margin-top:5px}
+.bar i{display:block;height:100%;border-radius:99px;transition:width .5s ease}
+.env{display:grid;gap:16px}
+.slider{display:grid;gap:6px}
+.slider .row{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.slider label{font-weight:700}
+.slider input{width:100%;accent-color:var(--pink)}
+.slider .hint{font-size:13.5px;color:var(--muted)}
+.blocks{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.blk{border:1.5px solid var(--line);border-radius:10px;padding:6px;background:var(--bg);display:grid;gap:4px;text-align:center}
+.blk.clean{border-color:var(--good)} .blk.contam{border-color:var(--bad)}
+.blk .mono{font-size:11.5px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.stat{border:1px solid var(--line);border-radius:9px;padding:10px 12px;background:var(--bg)}
+.stat b{display:block;font-family:var(--mono);font-size:21px;font-variant-numeric:tabular-nums}
+.rank{font-family:var(--display);font-size:clamp(30px,4.8vw,44px);font-weight:800;color:var(--pink)}
+.log{margin:0;padding:0;list-style:none;display:grid;gap:7px;font-size:14.5px}
+.log li{display:flex;gap:10px;align-items:baseline}
+.review{display:grid;gap:10px}
+.brief{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+@media (max-width:620px){.brief{grid-template-columns:minmax(0,1fr)}}
+.brief div{border:1px solid var(--line);border-radius:9px;padding:10px 12px;background:var(--bg)}
+.brief b{font-family:var(--display);font-size:18px;display:block}
+
+/* cheat sheet */
+.nums{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.num{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.num b{display:block;font-family:var(--mono);font-size:21px;color:var(--pink-deep);font-weight:600;font-variant-numeric:tabular-nums}
+.num span{font-size:13px;color:var(--muted)}
+.tblwrap{overflow-x:auto;background:var(--panel);border:1px solid var(--line);border-radius:12px}
+table{border-collapse:collapse;width:100%;min-width:640px;font-size:14px}
+th,td{text-align:left;vertical-align:top;padding:10px 12px;border-bottom:1px solid var(--line)}
+th{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+td b{font-family:var(--display)}
+tr:last-child td{border-bottom:none}
+td ul{margin:0;padding-left:16px}
+.ok-t{color:var(--good);font-weight:700} .no-t{color:var(--bad);font-weight:700}
+.myths2{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px}
+.m2{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:11px 13px;font-size:14.5px;display:grid;gap:3px}
+.m2 s{color:var(--muted)}
+/* v3 UX additions */
+.tabs .badge{font-family:var(--mono);font-size:10.5px;padding:1px 7px;border-radius:99px;background:var(--line);color:var(--ink)}
+.tabs button[aria-selected="true"] .badge{background:var(--pink);color:#fff}
+.tabs .badge.done{background:var(--good);color:var(--panel)}
+.path{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+@media (max-width:720px){.path{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.pstep{text-align:left;border:1.5px solid var(--line);background:var(--panel);border-radius:10px;padding:12px;display:grid;gap:7px;align-content:start}
+.pstep:hover{border-color:var(--pink)}
+.pstep .top{display:flex;justify-content:space-between;align-items:center;gap:6px}
+.pstep b{font-family:var(--display);font-size:15.5px}
+.pstep .mono{font-size:12px;color:var(--muted)}
+.tick{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--line);display:grid;place-items:center;font-size:12px;flex:0 0 auto}
+.tick.on{background:var(--good);border-color:var(--good);color:var(--panel)}
+.mini{height:5px;border-radius:99px;background:var(--line);overflow:hidden}
+.mini i{display:block;height:100%;background:var(--pink);transition:width .4s ease}
+.delta{display:inline-block;margin-right:6px;font-family:var(--mono);font-size:12px;font-weight:600;animation:rise 2.4s ease forwards}
+.delta.up{color:var(--good)} .delta.dn{color:var(--bad)}
+@keyframes rise{0%{opacity:0;transform:translateY(6px)}12%{opacity:1;transform:none}75%{opacity:1}100%{opacity:0;transform:translateY(-6px)}}
+.hintbox{border:1px dashed var(--line);border-radius:9px;padding:8px 12px;margin-bottom:14px;font-size:14.5px}
+.hintbox summary{cursor:pointer;font-weight:700;color:var(--pink-deep)}
+.hintbox[open]{background:var(--bg)}
+.hintbox ul{margin:6px 0 0;padding-left:18px;display:grid;gap:2px}
+.kbd{font-family:var(--mono);font-size:11.5px;color:var(--muted);margin-top:12px}
+.kbd kbd{font-family:var(--mono);border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 5px;background:var(--panel);color:var(--ink)}
+@media (hover:none){.kbd{display:none}}
+.simbar{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;justify-content:space-between;min-height:34px}
+.confirm{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:var(--bad-soft);border-radius:9px;padding:6px 10px;font-size:14.5px}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:999px;font-weight:700;z-index:20;box-shadow:0 6px 24px rgba(0,0,0,.25);max-width:calc(100% - 32px)}
+.search{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.search input{flex:1 1 260px;min-width:0;font:inherit;padding:10px 14px;border:1.5px solid var(--line);border-radius:9px;background:var(--panel);color:var(--ink)}
+.search input:focus{border-color:var(--pink);outline:none}
+textarea.copy{width:100%;min-height:96px;font-family:var(--mono);font-size:13px;padding:10px;border:1.5px solid var(--line);border-radius:9px;background:var(--bg);color:var(--ink)}
+.stagenav{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:14px}
+.empty{background:var(--panel);border:1px dashed var(--line);border-radius:12px;padding:20px;text-align:center;color:var(--muted)}
+h2[tabindex="-1"]:focus{outline:none}
+@media (max-width:880px){
+  .rail{grid-template-columns:minmax(0,170px) minmax(0,1fr);gap:10px;align-items:stretch}
+  .rail .card.meters{padding:12px;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px 12px;align-content:start}
+  .rail .meters>.label{grid-column:1/-1}
+  .rail .meter .row{font-size:13px}
+  .vessel{padding:6px}
+}
+@media (max-width:460px){.rail{grid-template-columns:minmax(0,112px) minmax(0,1fr);gap:8px}.rail .vessel .cap{display:none}.rail .card.meters{gap:8px 10px;padding:10px}.rail .meter .row{font-size:12px}.rail .meter .row b{font-size:12.5px}}
+footer{margin-top:30px;font-size:12.5px;color:var(--muted);max-width:75ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div id="app" class="wrap"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.4.21/vue.global.prod.min.js"></script>
+<script>
+/* ============================== CONTENT ============================== */
+const GL = {best:'Best', good:'Good', ok:'Workable', bad:'Mistake'};
+const GP = {best:3, good:2, ok:1, bad:0};
+
+const GUIDE = [
+ {id:'agar', name:'Agar', icon:'plate',
+  what:'Start or clean a culture on petri dishes, where you can see contamination and pick the strongest growth.',
+  target:'Genetic purity, early contamination detection, vigor screening.',
+  success:'Clean, fast, rhizomorphic-leaning mycelium you can read at a glance.',
+  picks:[['MEA','Malt extract agar. Gold standard for Pleurotus: cheap, rich, predictable.'],['MYA / MYPA','MEA plus yeast extract (± peptone). Faster, more robust growth.'],['PDA','Easiest to buy pre-made. Slightly leaner than MEA.'],['DFA','Dog food agar. Budget DIY, fine for hobby work.'],['CMA','Cornmeal agar. Lean on purpose: slower, but forces rhizomorphic growth and makes contamination easy to read.']],
+  mistakes:[
+   ['Expanding from a contaminated plate','“It’s mostly white” still carries spores into every jar downstream.','Cut a wedge of clean leading edge, far from the contamination, onto a fresh plate.'],
+   ['Over-rich custom media','Mycelium races across and hides slow contaminants. Agar’s main job is detection.','Stick to MEA or MYA. Use CMA when you need to read growth clearly.'],
+   ['Growing on plain water agar','It has no nutrients. Use it only to germinate spores or run clean mycelium away from contamination.','Move to MEA once the culture is clean.'],
+   ['Using old, dried-out plates','Degraded nutrients give weak, misleading growth.','Pour fresh plates.'],
+   ['Treating spores as a clone','Spores are sexually recombined. Every spore plate is a genetic lottery.','Tissue-clone to keep a strain. Screen spore sectors for vigor.'],
+   ['Leaning on antibiotics','Gentamicin is niche lab tooling and can mask poor technique.','Fix sterile technique first.']],
+  adds:[['Yeast extract / peptone','vigor and recovery'],['Activated charcoal 0.5–1%','adsorbs inhibitory metabolites; helps a stressed culture'],['Gentamicin','niche, real-lab bacterial suppression']]},
+ {id:'lc', name:'Liquid culture', icon:'flask',
+  what:'Grow mycelium in a dilute sugar broth so it can be pulled into a syringe and spread over many jars.',
+  target:'Rapid, even biomass expansion in suspension.',
+  success:'Dispersed white mycelial fragments in a sterile broth, fast grain takeover.',
+  picks:[['Light malt extract 1–4%','Cleanest and most defined. Best signal-to-noise for spotting contamination.'],['Honey water 1–4%','Cheap, with mild natural antimicrobials.'],['Light corn syrup 1–4%','Basically honey’s equivalent.'],['Dextrose / glucose','Simple, clean, predictable.'],['Sugar + pinch of yeast extract','Works, but unnecessary and raises bacterial-bloom risk.']],
+  mistakes:[
+   ['Sugar above 5–6%','Osmotic stress on mycelium. Bacteria and yeast thrive on it.','Keep it dilute: 1–4%.'],
+   ['No agitation','You get one oxygen-starved blob instead of injectable fragments.','Use a magnetic stir bar, or shake daily.'],
+   ['Believing richer LC is faster','Rich broth feeds contaminants, not your culture.','Pink oyster LC does not need to be nutrient-rich.'],
+   ['Plain table sugar only','It works, but malt and honey colonize cleaner and faster.','Switch to light malt extract or honey.'],
+   ['Overdoing yeast extract','Raises bacterial-bloom risk for no real gain on Pleurotus.','A tiny pinch at most.']],
+  adds:[['Magnetic stir bar','the single biggest upgrade'],['A few rye/barley kernels','nucleation sites and trace nutrition'],['Pinch of yeast extract','optional vigor']]},
+ {id:'grain', name:'Grain spawn', icon:'jar',
+  what:'Colonize sterilized grain. Each kernel becomes an inoculation point when you mix it into bulk substrate.',
+  target:'Maximum inoculation points, stored nutrition, shakeability.',
+  success:'Fully colonized, loose kernels. No clumps, no free water.',
+  picks:[['Rye berries','Classic gold standard: holds moisture, nutritious, shakes loose.'],['Millet-heavy bird seed (WBS)','Tons of small kernels. Very cheap. Pleurotus loves it.'],['Millet','Maximum inoculation points, fast.'],['Wheat berries','Rye’s cheaper cousin.'],['Oats','Good, slightly stickier.'],['Popcorn / corn / milo','Cheap, but big kernels mean fewer inoculation points.']],
+  mistakes:[
+   ['Grain too wet','Pooled water causes bacterial wet-spot. Hydration is the #1 grain failure.','Hydrate to field capacity: moist kernels, no free water.'],
+   ['Grain too dry','Colonization comes out patchy and slow.','Simmer or soak until kernels are hydrated through, then drain and surface-dry.'],
+   ['Pasteurizing grain','Grain is too nutritious to pasteurize. Contaminants win.','Pressure-sterilize 90–120 min at 15 psi.'],
+   ['Skipping gypsum','Kernels clump into a brick you can’t shake.','Add 1–2% gypsum.'],
+   ['Brown rice / flour cakes for bulk','PF-style cakes are poor for shakeable bulk spawn.','Use rye, WBS or millet.'],
+   ['Spawning before full colonization','Uncolonized kernels are free food for mold.','Wait until jars are fully white.']],
+  adds:[['Gypsum 1–2%','prevents clumping, buffers pH, adds Ca/S'],['Calcium carbonate (pinch)','extra pH buffering']]},
+ {id:'sub', name:'Substrate', icon:'bag',
+  what:'Mix spawn into the bulk material the mushrooms fruit from. Most of your yield is won or lost here.',
+  target:'Biological efficiency (fresh yield ÷ dry substrate), selectivity, cost.',
+  success:'High BE, good water retention and air exchange, resists mold, affordable.',
+  picks:[['Masters Mix','50% hardwood pellets + 50% soy hulls. Highest practical BE. Sterilize.'],['Hardwood sawdust + soy hulls','Top-tier BE. Sterilize.'],['Sawdust + 10–20% bran','Classic high-yield block. Sterilize.'],['Pasteurized straw','Traditional oyster substrate. Cheap, forgiving, low-tech.'],['Coir + vermiculite (CVG)','Beginner-friendly, easy to pasteurize, lower yield.'],['Spent coffee grounds','Fresh (<24 h) or pasteurized, cut with straw. High contamination risk.'],['Cardboard / paper','Lowest-tech, great for tiny grows, low yield.']],
+  mistakes:[
+   ['Pasteurizing a supplemented mix','Bran or soy with pasteurization only means near-guaranteed Trichoderma.','Sterilize anything with bran or soy.'],
+   ['Sterilizing plain straw','Leaves a nutrient vacuum that contaminants exploit.','Pasteurize straw: hot water or cold lime.'],
+   ['Softwood sawdust','Pine and cedar resins and oils inhibit growth.','Hardwood only.'],
+   ['Whole, unchopped straw','It colonizes poorly whether dry or soggy.','Chop it, then hydrate to field capacity.'],
+   ['Too much supplement','Diminishing returns past ~10–20% while contamination risk climbs.','Stay around 10–20% bran.'],
+   ['Old coffee grounds','Nutritious and non-sterile. Mold gets there first.','Use grounds under 24 h old, or pasteurize them, cut with straw.'],
+   ['Manure-based mixes','That’s the Agaricus playbook, not the lane for pinks.','Use lignocellulose: wood or straw.']],
+  adds:[['Wheat / oat / rice bran 10–20%','biggest yield lever (rice = highest yield and risk)'],['Soybean hulls','the engine of Masters Mix'],['Gypsum ~1%','structure; prevents anaerobic clumping'],['Hydrated lime','raises pH; selective against Trichoderma'],['Calcium carbonate','pH buffer for sawdust']]},
+ {id:'fruit', name:'Fruiting', icon:'cluster',
+  what:'Move colonized blocks to warm, humid conditions with fresh air so they form pins and then clusters.',
+  target:'Warmth, fresh air, and humidity kept high despite that airflow.',
+  success:'Fast pinning, short stems, broad ruffled pink caps.',
+  picks:[['70–85°F (21–30°C)','The fruiting sweet spot. Pinks are tropical.'],['Fresh air exchange','Low CO₂ gives short stems and wide caps.'],['High, managed humidity','Mist or humidify to offset the drying effect of fresh air.']],
+  mistakes:[
+   ['A cold room','Below ~64°F pinks sulk or won’t pin. The #1 silent beginner failure.','Keep it 70–85°F. A heat mat or a warm room fixes it.'],
+   ['Sealed, stale air','High CO₂ gives leggy, long-stemmed, small-capped clusters.','Increase fresh air exchange.'],
+   ['Fresh air without humidity','Air exchange dries caps. Edges crack and curl.','Raise misting or humidity as you add airflow.'],
+   ['Copying a blue oyster setup','Blue and grey oysters like cold. Pinks are the opposite.','Treat pinks as a warm-room species.']],
+  adds:[]},
+ {id:'harvest', name:'Harvest', icon:'knife',
+  what:'Pick clusters, then eat, sell or dry them fast.',
+  target:'Pick at peak and move product within 1–2 days.',
+  success:'Plan for 1–2 strong flushes; nothing spoils in the fridge.',
+  picks:[['Eat or sell fresh within 1–2 days','Shelf life is brutal.'],['Dehydrate the surplus','Drying beats rotting.'],['Plan 1–2 flushes','Pinks flush fast and hard early, then drop off.']],
+  mistakes:[
+   ['Storing like button mushrooms','Pinks last about 1–2 days fresh, not a week.','Eat, sell or dry right away.'],
+   ['Expecting pink on the plate','Heat fades them to tan-brown.','Sell the color raw. Plate them for flavor.'],
+   ['Expecting a long tail of flushes','After 1–2 strong flushes, yields drop off quickly.','Plan production around early flushes; replace blocks.']],
+  adds:[]}
+];
+
+const CASES = [
+ {st:'agar', see:'Day 6: a green fuzzy patch at one edge of an otherwise white plate.', opts:['Mold contamination (Trichoderma-type)','Normal pink oyster sporulation','The agar is drying out'], a:0,
+  fix:'Cut a clean leading-edge wedge far from the patch onto a fresh plate. Charcoal agar helps a stressed culture. Never expand from this plate.'},
+ {st:'agar', see:'A heavy custom “super agar” plate covered in 3 days, but every jar it inoculated contaminated.', opts:['Over-rich media hid a slow contaminant','The grain was too dry','The strain is weak'], a:0,
+  fix:'Use MEA or MYA, or lean CMA, so contamination shows before you expand.'},
+ {st:'agar', see:'A spore plate grows in patchy sectors: some ropey and fast, some fluffy and slow.', opts:['Spores are genetically variable','Bacterial contamination','The temperature is wrong'], a:0,
+  fix:'Transfer the fast, ropey (rhizomorphic) sector to isolate a strong dikaryon. Tissue-clone to preserve a strain.'},
+ {st:'lc', see:'Day 4: the broth is evenly milky, smells sour, and has no distinct fragments.', opts:['Bacterial contamination','Healthy, fast mycelium','Not enough sugar'], a:0,
+  fix:'Toss it. Restart from clean agar with 1–4% sugar. Healthy LC shows distinct white fragments, not uniform milk.'},
+ {st:'lc', see:'One dense white mat sits at the bottom of the jar and clogs the syringe.', opts:['No agitation: an oxygen-starved blob','Contamination','Too much light'], a:0,
+  fix:'Add a magnetic stir bar, or shake daily, to oxygenate and fragment the culture.'},
+ {st:'grain', see:'Grey, slimy kernels at the bottom of a jar smell sour, and the mycelium stalls there.', opts:['Bacterial wet-spot from over-hydration','Grain too dry','Normal metabolites'], a:0,
+  fix:'Discard the jar. Hydrate to field capacity with no pooled water, then pressure-cook 90–120 min at 15 psi.'},
+ {st:'grain', see:'Colonization is patchy. Some kernels are hard and never turn white.', opts:['Grain too dry','Grain too wet','Too much gypsum'], a:0,
+  fix:'Hydrate kernels through before cooking. Too dry gives patchy colonization.'},
+ {st:'grain', see:'The jar is one solid brick and you can’t break it up to shake.', opts:['No gypsum, and it was never shaken','Contamination','It was overcooked'], a:0,
+  fix:'Add 1–2% gypsum to the grain. Break and shake partway through colonization.'},
+ {st:'sub', see:'Bran-supplemented sawdust bags (hot-water pasteurized) turn emerald green in week 2.', opts:['Trichoderma: supplemented mixes need sterilization','Normal color of colonized sawdust','Too much light'], a:0,
+  fix:'Sterilize anything with bran or soy. Lime and higher pH add selectivity against Trichoderma.'},
+ {st:'sub', see:'A block barely colonizes after 3 weeks and smells like a Christmas tree.', opts:['Softwood resins','The room is too cold','Too much water'], a:0,
+  fix:'Use hardwood sawdust or pellets. Pine and cedar inhibit growth.'},
+ {st:'sub', see:'Your “extra-safe” sterilized plain straw molded faster than pasteurized straw ever did.', opts:['Sterilizing left a nutrient vacuum','Bad spawn','Too much fresh air'], a:0,
+  fix:'Pasteurize plain straw with hot water or cold lime. Its natural microbes help defend it.'},
+ {st:'sub', see:'A tub of week-old coffee grounds mixed with spawn is covered in green and black fuzz.', opts:['Old, non-sterile grounds let mold in first','Coffee is toxic to oysters','Too little spawn'], a:0,
+  fix:'Use grounds under 24 h old, or pasteurize them, and cut them with straw.'},
+ {st:'fruit', see:'Blocks have been fully colonized for 3 weeks with zero pins. The room is 62°F.', opts:['Too cold for a tropical species','The blocks need total darkness','Hidden contamination'], a:0,
+  fix:'Bring the room to 70–85°F. Below ~64°F pinks stall.'},
+ {st:'fruit', see:'Long stems and tiny caps, with clusters stretching toward the tote lid.', opts:['High CO₂ from too little fresh air','Too warm','Too humid'], a:0,
+  fix:'Add fresh air exchange and keep humidity up with misting.'},
+ {st:'harvest', see:'A bag of pinks turned to brown mush in the fridge by day 4.', opts:['Normal: short shelf life','The fridge was too cold','They were picked too early'], a:0,
+  fix:'Eat, sell or dehydrate within 1–2 days.'},
+ {st:'harvest', see:'The third flush is a small fraction of the first.', opts:['Normal for pinks','Contamination','Wrong strain'], a:0,
+  fix:'Plan around 1–2 strong flushes, then replace the block.'}
+];
+
+const MYTHS = [
+ {s:'Pink oysters stay bright pink after cooking.', a:false, w:'Heat fades them to tan-brown.'},
+ {s:'Pink oysters fruit best around 70–85°F.', a:true, w:'They’re tropical and stall below ~64°F.'},
+ {s:'Fresh pink oysters keep about a week in the fridge.', a:false, w:'Shelf life is often 1–2 days.'},
+ {s:'A richer, sweeter liquid culture grows faster.', a:false, w:'Dilute (1–4%) colonizes cleaner. Rich LC feeds bacteria.'},
+ {s:'Grain spawn must be pressure-sterilized, not pasteurized.', a:true, w:'Grain is too nutritious to pasteurize.'},
+ {s:'Growing from spores gives you a clone of the parent.', a:false, w:'Spores recombine. Tissue culture makes clones.'},
+ {s:'Plain straw should be pasteurized, not sterilized.', a:true, w:'Sterilized plain straw leaves a nutrient vacuum.'},
+ {s:'More bran always means more yield.', a:false, w:'Diminishing returns past ~10–20%, with rising contamination risk.'},
+ {s:'Softwood sawdust like pine inhibits growth.', a:true, w:'Resins and oils. Use hardwood.'},
+ {s:'Low fresh air is fine as long as humidity is high.', a:false, w:'High CO₂ makes leggy, small-capped clusters.'},
+ {s:'Alkaline conditions (lime) help suppress Trichoderma.', a:true, w:'High pH is selective against many molds.'},
+ {s:'Pink oysters are hard to colonize.', a:false, w:'They’re among the easiest. Contamination and cold are the real problems.'},
+ {s:'Pinks give you 1–2 strong flushes, then drop off.', a:true, w:'Plan around early flushes, not a long tail.'}
+];
+
+/* ---------- simulator ---------- */
+const SIM = [
+ {id:'agar', name:'Agar', days:'Day 0–10', vessel:'plate',
+  fixed:[
+   {q:'Where does your culture come from?', opts:[
+    {t:'Tissue clone from a fat, healthy pink cluster', s:'A sterile chunk from inside the stem base.', g:'best', fx:{vig:10,be:5}, why:'Cloning preserves the parent strain’s traits. You know what you’re getting.'},
+    {t:'A spore print', s:'Cheap and easy to store.', g:'ok', fx:{vig:-6,be:-4,risk:3}, why:'Spores are sexually recombined. Every germination is a genetic lottery, so you’ll need to screen sectors. It’s not a clone.'}]},
+   {q:'Pour plates with which medium?', opts:[
+    {t:'MEA — malt extract agar', g:'best', fx:{vig:8}, why:'The gold standard for Pleurotus: cheap, rich, vigorous, predictable.'},
+    {t:'MYA — malt + yeast extract', g:'best', fx:{vig:10}, why:'Yeast extract adds B-vitamins and amino acids for faster, more robust growth.'},
+    {t:'PDA — potato dextrose', g:'good', fx:{vig:5}, why:'Common and reliable, just marginally leaner than MEA.'},
+    {t:'CMA — cornmeal agar', s:'Lean on purpose.', g:'ok', fx:{vig:2,risk:-2}, why:'Slower, but it forces rhizomorphic growth and makes contamination easy to read. A deliberate choice.'},
+    {t:'Max-sugar custom “super agar”', g:'bad', fx:{vig:2,risk:12}, why:'Mycelium races over the plate and hides slow contaminants. You just disabled agar’s main job.'},
+    {t:'Plain water agar', g:'bad', fx:{vig:-12}, why:'Water agar is for germinating spores or escaping contamination. It isn’t a growth medium.'}]}],
+  pool:[
+   {event:'Day 6: a green fuzzy patch appears near the edge of your best plate.', q:'What do you do?', opts:[
+    {t:'Cut clean leading-edge mycelium far from the patch onto a fresh plate', g:'best', fx:{risk:-4}, why:'That is agar’s job: catch it early, leave it behind.'},
+    {t:'Transfer the clean edge onto charcoal-amended agar', s:'~0.5–1% activated charcoal.', g:'good', fx:{risk:-2}, why:'Charcoal adsorbs inhibitory metabolites and helps a stressed culture recover.'},
+    {t:'It’s mostly white. Start your liquid culture from it', g:'bad', fx:{risk:25}, set:{milky:true}, why:'You inoculated the whole pipeline with mold spores. Everything downstream inherits it.'}]},
+   {event:'Day 7: one sector is ropey and fast. Another is fluffy and slow.', q:'Which do you carry forward?', opts:[
+    {t:'Transfer the ropey, fast (rhizomorphic) sector', g:'best', fx:{vig:8}, why:'Fast rhizomorphic growth is the vigor signal agar lets you screen for.'},
+    {t:'Transfer the fluffy, slow sector', g:'ok', fx:{vig:-4}, why:'It may work, but you passed on the stronger genetics.'},
+    {t:'Scoop both into one transfer', g:'bad', fx:{vig:-2,risk:3}, why:'Mixing sectors throws away the isolation you just paid for.'}]},
+   {event:'Your only poured plates are two months old and visibly dried and cracked.', q:'Use them?', opts:[
+    {t:'Pour a fresh batch first', g:'best', fx:{vig:3}, why:'Fresh plates give honest, vigorous growth you can read.'},
+    {t:'Use them anyway', g:'bad', fx:{vig:-10}, why:'Dried plates and degraded nutrients give weak, misleading growth.'}]}]},
+ {id:'lc', name:'Liquid', days:'Day 10–20', vessel:'flask',
+  fixed:[
+   {q:'Mix your liquid culture broth.', opts:[
+    {t:'Light malt extract, ~2%', g:'best', fx:{vig:6}, why:'Cleanest and most defined. Best signal-to-noise for spotting contamination.'},
+    {t:'Honey water, ~2%', g:'good', fx:{vig:5}, why:'Cheap and reliable, with mild natural antimicrobials.'},
+    {t:'Light corn syrup, ~3%', g:'good', fx:{vig:4}, why:'Basically honey’s equivalent.'},
+    {t:'Strong 8% sugar syrup: more food, faster growth', g:'bad', fx:{vig:-6,risk:15}, set:{milky:true}, why:'Above ~5–6% you get osmotic stress on mycelium while bacteria and yeast feast.'}]},
+   {q:'How will you keep it moving?', opts:[
+    {t:'Magnetic stir bar on a stir plate', g:'best', fx:{vig:10}, set:{stir:2}, why:'The biggest single LC upgrade: oxygenation plus fragmentation.'},
+    {t:'Hand-shake the jar daily', g:'good', fx:{vig:5}, set:{stir:1}, why:'It works, just less evenly than a stir bar.'},
+    {t:'Leave it alone; mycelium likes peace', g:'bad', fx:{vig:-10,risk:4}, set:{stir:0}, why:'You get one oxygen-starved blob instead of dispersed fragments.'}]}],
+  pool:[
+   {event:'Day 4: one jar is evenly milky and smells sour. No distinct fragments.', q:'Your call?', opts:[
+    {t:'That’s bacteria. Toss it and use a clean jar', g:'best', fx:{risk:-3}, why:'Uniform milkiness plus a sour smell is bacterial. Healthy LC is distinct fragments.'},
+    {t:'Shake it harder and inject it anyway', g:'bad', fx:{risk:22}, set:{milky:true}, why:'You just inoculated grain with a bacterial bloom.'}]},
+   {event:'Day 7: the broth is clear with floating white wisps and clouds.', q:'Is it ready?', opts:[
+    {t:'Healthy. Pull a syringe and inoculate grain', g:'best', fx:{vig:4}, why:'Distinct white fragments in a clear broth is what you want.'},
+    {t:'Looks weird. Toss it and start over', g:'ok', fx:{vig:-5}, why:'That was healthy mycelium. You lost a week.'}]},
+   {event:'You have a few spare rye kernels on the bench.', q:'Drop them into the LC jar?', opts:[
+    {t:'Yes, a few kernels', g:'good', fx:{vig:4}, why:'They give nucleation sites and trace nutrition.'},
+    {t:'No, and add a big spoon of yeast extract instead', g:'bad', fx:{risk:8}, why:'Pleurotus doesn’t need it, and it raises bacterial-bloom risk.'}]}]},
+ {id:'grain', name:'Grain', days:'Day 20–35', vessel:'jar',
+  fixed:[
+   {q:'Pick a spawn grain.', opts:[
+    {t:'Rye berries', g:'best', fx:{vig:6,be:4}, why:'The classic gold standard: holds moisture, nutritious, shakes loose.'},
+    {t:'Millet-heavy wild bird seed (WBS)', g:'best', fx:{vig:7,be:3}, set:{small:true}, why:'Tons of small kernels for many inoculation points, and it’s cheap.'},
+    {t:'Popcorn', g:'ok', fx:{vig:1}, set:{big:true}, why:'Cheap and easy, but big kernels mean fewer inoculation points.'},
+    {t:'Brown rice flour cakes', g:'bad', fx:{vig:-6,risk:4}, why:'Fine for some species in jars. Poor for shakeable bulk spawn.'}]},
+   {q:'Prep the grain.', opts:[
+    {t:'Field capacity, ~1% gypsum, pressure-cook 90–120 min at 15 psi', g:'best', fx:{risk:-5,vig:4}, why:'Textbook: no free water, no clumping, fully sterile.'},
+    {t:'Same, but skip the gypsum', g:'ok', fx:{risk:2}, why:'It’ll work, but expect clumping and harder shaking.'},
+    {t:'Leave water pooling in the jar, then cook', g:'bad', fx:{risk:16}, set:{wet:true}, why:'Too wet means bacterial wet-spot. Hydration is the #1 grain failure.'},
+    {t:'Pasteurize at 160°F to save time', g:'bad', fx:{risk:28}, why:'Grain is too nutritious to pasteurize. It must be pressure-sterilized.'}]}],
+  pool:[
+   {event:'Day 8: one jar shows grey, slimy, sour kernels at the bottom.', q:'What now?', opts:[
+    {t:'Discard that jar and use only clean ones', g:'best', fx:{risk:-3}, why:'Wet-spot bacteria don’t get better. Isolate and toss.'},
+    {t:'Mix it in with the others; mycelium will win', g:'bad', fx:{risk:20}, set:{wet:true}, why:'You spread bacteria into every bag.'}]},
+   {event:'Day 6: jars are about 30% colonized.', q:'Break and shake?', opts:[
+    {t:'Yes, shake to spread colonized kernels', g:'best', fx:{vig:5}, why:'It redistributes inoculation points and speeds up the finish.'},
+    {t:'Leave them alone', g:'ok', fx:{vig:-2}, why:'It’s slower, and clumps are more likely.'}]},
+   {event:'Day 11: jars look about 80% white and you’re impatient.', q:'Spawn now?', opts:[
+    {t:'Wait until fully colonized', g:'best', fx:{risk:-2}, why:'Grain should be fully colonized before use.'},
+    {t:'Spawn now; close enough', g:'ok', fx:{risk:7}, why:'Uncolonized kernels are free food for mold in the bag.'}]}]},
+ {id:'sub', name:'Substrate', days:'Day 35–55', vessel:'bag',
+  fixed:[
+   {q:'Choose substrate and prep.', opts:[
+    {t:'Masters Mix (hardwood pellets + soy hulls), sterilized', g:'best', fx:{be:62,risk:8}, set:{sub:'dust'}, why:'Highest practical BE. Supplemented, so it needs sterilization, which you did.'},
+    {t:'Hardwood sawdust + 15% bran, sterilized', g:'good', fx:{be:48,risk:7}, set:{sub:'dust'}, why:'Classic high-yield supplemented block, prepped correctly.'},
+    {t:'Chopped wheat straw, hot-water pasteurized', g:'good', fx:{be:28,risk:2}, set:{sub:'straw'}, why:'Lower BE, but cheap, forgiving and low-tech. Pinks thrive on it.'},
+    {t:'Coir + vermiculite, pasteurized', g:'ok', fx:{be:12,risk:2}, set:{sub:'coir'}, why:'Beginner-friendly but low nutrition and low yield.'},
+    {t:'Masters Mix, pasteurized only', s:'Skipping the pressure cooker.', g:'bad', fx:{be:55,risk:42}, set:{sub:'dust'}, why:'Supplement plus pasteurization alone is near-guaranteed Trichoderma.'},
+    {t:'Pine sawdust, sterilized', g:'bad', fx:{be:-15,risk:4}, set:{sub:'dust'}, why:'Softwood resins and oils inhibit growth.'},
+    {t:'Plain straw, fully sterilized for “safety”', g:'bad', fx:{be:24,risk:16}, set:{sub:'straw'}, why:'Sterilizing plain straw leaves a nutrient vacuum contaminants exploit.'}]},
+   {q:'One more thing in the mix?', opts:[
+    {t:'~1% gypsum', g:'best', fx:{be:3,risk:-3}, why:'Adds structure, buffers calcium, prevents anaerobic clumping.'},
+    {t:'Hydrated lime to push pH up', g:'good', fx:{risk:-5}, why:'Alkaline conditions are selective against Trichoderma.'},
+    {t:'An extra 40% rice bran: more food, more mushrooms', g:'bad', fx:{be:4,risk:22}, why:'Returns flatten past ~10–20% while contamination climbs.'},
+    {t:'Nothing extra', g:'ok', fx:{}, why:'Fine, but you left a small edge on the table.'}]}],
+  pool:[
+   {event:'A neighbor offers 5 gallons of coffee grounds from last week.', q:'Add them?', opts:[
+    {t:'Decline; only grounds under 24 h old, pasteurized and cut with straw', g:'best', fx:{}, why:'Coffee is nutritious and usually non-sterile. Only fresh grounds are worth it.'},
+    {t:'Dump them in for a free yield boost', g:'bad', fx:{be:5,risk:20}, why:'Week-old grounds are already colonized by mold.'}]},
+   {event:'Squeeze test: a fistful of substrate streams water.', q:'Proceed?', opts:[
+    {t:'Drain until only a few drops come out', g:'best', fx:{risk:-3}, why:'Field capacity: moist, not dripping. Balances water retention and air.'},
+    {t:'Bag it; wetter means more mushrooms', g:'bad', fx:{risk:12,be:-4}, why:'Soggy substrate goes anaerobic and invites bacteria.'}]}]},
+ {id:'fruit', name:'Fruiting', days:'Day 55–65', vessel:'cluster', fixed:[{env:true}], pool:[]},
+ {id:'harvest', name:'Harvest', days:'Day 65+', vessel:'cluster',
+  fixed:[
+   {q:'How do you plan the harvest?', opts:[
+    {t:'Plan around 1–2 strong flushes, then retire the blocks', g:'best', fx:{}, why:'Realistic. Pinks front-load their yield and drop off quickly.'},
+    {t:'Keep soaking for 6+ flushes', g:'ok', fx:{be:-3,risk:4}, why:'Overstated expectations. Tail flushes are small, and old blocks invite mold.'}]},
+   {q:'You just picked a big pink cluster. Now what?', opts:[
+    {t:'Eat, sell or dehydrate within 1–2 days', g:'best', fx:{sell:1}, why:'Correct. Shelf life is often 1–2 days fresh.'},
+    {t:'Fridge it for a week like store-bought mushrooms', g:'bad', fx:{sell:.45}, why:'Pinks don’t store like buttons. Most of it is mush by day 4.'},
+    {t:'Save it for a dinner party so guests see pink on the plate', g:'bad', fx:{sell:.8}, why:'The pink fades to tan when cooked. Also, see: shelf life.'}]}],
+  pool:[]}
+];
+
+const SEASONS = [
+ {name:'January', temp:63, note:'It’s January. Your spare room sits at 63°F.'},
+ {name:'April', temp:68, note:'It’s April. The room hovers around 68°F.'},
+ {name:'August', temp:88, note:'It’s August. The room is running 88°F.'}
+];
+
+const NUMS = [
+ ['70–85°F','fruiting sweet spot (21–30°C)'],['< 64°F','pinks stall or won’t pin'],['1–2 days','fresh shelf life'],
+ ['1–4%','LC sugar strength'],['> 5–6%','LC sugar: too rich'],['90–120 min','grain at 15 psi'],
+ ['1–2%','gypsum in grain'],['~1%','gypsum in substrate'],['10–20%','bran supplement (dry wt)'],
+ ['0.5–1%','activated charcoal in agar'],['< 24 h','coffee grounds age'],['1–2','strong flushes to plan on']
+];
+const PREP = [
+ ['Grain spawn','Very rich','Pressure-sterilize','Pasteurize'],
+ ['Masters Mix / sawdust + soy','Supplemented','Sterilize','Pasteurize only'],
+ ['Sawdust + bran','Supplemented','Sterilize','Pasteurize only'],
+ ['Plain straw','Unsupplemented','Pasteurize (hot water or cold lime)','Sterilize'],
+ ['Coir + vermiculite','Lean','Pasteurize','—'],
+ ['Coffee grounds','Rich, non-sterile','Fresh <24 h or pasteurize; cut with straw','Old grounds']
+];
+
+/* ============================== DRAWING ============================== */
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+function rngFrom(seed){let a=seed>>>0;return()=>{a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
+function fit(cv,W,H){const d=Math.min(2,window.devicePixelRatio||1);cv.width=W*d;cv.height=H*d;const c=cv.getContext('2d');c.setTransform(d,0,0,d,0,0);return c}
+const reduceMotion = () => !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+function genHyphae(rng, tips, inside, maxSeg){
+  const segs=[]; let cur=tips.map(t=>({...t}));
+  while(cur.length && segs.length<maxSeg){
+    const nxt=[];
+    for(const t of cur){
+      t.a+=(rng()-.5)*.75;
+      const nx=t.x+Math.cos(t.a)*4, ny=t.y+Math.sin(t.a)*4;
+      if(!inside(nx,ny)) continue;
+      segs.push([t.x,t.y,nx,ny]); t.x=nx; t.y=ny; nxt.push(t);
+      if(rng()<.075 && nxt.length<220) nxt.push({x:nx,y:ny,a:t.a+(rng()<.5?-1:1)*(.5+rng()*.6)});
+    }
+    cur=nxt;
+  }
+  return segs;
+}
+const GEO = {
+  plate:{inside:(x,y)=>Math.hypot(x-160,y-122)<86, tips:r=>Array.from({length:14},(_,i)=>({x:160,y:122,a:i/14*6.283+r()*.3})), glow:[[160,122]], reach:92},
+  jar:{inside:(x,y)=>x>106&&x<214&&y>80&&y<212, tips:r=>[130,160,190].flatMap(x=>Array.from({length:5},()=>({x,y:84,a:1.57+(r()-.5)*2.4}))), glow:[[130,84],[160,84],[190,84]], reach:120},
+  bag:{inside:(x,y)=>x>94&&x<226&&y>96&&y<212, tips:r=>Array.from({length:10},()=>{const x=100+r()*120,y=102+r()*104;return Array.from({length:4},(_,i)=>({x,y,a:i*1.57+r()}))}).flat(), glow:null, reach:60}
+};
+
+function trich(c,x,y,r){
+  const g=c.createRadialGradient(x,y,0,x,y,r);
+  g.addColorStop(0,css('--trich-dark'));g.addColorStop(.55,css('--trich'));g.addColorStop(.8,css('--myc'));g.addColorStop(1,'rgba(255,255,255,0)');
+  c.fillStyle=g;c.beginPath();c.arc(x,y,r,0,6.283);c.fill();
+}
+function drawHyphae(c,segs,frac){
+  const n=Math.floor(segs.length*clamp(frac,0,1));
+  c.strokeStyle=css('--myc');c.globalAlpha=.6;c.lineWidth=.9;c.beginPath();
+  for(let i=0;i<n;i++){const s=segs[i];c.moveTo(s[0],s[1]);c.lineTo(s[2],s[3])}
+  c.stroke();c.globalAlpha=1;
+}
+function rr(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath()}
+
+function drawVessel(c,kind,st,cache,t){
+  const W=320,H=240; c.clearRect(0,0,W,H);
+  const ink=css('--ink'), muted=css('--muted'), panel=css('--panel'), myc=css('--myc');
+  const r=rngFrom(cache.seed);
+  const cover=st.cover, contam=st.contam;
+  const spots = contam>.18 ? Math.min(5,Math.ceil((contam-.18)*9)) : 0;
+  if(kind==='plate'){
+    c.fillStyle='rgba(0,0,0,.08)';c.beginPath();c.ellipse(162,220,104,12,0,0,6.283);c.fill();
+    c.fillStyle=panel;c.strokeStyle=muted;c.lineWidth=2;c.beginPath();c.arc(160,122,100,0,6.283);c.fill();c.stroke();
+    c.fillStyle=css('--agar');c.beginPath();c.arc(160,122,92,0,6.283);c.fill();
+    c.save();c.beginPath();c.arc(160,122,90,0,6.283);c.clip();
+    const R=cover*92; if(R>2){const g=c.createRadialGradient(160,122,0,160,122,R);g.addColorStop(0,myc);g.addColorStop(.75,myc);g.addColorStop(1,'rgba(255,255,255,0)');c.globalAlpha=.85;c.fillStyle=g;c.beginPath();c.arc(160,122,R,0,6.283);c.fill();c.globalAlpha=1}
+    drawHyphae(c,cache.segs,cover*1.05);
+    for(let i=0;i<spots;i++){const a=r()*6.283,d=50+r()*30;trich(c,160+Math.cos(a)*d,122+Math.sin(a)*d,10+r()*10+contam*8)}
+    c.restore();
+    c.strokeStyle='rgba(255,255,255,.55)';c.lineWidth=3;c.beginPath();c.arc(160,122,96,3.6,4.5);c.stroke();
+  } else if(kind==='jar'){
+    c.fillStyle='rgba(0,0,0,.08)';c.beginPath();c.ellipse(160,224,70,8,0,0,6.283);c.fill();
+    c.fillStyle=muted;rr(c,108,34,104,20,4);c.fill();
+    c.fillStyle=panel;c.strokeStyle=muted;c.lineWidth=2;rr(c,100,54,120,166,16);c.fill();c.stroke();
+    c.save();rr(c,104,58,112,158,13);c.clip();
+    const kr = st.flags.small?3.2:st.flags.big?7:5;
+    const grain=css('--grain');
+    for(const k of cache.kern(kr)){c.fillStyle=grain;c.beginPath();c.ellipse(k[0],k[1],kr,kr*.68,k[2],0,6.283);c.fill()}
+    // colonized front from top downward
+    const front=80+cover*140;
+    const g=c.createLinearGradient(0,80,0,front);g.addColorStop(0,myc);g.addColorStop(.85,myc);g.addColorStop(1,'rgba(255,255,255,0)');
+    c.globalAlpha=.78;c.fillStyle=g;c.fillRect(104,76,112,front-76);c.globalAlpha=1;
+    drawHyphae(c,cache.segs,cover*1.1);
+    if(st.flags.wet){c.fillStyle='rgba(120,130,120,.55)';c.beginPath();c.ellipse(150,206,40,10,0,0,6.283);c.fill();c.fillStyle='rgba(160,170,150,.6)';c.beginPath();c.ellipse(140,203,14,4,0,0,6.283);c.fill()}
+    for(let i=0;i<spots;i++)trich(c,118+r()*84,110+r()*90,8+r()*9+contam*6);
+    c.restore();
+    c.strokeStyle='rgba(255,255,255,.5)';c.lineWidth=4;c.beginPath();c.moveTo(112,74);c.lineTo(112,196);c.stroke();
+  } else if(kind==='bag'){
+    c.fillStyle='rgba(0,0,0,.08)';c.beginPath();c.ellipse(160,224,86,9,0,0,6.283);c.fill();
+    c.fillStyle=panel;c.globalAlpha=.9;c.strokeStyle=muted;c.lineWidth=2;
+    c.beginPath();c.moveTo(96,20);c.lineTo(224,20);c.lineTo(234,218);c.lineTo(86,218);c.closePath();c.fill();c.globalAlpha=1;c.stroke();
+    c.fillStyle=css('--line');rr(c,140,34,40,16,3);c.fill();
+    c.save();c.beginPath();c.rect(92,94,136,120);c.clip();
+    const sub=st.flags.sub||'dust';
+    c.fillStyle= sub==='straw'?css('--straw'): sub==='coir'?css('--grain'):css('--dust');c.fillRect(92,94,136,120);
+    if(sub==='straw'){c.strokeStyle='rgba(0,0,0,.18)';c.lineWidth=1.4;for(const s of cache.straw){c.beginPath();c.moveTo(s[0],s[1]);c.lineTo(s[0]+Math.cos(s[2])*14,s[1]+Math.sin(s[2])*14);c.stroke()}}
+    else{c.fillStyle='rgba(0,0,0,.2)';for(const s of cache.straw){c.fillRect(s[0],s[1],1.6,1.6)}}
+    for(const o of cache.spawn){const R=6+cover*58;const g=c.createRadialGradient(o[0],o[1],0,o[0],o[1],R);g.addColorStop(0,myc);g.addColorStop(.7,myc);g.addColorStop(1,'rgba(255,255,255,0)');c.globalAlpha=.7;c.fillStyle=g;c.beginPath();c.arc(o[0],o[1],R,0,6.283);c.fill();c.globalAlpha=1;
+      c.fillStyle=css('--grain');c.beginPath();c.arc(o[0],o[1],2.4,0,6.283);c.fill()}
+    drawHyphae(c,cache.segs,cover*1.1);
+    for(let i=0;i<spots;i++)trich(c,104+r()*112,106+r()*96,10+r()*12+contam*8);
+    c.restore();
+    c.strokeStyle=muted;c.lineWidth=1;c.setLineDash([3,3]);c.beginPath();c.moveTo(92,94);c.lineTo(228,94);c.stroke();c.setLineDash([]);
+  } else if(kind==='flask'){
+    c.fillStyle=muted;rr(c,84,206,152,22,5);c.fill();
+    c.fillStyle=css('--line');c.beginPath();c.arc(214,217,4,0,6.283);c.fill();
+    const path=()=>{c.beginPath();c.moveTo(140,24);c.lineTo(180,24);c.lineTo(180,74);c.lineTo(226,184);c.quadraticCurveTo(232,204,210,204);c.lineTo(110,204);c.quadraticCurveTo(88,204,94,184);c.lineTo(140,74);c.closePath()};
+    c.fillStyle=panel;c.strokeStyle=muted;c.lineWidth=2;path();c.fill();
+    c.save();path();c.clip();
+    c.fillStyle=css('--broth');c.globalAlpha=.75;c.fillRect(80,120,170,90);c.globalAlpha=1;
+    if(st.flags.milky||contam>.45){c.fillStyle='rgba(240,236,225,.55)';c.fillRect(80,120,170,90)}
+    const stir=st.flags.stir??2;
+    if(stir===0){
+      const R=14+cover*26;const g=c.createRadialGradient(160,196,0,160,196,R);g.addColorStop(0,myc);g.addColorStop(.8,myc);g.addColorStop(1,'rgba(255,255,255,0)');c.fillStyle=g;c.beginPath();c.ellipse(160,198,R*1.3,R*.55,0,0,6.283);c.fill();
+    } else {
+      const n=Math.round(4+cover*26), sp=stir===2?.0012:.0004;
+      for(let i=0;i<n;i++){const b=cache.frag[i%cache.frag.length];const a=b[0]+t*sp*(b[1]>0.5?1:-1)*(1+b[1]);
+        const x=160+Math.cos(a)*b[2]*48, y=166+Math.sin(a*1.3)*b[3]*22+Math.sin(t*.002+i)*2;
+        const R=3+b[1]*4;const g=c.createRadialGradient(x,y,0,x,y,R);g.addColorStop(0,myc);g.addColorStop(1,'rgba(255,255,255,0)');c.fillStyle=g;c.beginPath();c.arc(x,y,R,0,6.283);c.fill()}
+    }
+    c.save();c.translate(160,198);c.rotate(stir===2?t*.006:0);c.fillStyle=css('--pink');rr(c,-14,-3,28,6,3);c.fill();c.restore();
+    c.restore();
+    c.strokeStyle=muted;c.lineWidth=2;path();c.stroke();
+    c.strokeStyle='rgba(255,255,255,.5)';c.lineWidth=3;c.beginPath();c.moveTo(146,82);c.lineTo(108,178);c.stroke();
+    c.fillStyle=css('--line');rr(c,136,14,48,12,3);c.fill();
+  }
+}
+
+/* cluster: o = {size, stem, dry, pins, cooked, contam, seed, n} */
+function drawCluster(c,W,H,o){
+  c.clearRect(0,0,W,H);
+  const r=rngFrom(o.seed||11), myc=css('--myc'), muted=css('--muted');
+  const bx=W*.5, by=H*.62;
+  // block
+  c.fillStyle='rgba(0,0,0,.08)';c.beginPath();c.ellipse(bx,H-8,W*.26,7,0,0,6.283);c.fill();
+  c.fillStyle=myc;c.strokeStyle=muted;c.lineWidth=1.5;rr(c,bx-W*.22,by-12,W*.44,H-12-(by-12),10);c.fill();c.stroke();
+  c.strokeStyle='rgba(0,0,0,.06)';c.lineWidth=1;for(let i=0;i<22;i++){const x=bx-W*.2+r()*W*.38,y=by+r()*(H-by-24);c.beginPath();c.moveTo(x,y);c.lineTo(x+6+r()*8,y+r()*3);c.stroke()}
+  if(o.contam){for(let i=0;i<4;i++)trich(c,bx-W*.2+r()*W*.4,by+8+r()*H*.28,14+r()*16);return}
+  c.strokeStyle=muted;c.lineWidth=2;c.beginPath();c.moveTo(bx-16,by+6);c.lineTo(bx+16,by+6);c.stroke();
+  if(o.pins){c.fillStyle=css('--pink');for(let i=0;i<9;i++){c.beginPath();c.arc(bx-14+r()*28,by+2-r()*6,1.6+r()*1.8,0,6.283);c.fill()}return}
+  const pink = o.cooked?css('--cooked'):css('--pink'), deep=o.cooked?css('--cooked'):css('--pink-deep'), gill=o.cooked?css('--myc'):css('--gill');
+  const n=o.n||7, caps=[];
+  for(let i=0;i<n;i++){const f=n===1?.5:i/(n-1);const a=-Math.PI+.18+f*(Math.PI-.36)+(r()-.5)*.2;caps.push({a,k:.7+r()*.45,ph:r()*6,o:Math.abs(f-.5)})}
+  caps.sort((p,q)=>p.o-q.o);
+  c.fillStyle=gill;c.beginPath();c.ellipse(bx,by-2,o.size*.32,o.size*.22,0,0,6.283);c.fill();
+  for(const cp of caps){
+    const R=o.size*cp.k, L=(o.stem+o.size*.5)*(.8+cp.o*.6)*(.85+cp.k*.2);
+    const sx=bx+Math.cos(cp.a)*L, sy=by+Math.sin(cp.a)*L;
+    c.strokeStyle=gill;c.lineWidth=Math.max(4,R*.3);c.lineCap='round';c.beginPath();c.moveTo(bx,by);c.quadraticCurveTo(bx+Math.cos(cp.a)*L*.5,by+Math.sin(cp.a)*L*.6,sx,sy);c.stroke();
+    const span=.95, steps=40, amp=o.dry?.16:.07, freq=o.dry?17:9;
+    const pts=[];for(let j=0;j<=steps;j++){const th=cp.a-span+j/steps*span*2;const rad=R*(1+amp*Math.sin(th*freq+cp.ph))*(1-.18*Math.abs(j/steps-.5)*2);pts.push([sx+Math.cos(th)*rad,sy+Math.sin(th)*rad*.8])}
+    const g=c.createRadialGradient(sx,sy,0,sx,sy,R*1.05);g.addColorStop(0,pink);g.addColorStop(.6,pink);g.addColorStop(1,deep);
+    c.fillStyle=g;c.beginPath();c.moveTo(sx,sy);for(const p of pts)c.lineTo(p[0],p[1]);c.closePath();c.fill();
+    c.strokeStyle=gill;c.globalAlpha=.55;c.lineWidth=.8;c.beginPath();for(let j=1;j<steps;j+=2){const p=pts[j];c.moveTo(sx,sy);c.lineTo(sx+(p[0]-sx)*.92,sy+(p[1]-sy)*.92)}c.stroke();c.globalAlpha=1;
+    if(o.dry){c.strokeStyle=css('--panel');c.lineWidth=1.4;for(let j=4;j<steps;j+=7){const p=pts[j];c.beginPath();c.moveTo(p[0],p[1]);c.lineTo(sx+(p[0]-sx)*.8,sy+(p[1]-sy)*.8);c.stroke()}}
+  }
+}
+
+/* environment model for fruiting */
+function envModel(temp,fae,mist){
+  const co2=Math.round(400+4200/(1+fae*1.15));
+  const rh=clamp(Math.round(mist-fae*2.2),40,100);
+  let tF = temp<64?.08 : temp<70?.4+.6*(temp-64)/6 : temp<=85?1 : temp<=90?1-.05*(temp-85) : .6;
+  let cF = co2<=1000?1 : Math.max(.3,1-(co2-1000)/4200);
+  let hF = rh>=85&&rh<=95?1 : rh<85?Math.max(.3,1-(85-rh)*.035) : .9;
+  const score=tF*cF*hF;
+  const extraRisk=(rh>96?6:0)+(temp>90?6:0);
+  const vis={pins:temp<64, size:(16+30*tF*hF)*(.45+.55*cF), stem:8+Math.max(0,co2-1000)/55, dry:rh<80};
+  return {co2,rh,tF,cF,hF,score,extraRisk,vis};
+}
+function tStat(t){return t<64?['bad','No pins']:t<70?['ok','Slow']:t<=85?['good','Sweet spot']:t<=90?['ok','Heat stress']:['bad','Too hot']}
+function cStat(c){return c<=1000?['good','Fresh']:c<=2000?['ok','Stuffy']:['bad','Leggy stems']}
+function hStat(h){return h<75?['bad','Caps cracking']:h<85?['ok','A bit dry']:h<=95?['good','Ideal']:['ok','Soggy, bacterial risk']}
+
+/* ============================== COMPONENTS ============================== */
+const VesselCanvas = {
+  props:{kind:String, cover:Number, contam:Number, flags:Object, seed:{type:Number,default:5}},
+  template:`<canvas ref="cv" class="vc" width="320" height="240" role="img" :aria-label="kind+' vessel, '+Math.round(cover*100)+'% colonized'"></canvas>`,
+  data(){return{shown:0,raf:0,cache:null}},
+  mounted(){this.ctx=fit(this.$refs.cv,320,240);this.build();this.loop()},
+  unmounted(){cancelAnimationFrame(this.raf)},
+  watch:{kind(){this.shown=0;this.build()}},
+  methods:{
+    build(){
+      const r=rngFrom(this.seed*31+this.kind.length);
+      const geo=GEO[this.kind];
+      const kernMemo={};
+      this.cache={seed:this.seed,
+        segs: geo?genHyphae(r,geo.tips(r),geo.inside,this.kind==='plate'?5200:4200):[],
+        kern:(kr)=>kernMemo[kr]||(kernMemo[kr]=(()=>{const a=[];const rk=rngFrom(9);for(let y=66;y<218;y+=kr*1.4)for(let x=106;x<216;x+=kr*1.9)a.push([x+(rk()-.5)*kr,y+(rk()-.5)*kr,rk()*3]);return a})()),
+        straw:Array.from({length:150},()=>[94+r()*134,96+r()*118,r()*6.283]),
+        spawn:Array.from({length:9},()=>[102+r()*116,104+r()*100]),
+        frag:Array.from({length:30},()=>[r()*6.283,r(),.3+r()*.7,.2+r()*.8])};
+    },
+    loop(){
+      const step=(t)=>{
+        const target=this.cover;
+        if(reduceMotion()) this.shown=target; else this.shown+=(target-this.shown)*.04;
+        drawVessel(this.ctx,this.kind,{cover:this.shown,contam:this.contam,flags:this.flags||{}},this.cache,reduceMotion()?0:t);
+        this.raf=requestAnimationFrame(step);
+      };
+      this.raf=requestAnimationFrame(step);
+    }
+  }
+};
+const ClusterCanvas = {
+  props:{o:Object, w:{type:Number,default:320}, h:{type:Number,default:240}, label:String},
+  template:`<canvas ref="cv" class="vc" :width="w" :height="h" role="img" :aria-label="label||'Pink oyster cluster'"></canvas>`,
+  mounted(){this.ctx=fit(this.$refs.cv,this.w,this.h);this.draw();
+    this.mq=window.matchMedia?matchMedia('(prefers-color-scheme: dark)'):null;this.on=()=>this.draw();this.mq&&this.mq.addEventListener&&this.mq.addEventListener('change',this.on);
+    this.mo=new MutationObserver(this.on);this.mo.observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']})},
+  unmounted(){this.mq&&this.mq.removeEventListener&&this.mq.removeEventListener('change',this.on);this.mo&&this.mo.disconnect()},
+  watch:{o:{deep:true,handler(){this.draw()}}},
+  methods:{draw(){const k=this.w/320;drawCluster(this.ctx,this.w,this.h,{...this.o,size:(this.o.size||40)*k,stem:(this.o.stem||10)*k})}}
+};
+const StageIcon = {
+  props:{id:String},
+  template:`<svg class="ico" viewBox="0 0 48 48" aria-hidden="true">
+   <g v-if="id==='plate'"><ellipse class="s" cx="24" cy="26" rx="20" ry="14"/><ellipse class="a" cx="24" cy="25" rx="16" ry="10"/><ellipse class="m" cx="22" cy="25" rx="8" ry="5"/></g>
+   <g v-else-if="id==='flask'"><path class="s" d="M19 6h10M20 6v12L9 39a3 3 0 0 0 3 4h24a3 3 0 0 0 3-4L28 18V6"/><circle class="m" cx="20" cy="33" r="2.5"/><circle class="m" cx="28" cy="31" r="2"/><circle class="m" cx="24" cy="37" r="1.8"/><rect class="f" x="20" y="39" width="8" height="2" rx="1"/></g>
+   <g v-else-if="id==='jar'"><rect class="s" x="12" y="10" width="24" height="33" rx="5"/><path class="s" d="M14 6h20v4H14z"/><path class="m" d="M14 18h20v22a2 2 0 0 1-2 2H16a2 2 0 0 1-2-2z"/></g>
+   <g v-else-if="id==='bag'"><path class="s" d="M14 5h20l3 38H11z"/><path class="m" d="M13 20h22l2 23H11z"/><rect class="s" x="20" y="9" width="8" height="4"/></g>
+   <g v-else-if="id==='cluster'"><path class="f" d="M24 30C12 30 6 20 12 14s12 6 12 16z"/><path class="f" d="M24 30c12 0 18-10 12-16s-12 6-12 16z" opacity=".8"/><path class="s" d="M14 34h20v9H14z"/></g>
+   <g v-else><path class="s" d="M8 38L30 16l4 4L12 42z"/><path class="s" d="M30 16l6-8 4 4-6 8"/><path class="f" d="M30 34c-6 0-9-5-6-8s6 3 6 8z"/><path class="f" d="M30 34c6 0 9-5 6-8s-6 3-6 8z" opacity=".8"/></g>
+  </svg>`
+};
+const TradeoffChart = {
+  template:`<div class="chartwrap"><svg viewBox="0 0 600 290" role="img" aria-label="Illustrative chart: as nutrition rises, yield rises and flattens while contamination risk accelerates">
+    <rect class="ch-zone" :x="X(50)" y="24" :width="X(100)-X(50)" height="210"/>
+    <text class="ch-t" :x="X(38)" :y="Y(0)-8" text-anchor="middle">PASTEURIZE ZONE</text>
+    <text class="ch-t" :x="X(75)" :y="Y(0)-8" text-anchor="middle">STERILIZE ZONE</text>
+    <line v-for="g in [0,25,50,75,100]" :key="g" class="ch-grid" :x1="X(0)" :x2="X(100)" :y1="Y(g)" :y2="Y(g)"/>
+    <line class="ch-axis" :x1="X(0)" :x2="X(100)" :y1="Y(0)" :y2="Y(0)"/>
+    <line class="ch-axis" :x1="X(0)" :x2="X(0)" :y1="Y(0)" :y2="Y(100)"/>
+    <path class="ch-risk" :d="path(riskF)"/>
+    <path class="ch-yield" :d="path(yieldF)"/>
+    <line class="ch-yield" :x1="X(3)" :x2="X(9)" y1="40" y2="40"/><text class="ch-lab-y" :x="X(10)" y="44">Yield potential</text>
+    <line class="ch-risk" :x1="X(3)" :x2="X(9)" y1="62" y2="62"/><text class="ch-lab-r" :x="X(10)" y="66">Contamination risk</text>
+    <g v-for="(p,i) in pts" :key="p[0]">
+      <circle class="ch-dot" :cx="X(p[1])" :cy="Y(yieldF(p[1]))" r="5"/>
+      <text class="ch-tb" :x="X(p[1])" :y="Y(yieldF(p[1]))+(i%2? -14: 22)" text-anchor="middle">{{p[0]}}</text>
+    </g>
+    <text class="ch-t" :x="X(0)" :y="Y(0)+22">Lean</text>
+    <text class="ch-t" :x="X(100)" :y="Y(0)+22" text-anchor="end">Nitrogen-rich</text>
+    <text class="ch-t" :x="X(50)" :y="Y(0)+22" text-anchor="middle">Nutrition / supplementation →</text>
+  </svg></div>`,
+  data(){return{pts:[['Cardboard',6],['CVG',18],['Straw',32],['Sawdust + bran',62],['Masters Mix',84]]}},
+  methods:{
+    X(v){return 40+v*5.4}, Y(v){return 234-v*2},
+    yieldF(x){return 92*(1-Math.exp(-x/30))}, riskF(x){return 4+88*Math.pow(x/100,2.1)},
+    path(f){let d='';for(let x=0;x<=100;x+=2)d+=(x?'L':'M')+this.X(x).toFixed(1)+' '+this.Y(f(x)).toFixed(1);return d}
+  }
+};
+
+/* ============================== APP ============================== */
+function shuffle(a,r=Math.random){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+const store={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const TABS=[['guide','Field guide'],['cases','Situations'],['sim','Simulator'],['cheatsheet','Cheat sheet']];
+
+const App = {
+ components:{VesselCanvas,ClusterCanvas,StageIcon,TradeoffChart},
+ data(){
+  const h=(location.hash||'').slice(1);
+  const saved=store.get('por-sim',null);
+  const okSaved=saved&&saved.v===3&&Array.isArray(saved.steps);
+  return {
+   tab: TABS.some(t=>t[0]===h)?h:'guide', TABS, GUIDE, CASES, MYTHS, NUMS, PREP, GL, SIM,
+   gStage:'agar', cooked:false,
+   caseFilter:'all', caseAns:store.get('por-cases',{}), drill:'cases', hideSolved:false,
+   myths:[], mi:0, mAns:null, mScore:0, mDone:false,
+   sim: okSaved?saved:this.newRun(), best:store.get('por-best',null),
+   progress: Object.assign({seen:[],myth:null,runs:0}, store.get('por-progress',{})),
+   resumed: okSaved && saved.screen!=='brief' && saved.screen!=='report',
+   confirmRestart:false, deltas:{}, dk:0, toast:'', toastT:0, copyFallback:'', csQ:''
+  };
+ },
+ created(){
+  window.addEventListener('hashchange',()=>{const h=location.hash.slice(1);if(TABS.some(t=>t[0]===h))this.tab=h});
+  window.addEventListener('keydown',this.onKey);
+  this.startMyths();
+  const s=this.sim;
+  if(s.rolled && s.blocks.some(b=>b.state==='pending')){s.blocks.forEach(b=>{if(b.state==='pending')b.state=Math.random()*100<this.riskFinal?'contam':'clean'});this.finish()}
+  this.markSeen();
+ },
+ watch:{
+  sim:{deep:true,handler(v){store.set('por-sim',v)}},
+  caseAns(v){store.set('por-cases',v)},
+  gStage(){this.markSeen()},
+  tab(){this.markSeen();this.confirmRestart=false}
+ },
+ methods:{
+  go(t){this.tab=t;try{location.hash=t}catch(e){} window.scrollTo({top:0,behavior:reduceMotion()?'auto':'smooth'})},
+  saveProg(){store.set('por-progress',this.progress)},
+  markSeen(){if(this.tab==='guide'&&!this.progress.seen.includes(this.gStage)){this.progress.seen.push(this.gStage);this.saveProg()}},
+  pickStage(id){
+   this.gStage=id;
+   this.$nextTick(()=>{const el=document.getElementById('stagepanel');if(!el)return;const r=el.getBoundingClientRect();if(r.top<60||r.top>window.innerHeight*.6)el.scrollIntoView({behavior:reduceMotion()?'auto':'smooth',block:'start'})});
+  },
+  showToast(m){this.toast=m;clearTimeout(this.toastT);this.toastT=setTimeout(()=>{this.toast=''},2400)},
+  badge(t){
+   if(t==='guide') return this.progress.seen.length+'/6';
+   if(t==='cases') return this.answered+'/'+CASES.length;
+   if(t==='sim') return this.best!=null?'best '+this.best:(this.sim.screen!=='brief'&&this.sim.screen!=='report'?'in progress':'');
+   return '';
+  },
+  badgeDone(t){return t==='guide'?this.progress.seen.length>=6:t==='cases'?this.answered>=CASES.length:false},
+  caseCount(st){const l=CASES.map((c,i)=>i).filter(i=>CASES[i].st===st);return [l.filter(i=>this.caseAns[i]!==undefined).length,l.length]},
+  onKey(e){
+   if(this.tab!=='sim'||e.metaKey||e.ctrlKey||e.altKey) return;
+   const ae=document.activeElement, tag=ae&&ae.tagName||'';
+   if(tag==='INPUT'||tag==='TEXTAREA'||tag==='SUMMARY') return;
+   const s=this.sim;
+   if(s.screen==='step' && !this.curStep.env && s.picked===null && e.key.length===1){
+    const k=e.key.toLowerCase(); let i='abcdefg'.indexOf(k); if(i<0) i='1234567'.indexOf(k);
+    if(i>=0 && i<this.curStep.opts.length){e.preventDefault();this.choose(i);return}
+   }
+   if(e.key==='Enter' && tag!=='BUTTON'){
+    if(s.screen==='brief'){e.preventDefault();this.simStart()}
+    else if(s.screen==='step'&&s.picked!==null){e.preventDefault();this.next()}
+   }
+  },
+  focusNext(){this.$nextTick(()=>{const b=this.$refs.nextBtn;if(b){b.focus({preventScroll:true});const r=b.getBoundingClientRect();if(r.bottom>window.innerHeight-10)b.scrollIntoView({behavior:reduceMotion()?'auto':'smooth',block:'center'})}})},
+  focusStage(){this.$nextTick(()=>{const h=this.$refs.stageH;if(h){h.focus({preventScroll:true});const r=h.getBoundingClientRect();if(r.top<70||r.top>window.innerHeight)h.scrollIntoView({behavior:reduceMotion()?'auto':'smooth',block:'center'})}})},
+  onHint(e){if(e.target.open){const id=SIM[this.sim.si].id;if(!this.sim.hints.includes(id))this.sim.hints.push(id)}},
+  async copyResult(){
+   const txt='Pink Oyster Run: '+this.rank[0]+', '+this.total+'/100\n'+this.cleanBlocks+'/6 clean blocks · '+this.keptKg+' kg kept · BE '+this.beFinal+'% · '+this.sim.season.name+' season\n'+(this.mistakes.length?'Cost me: '+this.mistakes.map(m=>m.stage+' – '+m.t).join('; '):'No mistakes.');
+   try{await navigator.clipboard.writeText(txt);this.copyFallback='';this.showToast('Result copied')}
+   catch(e){this.copyFallback=txt;this.showToast('Copying is blocked here. Select the text below.')}
+  },
+  csMatch(s){const q=this.csQ.trim().toLowerCase();return !q||String(s).toLowerCase().includes(q)},
+  csItems(arr){if(!this.csQ.trim())return arr.slice(0,3);const f=arr.filter(a=>this.csMatch(a.join(' ')));return f.length?f:arr.slice(0,3)},
+  study(st){this.gStage=st;this.go('guide');this.$nextTick(()=>{const el=document.getElementById('stagepanel');el&&el.scrollIntoView({behavior:reduceMotion()?'auto':'smooth',block:'start'})})},
+  guideFor(id){return GUIDE.find(g=>g.id===id)},
+  /* cases */
+  pickCase(i,j){if(this.caseAns[i]!==undefined)return;this.caseAns={...this.caseAns,[i]:j}},
+  resetCases(){this.caseAns={}},
+  /* myths */
+  startMyths(){this.myths=shuffle(MYTHS).slice(0,8);this.mi=0;this.mAns=null;this.mScore=0;this.mDone=false},
+  mythAnswer(v){if(this.mAns!==null)return;this.mAns=v;if(v===this.myths[this.mi].a)this.mScore++},
+  mythNext(){if(this.mi<this.myths.length-1){this.mi++;this.mAns=null}else{this.mDone=true;this.progress.myth=Math.max(this.progress.myth??0,this.mScore);this.saveProg()}},
+  /* sim */
+  newRun(){
+   const seed=Math.floor(Math.random()*1e9), r=rngFrom(seed);
+   const steps=SIM.map(s=>[...s.fixed, ...(s.pool.length?[s.pool[Math.floor(r()*s.pool.length)]]:[])].map(st=>st.env?st:{...st,opts:shuffle(st.opts,r)}));
+   const season=SEASONS[Math.floor(r()*SEASONS.length)];
+   return {v:3, hints:[], seed, steps, season, screen:'brief', si:0, qi:0, picked:null, vig:50, risk:6, be:40, sell:1,
+     flags:{stir:2}, log:[], env:{temp:season.temp, fae:0, mist:80}, envDone:false, envScore:1, blocks:[], rolled:false};
+  },
+  restart(){this.sim=this.newRun();this.confirmRestart=false;this.resumed=false;this.copyFallback='';window.scrollTo({top:0})},
+  simStart(){this.sim.screen='step';this.focusStage()},
+  choose(i){
+   const s=this.sim; if(s.picked!==null) return;
+   s.picked=i; const o=this.curStep.opts[i], f=o.fx||{};
+   s.vig=clamp(s.vig+(f.vig||0),0,100); s.risk=clamp(s.risk+(f.risk||0),2,95); s.be=clamp(s.be+(f.be||0),0,140);
+   if(f.sell!==undefined) s.sell=f.sell;
+   if(o.set) Object.assign(s.flags,o.set);
+   s.log.push({st:SIM[s.si].id, stage:SIM[s.si].name, t:o.t, g:o.g, why:o.why});
+   this.deltas={vig:f.vig||0,risk:f.risk||0,be:f.be||0}; this.dk++; this.resumed=false;
+   this.focusNext();
+  },
+  lockEnv(){
+   const s=this.sim, m=this.envM;
+   s.envScore=m.score; s.risk=clamp(s.risk+m.extraRisk,2,95); s.envDone=true;
+   const g=m.score>.85?'best':m.score>.6?'good':m.score>.35?'ok':'bad';
+   const issues=[];
+   if(m.tF<1) issues.push(s.env.temp<64?'too cold to pin (below ~64°F)':s.env.temp<70?'cool, so pinning is slow':'above 85°F, so the blocks are heat-stressed');
+   if(m.cF<1) issues.push('CO₂ too high: leggy stems, small caps');
+   if(m.hF<1) issues.push(m.rh<85?'humidity too low for the airflow: caps dry and crack':'humidity so high it invites bacteria');
+   s.log.push({st:'fruit', stage:'Fruiting', t:`${s.env.temp}°F · ${s.env.fae} air exchanges/hr · ${m.rh}% RH`, g,
+     why: issues.length? 'Costly: '+issues.join('; ')+'.' : 'Warm, fresh and humid. Exactly what a tropical oyster wants.'});
+   s.picked=0;
+   this.deltas={risk:m.extraRisk}; this.dk++;
+   this.focusNext();
+  },
+  next(){
+   const s=this.sim; s.picked=null; s.envDone=false; this.deltas={};
+   if(s.qi<s.steps[s.si].length-1){s.qi++;this.focusStage();return}
+   if(s.si<SIM.length-1){s.si++;s.qi=0;this.focusStage();return}
+   s.screen='blocks'; s.blocks=Array.from({length:6},()=>({state:'pending'}));
+   window.scrollTo({top:0,behavior:reduceMotion()?'auto':'smooth'});
+  },
+  rollBlocks(){
+   const s=this.sim; if(s.rolled) return; s.rolled=true;
+   const fast=reduceMotion();
+   s.blocks.forEach((b,i)=>setTimeout(()=>{b.state=Math.random()*100<this.riskFinal?'contam':'clean'; if(i===5) this.finish()}, fast?0:(i+1)*420));
+  },
+  finish(){
+   const t=this.total; if(this.best==null||t>this.best){this.best=t;store.set('por-best',t)}
+   this.progress.runs++; this.saveProg();
+  },
+  toReport(){this.sim.screen='report';window.scrollTo({top:0})},
+  fxList(fx){
+   const out=[],m={vig:'vigor',risk:'contam risk',be:'yield potential'};
+   for(const k of ['vig','risk','be']) if(fx&&fx[k]){const v=fx[k],good=k==='risk'?v<0:v>0;out.push({t:(v>0?'+':'')+v+(k==='vig'?'':'%')+' '+m[k],c:good?'up':'dn'})}
+   if(fx&&fx.sell!==undefined&&fx.sell<1) out.push({t:'−'+Math.round((1-fx.sell)*100)+'% usable harvest',c:'dn'});
+   return out;
+  },
+  tStat, cStat, hStat
+ },
+ computed:{
+  guide(){return this.guideFor(this.gStage)},
+  heroO(){return {size:46,stem:10,n:8,seed:4,cooked:this.cooked}},
+  casesShown(){return CASES.map((c,i)=>({...c,i})).filter(c=>(this.caseFilter==='all'||c.st===this.caseFilter)&&!(this.hideSolved&&this.caseAns[c.i]!==undefined))},
+  answered(){return Object.keys(this.caseAns).length},
+  gIdx(){return GUIDE.findIndex(g=>g.id===this.gStage)},
+  pathSteps(){
+   const p=this.progress;
+   return [
+    {t:'Read all six stages', d:p.seen.length+' of 6 read', f:p.seen.length/6, on:p.seen.length>=6, go:()=>this.pickStage(GUIDE.find(g=>!p.seen.includes(g.id))?.id||'agar')},
+    {t:'Diagnose the situations', d:this.answered+' of '+CASES.length+' answered', f:this.answered/CASES.length, on:this.answered>=CASES.length, go:()=>{this.drill='cases';this.go('cases')}},
+    {t:'Pass the myth sprint', d:p.myth==null?'Not tried yet':'Best '+p.myth+'/8', f:p.myth==null?0:p.myth/8, on:(p.myth??0)>=6, go:()=>{this.drill='myths';this.go('cases')}},
+    {t:'Finish a simulated grow', d:p.runs?p.runs+' run'+(p.runs>1?'s':'')+' · best '+this.best:'No runs yet', f:p.runs?Math.min(1,(this.best||0)/100):0, on:p.runs>0, go:()=>this.go('sim')}
+   ];
+  },
+  csNums(){return NUMS.filter(n=>this.csMatch(n.join(' ')))},
+  csGuide(){return GUIDE.filter(g=>this.csMatch([g.name,g.target,...g.picks.flat(),...g.mistakes.flat(),...g.adds.flat()].join(' ')))},
+  csPrep(){return PREP.filter(p=>this.csMatch(p.join(' ')))},
+  csMyths(){return MYTHS.filter(m=>this.csMatch(m.s+' '+m.w))},
+  csTotal(){return this.csNums.length+this.csGuide.length+this.csPrep.length+this.csMyths.length},
+  caseScore(){let r=0,n=0;for(const k in this.caseAns){n++;if(this.caseAns[k]===CASES[k].a)r++}return [r,n]},
+  curStep(){const s=this.sim;return s.steps[s.si][s.qi]},
+  curStage(){return SIM[this.sim.si]},
+  totalSteps(){return this.sim.steps.reduce((a,b)=>a+b.length,0)},
+  doneSteps(){const s=this.sim;let d=0;for(let i=0;i<s.si;i++)d+=s.steps[i].length;return d+s.qi+(s.picked!==null?1:0)},
+  envM(){const e=this.sim.env;return envModel(+e.temp,+e.fae,+e.mist)},
+  riskFinal(){const s=this.sim;return clamp(Math.round(s.risk-(s.vig-50)*.15),2,95)},
+  beFinal(){const s=this.sim;return Math.round(s.be*(.6+s.vig/250)*(.25+.75*s.envScore))},
+  cleanBlocks(){return this.sim.blocks.filter(b=>b.state==='clean').length},
+  freshKg(){return +(this.cleanBlocks*this.beFinal/100).toFixed(2)},
+  keptKg(){return +(this.freshKg*this.sim.sell).toFixed(2)},
+  decPts(){return this.sim.log.reduce((a,l)=>a+GP[l.g],0)},
+  decMax(){return this.totalSteps*3},
+  total(){
+   const s=this.sim, dec=this.decPts/this.decMax;
+   const harvest=(this.cleanBlocks/6)*Math.min(1,this.beFinal/90)*s.sell;
+   return Math.round(55*dec+15*s.envScore+30*harvest);
+  },
+  rank(){
+   const t=this.total;
+   if(t>=88) return ['Pleurotus Whisperer','Clean technique, smart prep, warm room, fast harvest. This is a market-table run.'];
+   if(t>=70) return ['Flush Master','A solid run with a couple of costly habits. Fix the rows below and you’re top tier.'];
+   if(t>=50) return ['Grain Jar Apprentice','You can grow mycelium. Contamination, conditions or timing are still beating you.'];
+   return ['Spore Tourist','The mushrooms weren’t the problem. Study the rows below, then run it again.'];
+  },
+  mistakes(){return this.sim.log.filter(l=>l.g==='bad'||l.g==='ok')},
+  railKind(){const s=this.sim;if(s.screen==='brief')return 'plate';if(s.screen!=='step')return 'cluster';return SIM[s.si].vessel},
+  railCover(){
+   const s=this.sim; if(s.screen==='brief') return .05;
+   const n=s.steps[s.si].length, f=(s.qi+(s.picked!==null?1:0))/n;
+   return clamp((.12+f*.88)*(.55+s.vig/220),0,1);
+  },
+  railContam(){const s=this.sim;return clamp((s.risk-12)/60,0,1)},
+  railCluster(){
+   const s=this.sim;
+   if(s.si===4 && s.screen==='step'){const v=this.envM.vis;return {size:v.size,stem:v.stem,dry:v.dry,pins:v.pins,n:7,seed:s.seed%97}}
+   const v=envModel(+s.env.temp,+s.env.fae,+s.env.mist).vis;
+   return {size:v.size,stem:v.stem,dry:v.dry,pins:v.pins,n:7,seed:s.seed%97,cooked:false,contam:s.screen==='report'&&this.cleanBlocks===0&&s.rolled};
+  },
+  railCap(){
+   const s=this.sim;
+   if(s.screen==='brief') return 'Fresh MEA plate, ready for a culture';
+   if(s.screen==='blocks'||s.screen==='report') return 'Your fruiting block';
+   return {plate:'Petri dish',flask:'LC jar on stir plate',jar:'Quart jar of grain spawn',bag:'Filter-patch grow bag',cluster:s.si===4?'Live preview: move the sliders':'Fruiting block'}[SIM[s.si].vessel]+' · '+SIM[s.si].days;
+  },
+  riskColor(){const r=this.sim.risk;return r>40?'var(--bad)':r>20?'var(--warn)':'var(--good)'}
+ },
+ template:`
+<header class="masthead">
+  <div class="logo">Pink Oyster <em>Run</em></div>
+  <div class="species"><i>Pleurotus djamor</i> · 70–85°F · shelf life 1–2 days</div>
+</header>
+<nav class="tabs" role="tablist" aria-label="Sections">
+  <button v-for="(t,i) in TABS" :key="t[0]" role="tab" :aria-selected="tab===t[0]" @click="go(t[0])"><span class="n">0{{i+1}}</span>{{t[1]}}<span v-if="badge(t[0])" class="badge" :class="{done:badgeDone(t[0])}">{{ badgeDone(t[0])?'✓ ':'' }}{{ badge(t[0]) }}</span></button>
+</nav>
+
+<!-- ======================= FIELD GUIDE ======================= -->
+<section v-if="tab==='guide'" class="tab">
+  <div class="hero">
+    <div>
+      <span class="label">Field guide · start here</span>
+      <h1 style="margin-top:8px">Easy to colonize. <span>Hard to grow clean.</span></h1>
+      <p class="lede">Pink oysters are aggressive and fast. You’re mostly fighting contamination on the rich substrates they love, a cold room, and a harvest that spoils in two days. Walk the six stages below, then run the simulator.</p>
+      <div class="facts">
+        <div class="fact"><b>70–85°F</b><span>fruiting range</span></div>
+        <div class="fact"><b>&lt; 64°F</b><span>pins stall</span></div>
+        <div class="fact"><b>1–2 days</b><span>fresh shelf life</span></div>
+        <div class="fact"><b>1–2</b><span>strong flushes</span></div>
+      </div>
+      <div class="actions" style="margin-top:20px">
+        <button class="btn" @click="go('sim')">Run the simulator</button>
+        <button class="btn ghost" @click="go('cases')">Diagnose situations</button>
+      </div>
+    </div>
+    <div class="art">
+      <cluster-canvas :o="heroO" :w="480" :h="340" :label="cooked?'Cooked pink oysters, faded to tan':'Raw pink oyster cluster'"></cluster-canvas>
+      <div class="toggle" role="group" aria-label="Raw or cooked">
+        <button :aria-pressed="!cooked" @click="cooked=false">Raw</button>
+        <button :aria-pressed="cooked" @click="cooked=true">Cooked</button>
+      </div>
+      <p class="muted" style="text-align:center;font-size:13px">{{ cooked ? 'Heat fades the pink to tan-brown. Sell the color raw.' : 'Tap Cooked to bust myth #1.' }}</p>
+    </div>
+  </div>
+
+  <div class="stack">
+    <span class="label">Your learning path · saved in this browser</span>
+    <div class="path">
+      <button v-for="(p,i) in pathSteps" :key="p.t" class="pstep" @click="p.go()">
+        <span class="top"><span class="label">Step {{ i+1 }}</span><span class="tick" :class="{on:p.on}" aria-hidden="true">{{ p.on?'✓':'' }}</span></span>
+        <b>{{ p.t }}</b>
+        <span class="mini"><i :style="{width:Math.round(p.f*100)+'%'}"></i></span>
+        <span class="mono">{{ p.d }}</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="card stack">
+    <span class="label">The one rule that runs the pipeline</span>
+    <h2 style="font-size:clamp(22px,3vw,30px)">More nitrogen → more yield → more contamination risk → more sterility required</h2>
+    <p class="muted">Every “best” choice is a point on this curve. The curve shape is illustrative, not measured data.</p>
+    <tradeoff-chart></tradeoff-chart>
+  </div>
+
+  <div class="stack">
+    <span class="label">The pipeline · tap a stage</span>
+    <div class="pipeline">
+      <button v-for="(g,i) in GUIDE" :key="g.id" class="pnode" :aria-pressed="gStage===g.id" @click="pickStage(g.id)">
+        <stage-icon :id="g.icon"></stage-icon><b>{{g.name}}</b><span class="mono">{{g.mistakes.length}} mistakes</span>
+      </button>
+    </div>
+  </div>
+
+  <div id="stagepanel" class="stagepanel">
+    <div class="card stack">
+      <span class="label">Stage {{ GUIDE.indexOf(guide)+1 }} of 6</span>
+      <h2>{{ guide.name }}</h2>
+      <p>{{ guide.what }}</p>
+      <div class="target"><span class="label">Optimizing for</span><p style="margin-top:2px"><b>{{ guide.target }}</b></p><p class="muted" style="font-size:14.5px;margin-top:2px">Success looks like: {{ guide.success }}</p></div>
+      <span class="label">Best → acceptable</span>
+      <ol class="picks"><li v-for="p in guide.picks" :key="p[0]"><div><b>{{p[0]}}</b> <span class="muted">{{p[1]}}</span></div></li></ol>
+      <template v-if="guide.adds.length">
+        <span class="label">Good additives</span>
+        <div class="addrow"><span v-for="a in guide.adds" :key="a[0]" class="add"><b>{{a[0]}}</b> · {{a[1]}}</span></div>
+      </template>
+      <div class="stagenav">
+        <button class="btn ghost sm" :disabled="gIdx===0" @click="pickStage(GUIDE[Math.max(0,gIdx-1)].id)">← {{ gIdx>0?GUIDE[gIdx-1].name:'Start' }}</button>
+        <button v-if="gIdx<GUIDE.length-1" class="btn sm" @click="pickStage(GUIDE[gIdx+1].id)">Next: {{ GUIDE[gIdx+1].name }} →</button>
+        <button v-else class="btn sm" @click="go('sim')">Run the simulator →</button>
+      </div>
+    </div>
+    <div class="stack" style="align-content:start">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap">
+        <span class="label">Common mistakes</span>
+        <button class="btn ghost sm" @click="caseFilter=gStage;go('cases')">Practice {{ guide.name.toLowerCase() }} situations</button>
+      </div>
+      <div class="mist">
+        <div v-for="m in guide.mistakes" :key="m[0]" class="mistake">
+          <h4>{{ m[0] }}</h4>
+          <p class="why">{{ m[1] }}</p>
+          <p class="fix"><b>Fix:</b> {{ m[2] }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================= SITUATIONS ======================= -->
+<section v-else-if="tab==='cases'" class="tab">
+  <div class="stack">
+    <span class="label">Situations</span>
+    <h1 style="font-size:clamp(30px,5vw,48px)">What’s going on with my grow?</h1>
+    <p class="muted" style="max-width:62ch">These are the situations growers hit most. Read the symptom, make a call, then see the fix. Or switch to the myth sprint.</p>
+    <div class="toggle" role="group" aria-label="Mode" style="justify-self:start">
+      <button :aria-pressed="drill==='cases'" @click="drill='cases'">Diagnose ({{CASES.length}})</button>
+      <button :aria-pressed="drill==='myths'" @click="drill='myths'">Myth sprint</button>
+    </div>
+  </div>
+
+  <template v-if="drill==='cases'">
+    <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center">
+      <div class="filters" role="group" aria-label="Filter by stage">
+        <button :aria-pressed="caseFilter==='all'" @click="caseFilter='all'">All <span class="mono">{{answered}}/{{CASES.length}}</span></button>
+        <button v-for="g in GUIDE" :key="g.id" :aria-pressed="caseFilter===g.id" @click="caseFilter=g.id">{{g.name}} <span class="mono">{{caseCount(g.id)[0]}}/{{caseCount(g.id)[1]}}</span></button>
+      </div>
+      <div class="actions" style="align-items:center">
+        <label class="score" style="display:flex;gap:6px;align-items:center"><input id="hide-solved" type="checkbox" v-model="hideSolved" style="accent-color:var(--pink)"> Hide answered</label>
+        <span class="score">{{caseScore[0]}}/{{caseScore[1]}} correct</span>
+        <button class="btn ghost sm" @click="resetCases" :disabled="!caseScore[1]">Reset</button>
+      </div>
+    </div>
+    <div class="mini" role="progressbar" :aria-valuenow="answered" aria-valuemin="0" :aria-valuemax="CASES.length" aria-label="Situations answered"><i :style="{width:answered/CASES.length*100+'%'}"></i></div>
+    <div v-if="!casesShown.length" class="empty">{{ hideSolved?'You’ve answered every situation in this filter. Untick “Hide answered” to review them, or pick another stage.':'No situations here.' }}</div>
+    <div class="cases">
+      <article v-for="c in casesShown" :key="c.i" class="case">
+        <div class="hd"><span class="chip plain">{{ guideFor(c.st).name }}</span><span class="label">Case {{ String(c.i+1).padStart(2,'0') }}</span></div>
+        <p class="see">{{ c.see }}</p>
+        <div class="copts">
+          <button v-for="(o,j) in c.opts" :key="j" class="copt" :disabled="caseAns[c.i]!==undefined"
+            :class="caseAns[c.i]===undefined?'':(j===c.a?'right':(caseAns[c.i]===j?'wrong':'fade'))"
+            @click="pickCase(c.i,j)">{{ o }}</button>
+        </div>
+        <div v-if="caseAns[c.i]!==undefined" class="reveal" aria-live="polite">
+          <span><span class="chip" :class="caseAns[c.i]===c.a?'good':'bad'">{{ caseAns[c.i]===c.a?'Correct':'Not quite' }}</span></span>
+          <p><b>Fix:</b> {{ c.fix }}</p>
+        </div>
+      </article>
+    </div>
+    <div class="card" style="display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between">
+      <p style="max-width:60ch"><b>Ready to run your own grow?</b> The simulator throws a random mix of these situations at you, so every run is a little different.</p>
+      <button class="btn" @click="go('sim')">Open the simulator</button>
+    </div>
+  </template>
+
+  <div v-else class="card stack" style="max-width:720px">
+    <template v-if="!mDone">
+      <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><span class="label">Myth or fact</span><span class="score">{{mi+1}} / {{myths.length}} · score {{mScore}}</span></div>
+      <p class="myth">“{{ myths[mi].s }}”</p>
+      <div class="tf">
+        <button class="btn ghost" :disabled="mAns!==null" @click="mythAnswer(true)">Fact</button>
+        <button class="btn ghost" :disabled="mAns!==null" @click="mythAnswer(false)">Myth</button>
+      </div>
+      <div v-if="mAns!==null" class="verdict" :class="mAns===myths[mi].a?'good':'bad'" aria-live="polite">
+        <div><span class="chip" :class="mAns===myths[mi].a?'good':'bad'">{{ mAns===myths[mi].a?'Correct':'Wrong' }}</span> <b>{{ myths[mi].a?'Fact.':'Myth.' }}</b> {{ myths[mi].w }}</div>
+      </div>
+      <div class="actions" v-if="mAns!==null"><button class="btn" @click="mythNext">{{ mi<myths.length-1?'Next':'Finish' }}</button></div>
+    </template>
+    <template v-else>
+      <span class="label">Myth sprint done</span>
+      <p class="rank">{{ mScore }} / {{ myths.length }}</p>
+      <p>{{ mScore>=7?'Sharp. You won’t fall for the usual forum advice.':mScore>=5?'Decent. Review the myths list on the cheat sheet.':'Worth a pass through the cheat sheet’s myth list.' }}</p>
+      <div class="actions"><button class="btn" @click="startMyths">Another round</button><button class="btn ghost" @click="go('cheatsheet')">Cheat sheet</button></div>
+    </template>
+  </div>
+</section>
+
+<!-- ======================= SIMULATOR ======================= -->
+<section v-else-if="tab==='sim'" class="tab">
+  <div class="simbar">
+    <span class="muted" style="font-size:14px">{{ resumed ? 'Resumed your saved run: '+curStage.days+', '+curStage.name+'.' : (sim.screen==='brief'?'A new run with fresh situations.':'Your run saves automatically in this browser.') }}</span>
+    <template v-if="sim.screen!=='brief'">
+      <div v-if="confirmRestart" class="confirm" role="alert">
+        <span>Discard this run and start over?</span>
+        <button class="btn sm" @click="restart">Discard</button>
+        <button class="btn ghost sm" @click="confirmRestart=false">Keep playing</button>
+      </div>
+      <button v-else-if="sim.screen!=='report'" class="btn ghost sm" @click="confirmRestart=true">Restart run</button>
+    </template>
+  </div>
+  <nav class="track" aria-label="Run progress">
+    <div v-for="(s,i) in SIM" :key="s.id" class="node" :class="{now:sim.screen==='step'&&i===sim.si, done:sim.screen!=='brief'&&(sim.screen!=='step'||i<sim.si)}">
+      {{ s.days }}<b>{{ s.name }}</b>
+    </div>
+  </nav>
+
+  <div class="simgrid">
+  <main>
+    <!-- BRIEF -->
+    <div v-if="sim.screen==='brief'" class="card stack">
+      <span class="label">Run brief · seed {{ sim.seed % 10000 }}</span>
+      <h2 style="font-size:clamp(26px,4vw,36px)">Your grow, from plate to plate</h2>
+      <p>You’ll make about {{ totalSteps }} calls across six stages. Each stage also throws one random situation at you. In the fruiting room you set the conditions yourself. At the end, <b>six blocks</b> each roll against your contamination risk.</p>
+      <div class="brief">
+        <div><span class="label">Season</span><b>{{ sim.season.name }}</b><span class="muted" style="font-size:14px">{{ sim.season.note }}</span></div>
+        <div><span class="label">Batch</span><b>6 blocks</b><span class="muted" style="font-size:14px">1 kg dry substrate each</span></div>
+        <div><span class="label">Your best</span><b>{{ best ?? '—' }}</b><span class="muted" style="font-size:14px">score out of 100</span></div>
+      </div>
+      <p class="muted" style="font-size:14.5px">Scoring: decisions 55%, fruiting conditions 15%, harvest you actually keep 30%.</p>
+      <div class="actions"><button class="btn" @click="simStart">Start the run</button><button class="btn ghost" @click="go('guide')">Review the guide first</button></div>
+    </div>
+
+    <!-- STEP -->
+    <div v-else-if="sim.screen==='step'" class="card">
+      <div class="stagehead">
+        <span class="label">{{ curStage.days }} · step {{ sim.qi+1 }}/{{ sim.steps[sim.si].length }}</span>
+        <h2 ref="stageH" tabindex="-1">{{ guideFor(curStage.id).name }}</h2>
+        <p class="muted" style="font-size:14.5px"><b style="color:var(--ink)">Optimizing for:</b> {{ guideFor(curStage.id).target }}</p>
+      </div>
+      <details class="hintbox" :key="'h'+sim.si" @toggle="onHint">
+        <summary>Field notes for {{ guideFor(curStage.id).name.toLowerCase() }}</summary>
+        <p class="muted" style="margin-top:4px;font-size:13.5px">Free to open. Your report notes which stages you peeked at.</p>
+        <ul><li v-for="m in guideFor(curStage.id).mistakes.slice(0,4)" :key="m[0]"><b>Avoid:</b> {{ m[0].toLowerCase() }}. {{ m[2] }}</li></ul>
+      </details>
+
+      <!-- fruiting room -->
+      <div v-if="curStep.env" class="env">
+        <div class="event"><span class="label">{{ sim.season.name }}</span><span>{{ sim.season.note }} The tote lid is sealed and the mister is on low. Set up the room, watch the preview, then lock it in.</span></div>
+        <div class="slider">
+          <div class="row"><label for="s-temp">Room temperature</label><span><b class="mono">{{ sim.env.temp }}°F</b> <span class="chip" :class="tStat(+sim.env.temp)[0]">{{ tStat(+sim.env.temp)[1] }}</span></span></div>
+          <input id="s-temp" type="range" min="55" max="95" step="1" v-model.number="sim.env.temp" :disabled="sim.envDone">
+          <span class="hint">Heater, heat mat or AC. Pinks are tropical.</span>
+        </div>
+        <div class="slider">
+          <div class="row"><label for="s-fae">Fresh air exchange</label><span><b class="mono">{{ sim.env.fae }}/hr · ~{{ envM.co2 }} ppm CO₂</b> <span class="chip" :class="cStat(envM.co2)[0]">{{ cStat(envM.co2)[1] }}</span></span></div>
+          <input id="s-fae" type="range" min="0" max="10" step="1" v-model.number="sim.env.fae" :disabled="sim.envDone">
+          <span class="hint">Fan or vent the tote. More air lowers CO₂ but dries the air.</span>
+        </div>
+        <div class="slider">
+          <div class="row"><label for="s-mist">Misting / humidifier</label><span><b class="mono">{{ envM.rh }}% RH</b> <span class="chip" :class="hStat(envM.rh)[0]">{{ hStat(envM.rh)[1] }}</span></span></div>
+          <input id="s-mist" type="range" min="60" max="110" step="1" v-model.number="sim.env.mist" :disabled="sim.envDone">
+          <span class="hint">Effective humidity drops as fresh air rises. The 85–95% target is common practice, not a figure from the guide.</span>
+        </div>
+        <div class="meter"><div class="row"><span>Room quality</span><b>{{ Math.round(envM.score*100) }}%</b></div><div class="bar"><i :style="{width:envM.score*100+'%',background:'var(--pink)'}"></i></div></div>
+        <div class="actions" v-if="!sim.envDone"><button class="btn" @click="lockEnv">Lock in conditions</button></div>
+        <div v-else class="verdict" :class="sim.log[sim.log.length-1].g">
+          <div><span class="chip" :class="sim.log[sim.log.length-1].g">{{ GL[sim.log[sim.log.length-1].g] }}</span></div>
+          <div>{{ sim.log[sim.log.length-1].why }}</div>
+        </div>
+      </div>
+
+      <!-- choice step -->
+      <template v-else>
+        <div v-if="curStep.event" class="event"><span class="label">Situation</span><span>{{ curStep.event }}</span></div>
+        <p class="q">{{ curStep.q }}</p>
+        <div class="opts">
+          <button v-for="(o,i) in curStep.opts" :key="sim.si+'-'+sim.qi+'-'+i" class="opt"
+            :class="[sim.picked===i?'picked '+o.g:'', sim.picked!==null&&sim.picked!==i?'dim':'']"
+            :disabled="sim.picked!==null" @click="choose(i)">
+            <span class="key">{{ 'ABCDEFG'[i] }}</span><span class="txt">{{ o.t }}<small v-if="o.s">{{ o.s }}</small></span>
+          </button>
+        </div>
+        <div v-if="sim.picked!==null" class="verdict" :class="curStep.opts[sim.picked].g" aria-live="polite">
+          <div><span class="chip" :class="curStep.opts[sim.picked].g">{{ GL[curStep.opts[sim.picked].g] }}</span></div>
+          <div>{{ curStep.opts[sim.picked].why }}</div>
+          <div class="fx" v-if="fxList(curStep.opts[sim.picked].fx).length"><span v-for="f in fxList(curStep.opts[sim.picked].fx)" :class="f.c">{{ f.t }}</span></div>
+        </div>
+        <p class="kbd" v-if="sim.picked===null">Keys: <kbd>A</kbd>–<kbd>{{ 'ABCDEFG'[curStep.opts.length-1] }}</kbd> or <kbd>1</kbd>–<kbd>{{ curStep.opts.length }}</kbd> to choose · <kbd>Enter</kbd> to continue</p>
+      </template>
+
+      <div class="actions" style="margin-top:16px" v-if="sim.picked!==null">
+        <button class="btn" ref="nextBtn" @click="next">{{ sim.qi<sim.steps[sim.si].length-1 ? 'Next decision' : (sim.si<SIM.length-1 ? 'On to '+guideFor(SIM[sim.si+1].id).name.toLowerCase() : 'Check the blocks') }}</button>
+      </div>
+    </div>
+
+    <!-- BLOCKS -->
+    <div v-else-if="sim.screen==='blocks'" class="card stack">
+      <span class="label">Moment of truth</span>
+      <h2 style="font-size:clamp(26px,4vw,34px)">Six blocks. Who stays clean?</h2>
+      <p>Final contamination risk: <b class="mono">{{ riskFinal }}%</b> per block{{ sim.vig>50?', trimmed because vigorous mycelium outcompetes mold':'' }}. Each block rolls on its own.</p>
+      <div class="blocks">
+        <div v-for="(b,i) in sim.blocks" :key="i" class="blk" :class="b.state">
+          <cluster-canvas v-if="b.state!=='pending'" :o="{...railCluster, contam:b.state==='contam', seed:i+3}" :w="200" :h="150" :label="'Block '+(i+1)+(b.state==='contam'?' contaminated':' fruiting')"></cluster-canvas>
+          <div v-else style="aspect-ratio:4/3;display:grid;place-items:center" class="mono muted">?</div>
+          <span class="mono">Block {{ i+1 }} · {{ b.state==='pending'?'colonizing':b.state==='clean'?'clean':'Trichoderma' }}</span>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn" v-if="!sim.rolled" @click="rollBlocks">Roll all six</button>
+        <button class="btn" v-else-if="sim.blocks.every(b=>b.state!=='pending')" @click="toReport">See the lab report</button>
+      </div>
+    </div>
+
+    <!-- REPORT -->
+    <div v-else class="stack">
+      <div class="card stack">
+        <span class="label">Lab report · score {{ total }}/100{{ best===total?' · new best':'' }}</span>
+        <div class="rank">{{ rank[0] }}</div>
+        <p>{{ rank[1] }}</p>
+        <div class="stats">
+          <div class="stat"><span class="label">Decisions</span><b>{{ decPts }}/{{ decMax }}</b></div>
+          <div class="stat"><span class="label">Room quality</span><b>{{ Math.round(sim.envScore*100) }}%</b></div>
+          <div class="stat"><span class="label">Clean blocks</span><b>{{ cleanBlocks }}/6</b></div>
+          <div class="stat"><span class="label">Bio. efficiency</span><b>{{ beFinal }}%</b></div>
+          <div class="stat"><span class="label">Fresh yield</span><b>{{ freshKg }} kg</b></div>
+          <div class="stat"><span class="label">Kept / sold</span><b>{{ keptKg }} kg</b></div>
+        </div>
+        <p class="muted" style="font-size:13.5px">Yield = clean blocks × 1 kg dry substrate × BE. The numbers are game balance. The rankings follow the guide.</p>
+        <p class="muted" style="font-size:13.5px">Field notes opened: {{ sim.hints.length ? sim.hints.map(h=>guideFor(h).name).join(', ') : 'none. Played from memory.' }}</p>
+        <div class="actions"><button class="btn" @click="restart">New run (new situations)</button><button class="btn ghost" @click="copyResult">Copy result</button><button class="btn ghost" @click="go('cheatsheet')">Cheat sheet</button></div>
+        <textarea v-if="copyFallback" id="copy-fallback" class="copy" readonly :value="copyFallback" @focus="$event.target.select()" aria-label="Result text to copy"></textarea>
+      </div>
+      <div class="card review" v-if="mistakes.length">
+        <span class="label">What cost you · {{ mistakes.length }}</span>
+        <div v-for="(m,i) in mistakes" :key="i" class="mistake" :style="m.g==='ok'?'border-left-color:var(--warn)':''">
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span class="chip" :class="m.g">{{ GL[m.g] }}</span><span class="label">{{ m.stage }}</span></div>
+          <h4>{{ m.t }}</h4>
+          <p class="why">{{ m.why }}</p>
+          <div><button class="btn ghost sm" @click="study(m.st)">Study {{ guideFor(m.st).name.toLowerCase() }} mistakes</button></div>
+        </div>
+      </div>
+      <div class="card review" v-else><span class="label">What cost you</span><p>Nothing. A clean sheet.</p></div>
+      <div class="card">
+        <span class="label">Full run log</span>
+        <ul class="log" style="margin-top:10px"><li v-for="(l,i) in sim.log" :key="i"><span class="chip" :class="l.g">{{ GL[l.g] }}</span><span><b>{{ l.stage }}:</b> {{ l.t }}</span></li></ul>
+      </div>
+    </div>
+  </main>
+
+  <aside class="rail">
+    <div class="vessel">
+      <vessel-canvas v-if="railKind!=='cluster'" :kind="railKind" :cover="railCover" :contam="railContam" :flags="sim.flags" :seed="sim.seed%101"></vessel-canvas>
+      <cluster-canvas v-else :o="railCluster" :label="railCap"></cluster-canvas>
+      <div class="cap">{{ railCap }}</div>
+    </div>
+    <div class="card meters">
+      <span class="label">Culture readout</span>
+      <div class="meter"><div class="row"><span>Mycelial vigor</span><span><span v-if="deltas.vig" :key="'v'+dk" class="delta" :class="deltas.vig>0?'up':'dn'">{{ deltas.vig>0?'+':'' }}{{ deltas.vig }}</span><b>{{ sim.vig }}</b></span></div><div class="bar"><i :style="{width:sim.vig+'%',background:'var(--pink)'}"></i></div></div>
+      <div class="meter"><div class="row"><span>Contamination risk</span><span><span v-if="deltas.risk" :key="'r'+dk" class="delta" :class="deltas.risk<0?'up':'dn'">{{ deltas.risk>0?'+':'' }}{{ deltas.risk }}</span><b>{{ sim.risk }}%</b></span></div><div class="bar"><i :style="{width:sim.risk+'%',background:riskColor}"></i></div></div>
+      <div class="meter"><div class="row"><span>Yield potential (BE)</span><span><span v-if="deltas.be" :key="'b'+dk" class="delta" :class="deltas.be>0?'up':'dn'">{{ deltas.be>0?'+':'' }}{{ deltas.be }}</span><b>{{ sim.be }}%</b></span></div><div class="bar"><i :style="{width:Math.min(100,sim.be/1.4)+'%',background:'var(--ink)'}"></i></div></div>
+      <div class="meter"><div class="row"><span>Run progress</span><b>{{ sim.screen==='brief'?0:sim.screen==='step'?Math.round(doneSteps/totalSteps*100):100 }}%</b></div><div class="bar"><i :style="{width:(sim.screen==='brief'?0:sim.screen==='step'?doneSteps/totalSteps*100:100)+'%',background:'var(--muted)'}"></i></div></div>
+    </div>
+  </aside>
+  </div>
+</section>
+
+<!-- ======================= CHEAT SHEET ======================= -->
+<section v-else class="tab">
+  <div class="stack">
+    <span class="label">Cheat sheet</span>
+    <h1 style="font-size:clamp(30px,5vw,48px)">Pink oyster, on one page</h1>
+    <p class="muted" style="max-width:64ch">Keep this open at the bench. Rankings are relative. Exact numbers vary by strain, environment and prep.</p>
+    <div class="search">
+      <input id="cs-q" type="search" v-model="csQ" placeholder="Search: gypsum, straw, 15 psi, humidity…" aria-label="Search the cheat sheet">
+      <span class="score" v-if="csQ.trim()">{{ csTotal }} match{{ csTotal===1?'':'es' }}</span>
+      <button v-if="csQ" class="btn ghost sm" @click="csQ=''">Clear</button>
+    </div>
+  </div>
+  <div v-if="csQ.trim() && !csTotal" class="empty">Nothing matches “{{ csQ }}”. Try a material (straw, rye), a number (15 psi) or a stage name.</div>
+  <div class="stack" v-if="csNums.length">
+    <span class="label">Numbers to remember</span>
+    <div class="nums"><div v-for="n in csNums" :key="n[0]+n[1]" class="num"><b>{{n[0]}}</b><span>{{n[1]}}</span></div></div>
+  </div>
+  <div class="stack" v-if="csGuide.length">
+    <span class="label">Stage by stage</span>
+    <div class="tblwrap"><table>
+      <thead><tr><th>Stage</th><th>Optimize for</th><th>Use</th><th>Avoid</th><th>Add</th></tr></thead>
+      <tbody>
+        <tr v-for="g in csGuide" :key="g.id">
+          <td><b>{{ g.name }}</b></td>
+          <td>{{ g.target }}</td>
+          <td><ul><li v-for="p in csItems(g.picks)" :key="p[0]">{{ p[0] }}</li></ul></td>
+          <td><ul><li v-for="m in csItems(g.mistakes)" :key="m[0]">{{ m[0] }}</li></ul></td>
+          <td><ul v-if="g.adds.length"><li v-for="a in csItems(g.adds)" :key="a[0]">{{ a[0] }}</li></ul><span v-else class="muted">—</span></td>
+        </tr>
+      </tbody>
+    </table></div>
+  </div>
+  <div class="stack" v-if="csPrep.length">
+    <span class="label">Pasteurize or sterilize?</span>
+    <div class="tblwrap"><table>
+      <thead><tr><th>Material</th><th>Nutrition</th><th>Do</th><th>Don’t</th></tr></thead>
+      <tbody><tr v-for="p in csPrep" :key="p[0]"><td><b>{{p[0]}}</b></td><td>{{p[1]}}</td><td class="ok-t">{{p[2]}}</td><td class="no-t">{{p[3]}}</td></tr></tbody>
+    </table></div>
+    <p class="muted" style="font-size:14px">Rule of thumb: pasteurize lignin-rich, unsupplemented material. Sterilize anything with bran or soy.</p>
+  </div>
+  <div class="stack" v-if="csMyths.length">
+    <span class="label">Myths, busted</span>
+    <div class="myths2"><div v-for="m in csMyths" :key="m.s" class="m2"><span><span class="chip" :class="m.a?'good':'bad'">{{ m.a?'Fact':'Myth' }}</span></span><span v-if="m.a">{{ m.s }}</span><s v-else>{{ m.s }}</s><span class="muted">{{ m.w }}</span></div></div>
+  </div>
+</section>
+
+<div v-if="toast" class="toast" role="status" aria-live="polite">{{ toast }}</div>
+<footer>Built from the Pink Oyster (<i>Pleurotus djamor</i>) cultivation pipeline guide. Fruiting humidity targets, CO₂ estimates and all scores and yields in the simulator are illustrative additions, not figures from the guide.</footer>
+`
+};
+
+Vue.createApp(App).mount('#app');
+</script>
+
+</body></html>

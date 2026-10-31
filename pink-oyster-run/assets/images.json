@@ -1,0 +1,204 @@
+{
+  "version": 1,
+  "game": "Pink Oyster Run",
+  "howToUse": [
+    "Each entry in 'images' is one picture the game shows. 'file' is where to save it, relative to pink-oyster-run/index.html.",
+    "Full prompt to send to the image model = stylePrompt + ' ' + prompt + ' ' + backgroundSuffix[background]. Use negativePrompt where the model supports it.",
+    "Generate at width x height (or any larger size with the same aspect ratio). PNG keeps transparency; WebP also works if you change the extension in 'file'.",
+    "Entries with 'alignWith' are revealed on top of that image with a growing mask, so the object must sit in the exact same place. Make them by editing the 'alignWith' image (img2img / inpaint / 'same image but...'), not from scratch.",
+    "'reveal' says which part of the canvas the growth mask sweeps over (fractions of width/height). If your art is framed differently, adjust these numbers instead of regenerating.",
+    "Missing files are fine: the game falls back to its built-in placeholder art for that id. Open the Notebook > Art tab in the game to see which files it found.",
+    "After editing this file, run: node pink-oyster-run/tools/sync-manifest.mjs  (copies it into index.html so the game also works when opened straight from disk)."
+  ],
+  "stylePrompt": "Cozy storybook illustration for a casual mobile game. Clean vector-like shapes, soft cel shading and gentle gradients, confident dark plum outlines (#2a1b2e). Warm palette: flamingo pink (#e2557a), deep rose (#b8325a), cream-white mycelium (#fbf8f1), honey-amber agar (#ead7a8), wheat straw (#d9b65a), sawdust brown (#8a6040). One centered subject, front view tilted slightly from above, soft contact shadow directly underneath, even studio lighting, readable at small sizes.",
+  "backgroundSuffix": {
+    "transparent": "Isolated subject on a fully transparent background (PNG alpha channel). Nothing else in frame.",
+    "opaque": "Full-bleed scene that fills the whole canvas. No transparency."
+  },
+  "negativePrompt": "text, letters, numbers, labels, watermark, logo, signature, hands, people, faces, photorealistic, grainy noise, busy background, cropped subject, multiple separate subjects, frame, border",
+  "images": [
+    {
+      "id": "plate_empty",
+      "file": "assets/img/plate_empty.png",
+      "width": 512, "height": 512, "background": "transparent",
+      "usedFor": "Agar plate on a shelf before mycelium grows. Bottom layer of every plate.",
+      "prompt": "A round glass petri dish seen from slightly above, filled with smooth, glossy honey-amber agar. Clean and empty: no growth, no spots. Small specular highlight on the upper-left rim.",
+      "framing": "Dish centered at 50% x, 49% y. Outer rim diameter about 86% of the canvas width. Agar surface radius about 40% of the width."
+    },
+    {
+      "id": "plate_colonized",
+      "file": "assets/img/plate_colonized.png",
+      "width": 512, "height": 512, "background": "transparent",
+      "alignWith": "plate_empty",
+      "reveal": { "type": "radial", "cx": 0.5, "cy": 0.49, "r": 0.40 },
+      "usedFor": "Revealed over plate_empty as a growing circle while the plate colonizes.",
+      "prompt": "The exact same petri dish as the reference, now covered edge to edge in dense, fluffy cream-white mycelium, with fine ropey rhizomorphic strands radiating outward from a small square agar wedge in the center. Healthy and clean: no green, no other colors.",
+      "framing": "Identical framing to plate_empty."
+    },
+    {
+      "id": "jar_empty",
+      "file": "assets/img/jar_empty.png",
+      "width": 512, "height": 512, "background": "transparent",
+      "usedFor": "Grain spawn jar before colonization (also while in the pressure cooker or waiting for spawn).",
+      "prompt": "A quart glass mason jar with a grey metal lid that has a small round white filter patch in its center, filled about 90% with plump, hydrated golden-brown rye berries. Clean glass, kernels loose, no water pooling at the bottom.",
+      "framing": "Jar centered. Lid top at about 8% of the height, jar bottom at about 94%. Grain fills from about 27% to 92% of the height."
+    },
+    {
+      "id": "jar_colonized",
+      "file": "assets/img/jar_colonized.png",
+      "width": 512, "height": 512, "background": "transparent",
+      "alignWith": "jar_empty",
+      "reveal": { "type": "top-down", "from": 0.27, "to": 0.92 },
+      "usedFor": "Revealed over jar_empty from the top down as the grain colonizes.",
+      "prompt": "The exact same mason jar as the reference, the grain now fully colonized: every rye kernel bound together by bright cream-white mycelium, a few kernels faintly visible through the white.",
+      "framing": "Identical framing to jar_empty."
+    },
+    {
+      "id": "bag_straw",
+      "file": "assets/img/bag_straw.png",
+      "width": 512, "height": 512, "background": "transparent",
+      "usedFor": "Grow bag filled with chopped straw (pasteurized or sterilized), before colonization.",
+      "prompt": "A clear plastic mushroom grow bag standing upright, top folded flat, with a small white rectangular filter patch near the top. The bottom 60% is filled with chopped golden wheat straw pieces.",
+      "framing": "Bag centered. Bag top at about 5%, bottom at about 95% of the height. Substrate top edge at about 39% of the height."
+    },
+    {
+      "id": "bag_sawdust",
+      "file": "assets/img/bag_sawdust.png",
+      "width": 512, "height": 512, "background": "transparent",
+      "alignWith": "bag_straw",
+      "usedFor": "Grow bag filled with supplemented hardwood (sawdust + bran, or Masters Mix), before colonization.",
+      "prompt": "The exact same grow bag as the reference, but the bottom 60% is filled with dense dark-brown hardwood sawdust and pellets with lighter tan flecks of soy hulls and bran.",
+      "framing": "Identical framing to bag_straw."
+    },
+    {
+      "id": "bag_coir",
+      "file": "assets/img/bag_coir.png",
+      "width": 512, "height": 512, "background": "transparent",
+      "alignWith": "bag_straw",
+      "usedFor": "Grow bag filled with coir + vermiculite (also used for the coffee-grounds event bag).",
+      "prompt": "The exact same grow bag as the reference, but the bottom 60% is filled with dark-brown fluffy coco coir mixed with small sparkly white-grey vermiculite flecks.",
+      "framing": "Identical framing to bag_straw."
+    },
+    {
+      "id": "bag_colonized",
+      "file": "assets/img/bag_colonized.png",
+      "width": 512, "height": 512, "background": "transparent",
+      "alignWith": "bag_sawdust",
+      "reveal": { "type": "top-down", "from": 0.39, "to": 0.95 },
+      "usedFor": "Revealed over any of the three bag images from the top down while the bag colonizes.",
+      "prompt": "The exact same grow bag as the reference, the substrate now fully colonized into a solid cream-white block of mycelium, with faint texture of the substrate showing underneath.",
+      "framing": "Identical framing to bag_straw / bag_sawdust."
+    },
+    {
+      "id": "block_ready",
+      "file": "assets/img/block_ready.png",
+      "width": 512, "height": 512, "background": "transparent",
+      "usedFor": "Colonized fruiting block before pins appear, and while resting between flushes.",
+      "prompt": "A fully colonized cream-white rectangular mushroom block with the plastic bag cut away, standing upright, with a small X-shaped cut on the front center. No mushrooms yet.",
+      "framing": "Block in the lower half: top edge at about 51%, bottom at about 95% of the height, about 42% of the width wide. X-cut centered at about 50% x, 65% y. Keep the upper half empty so clusters can grow into it."
+    },
+    {
+      "id": "block_pins",
+      "file": "assets/img/block_pins.png",
+      "width": 512, "height": 512, "background": "transparent",
+      "alignWith": "block_ready",
+      "usedFor": "Block that is pinning (tiny primordia forming).",
+      "prompt": "The exact same block as the reference, with a tight cluster of tiny bright-pink mushroom pins (primordia) bursting from the X-cut.",
+      "framing": "Identical framing to block_ready."
+    },
+    {
+      "id": "cluster_young",
+      "file": "assets/img/cluster_young.png",
+      "width": 512, "height": 512, "background": "transparent",
+      "alignWith": "block_ready",
+      "usedFor": "Cluster growing toward harvest.",
+      "prompt": "The exact same block as the reference, with a small young cluster of pink oyster mushrooms (Pleurotus djamor) growing from the X-cut: 5 to 6 small fan-shaped caps with edges curled under, rich flamingo pink.",
+      "framing": "Identical block framing to block_ready. The cluster may grow up into the empty upper half."
+    },
+    {
+      "id": "cluster_peak",
+      "file": "assets/img/cluster_peak.png",
+      "width": 512, "height": 512, "background": "transparent",
+      "alignWith": "block_ready",
+      "usedFor": "Healthy cluster at peak: the harvest moment.",
+      "prompt": "The exact same block as the reference, with a large, perfect cluster of pink oyster mushrooms growing from the X-cut: 8 to 10 broad ruffled fan-shaped caps, edges still slightly curled down, vivid flamingo pink with deeper rose edges, short pale stems, pale-pink gills visible under the caps. Harvest-ready.",
+      "framing": "Identical block framing to block_ready. The cluster fills most of the upper half."
+    },
+    {
+      "id": "cluster_leggy",
+      "file": "assets/img/cluster_leggy.png",
+      "width": 512, "height": 512, "background": "transparent",
+      "alignWith": "block_ready",
+      "usedFor": "Cluster grown in stale, high-CO2 air (too little fresh air exchange).",
+      "prompt": "The exact same block as the reference, with a stretched, leggy cluster of pink oyster mushrooms: long thin pale stems reaching upward and small, undersized pink caps, the look of too little fresh air.",
+      "framing": "Identical block framing to block_ready."
+    },
+    {
+      "id": "cluster_dry",
+      "file": "assets/img/cluster_dry.png",
+      "width": 512, "height": 512, "background": "transparent",
+      "alignWith": "block_ready",
+      "usedFor": "Cluster grown in air that is too dry (low humidity).",
+      "prompt": "The exact same block as the reference, with a pink oyster cluster whose caps are dry and cracked: split edges curling upward, slightly faded pink, a few crispy brown edges, the look of low humidity.",
+      "framing": "Identical block framing to block_ready."
+    },
+    {
+      "id": "cluster_overripe",
+      "file": "assets/img/cluster_overripe.png",
+      "width": 512, "height": 512, "background": "transparent",
+      "alignWith": "block_ready",
+      "usedFor": "Cluster left past its peak; will drop if not picked.",
+      "prompt": "The exact same block as the reference, with an overripe pink oyster cluster: caps flattened and turned up at the edges, color faded to washed-out pale pink, wavy edges, and a fine dusting of pale spores on the block below.",
+      "framing": "Identical block framing to block_ready."
+    },
+    {
+      "id": "block_spent",
+      "file": "assets/img/block_spent.png",
+      "width": 512, "height": 512, "background": "transparent",
+      "alignWith": "block_ready",
+      "usedFor": "Block after its flushes are used up, waiting to be retired.",
+      "prompt": "The exact same block as the reference, now tired and spent: shrunken, dented, slightly yellowed tan-cream, with a couple of small dried brown mushroom stubs at the X-cut.",
+      "framing": "Identical framing to block_ready."
+    },
+    {
+      "id": "mold_overlay",
+      "file": "assets/img/mold_overlay.png",
+      "width": 512, "height": 512, "background": "transparent",
+      "usedFor": "Drawn on top of any plate, jar or bag when contamination becomes visible. Opacity and size grow with the infection.",
+      "prompt": "Only patches of green Trichoderma mold and nothing else: 5 to 7 fuzzy round colonies, dark emerald-green centers fading to a soft white fuzzy ring at the edges, scattered across the middle of the frame.",
+      "framing": "Patches stay inside the central 60% of the canvas. Transparency everywhere else is essential: this layer sits on top of other images."
+    },
+    {
+      "id": "crate_fresh",
+      "file": "assets/img/crate_fresh.png",
+      "width": 256, "height": 256, "background": "transparent",
+      "usedFor": "Icon for the fresh-harvest crate.",
+      "prompt": "A small woven wicker basket heaped with fresh, bright pink oyster mushroom clusters.",
+      "framing": "Basket centered, filling about 85% of the canvas."
+    },
+    {
+      "id": "crate_dried",
+      "file": "assets/img/crate_dried.png",
+      "width": 256, "height": 256, "background": "transparent",
+      "usedFor": "Icon for dehydrated mushrooms.",
+      "prompt": "A small glass jar with a cork lid filled with dried, shriveled tan and faded-pink oyster mushroom pieces.",
+      "framing": "Jar centered, filling about 85% of the canvas."
+    },
+    {
+      "id": "cooker",
+      "file": "assets/img/cooker.png",
+      "width": 256, "height": 256, "background": "transparent",
+      "usedFor": "Icon for the pressure cooker (sterilizer) widget.",
+      "prompt": "A stovetop aluminum pressure cooker with a round pressure gauge on the lid and two black handles, a small puff of steam rising from the valve.",
+      "framing": "Pot centered, filling about 85% of the canvas."
+    },
+    {
+      "id": "title_hero",
+      "file": "assets/img/title_hero.png",
+      "width": 1280, "height": 720, "background": "opaque",
+      "usedFor": "Title screen illustration.",
+      "prompt": "A cozy small home mushroom grow room in the evening: wooden shelves holding petri dishes, mason jars of white grain spawn and grow bags; in the foreground right, a large vivid pink oyster mushroom cluster fruiting from a cream block; soft warm lamp light and a little humidifier mist; pastel pink and cream palette.",
+      "framing": "Wide 16:9 scene. Main cluster in the right half."
+    }
+  ]
+}
