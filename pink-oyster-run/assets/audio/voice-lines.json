@@ -1,0 +1,535 @@
+{
+  "version": 1,
+  "generatedBy": "node assets/tools/build-voice-lines.mjs (do not edit by hand: edit the game script)",
+  "count": 66,
+  "lines": [
+    {
+      "id": "mentor_intro_1",
+      "who": "mentor",
+      "text": "You. The one with the petri dishes in the recycling. I was a mycologist for forty years.",
+      "speak": "You. The one with the petri dishes in the recycling. I was a mycologist for forty years.",
+      "file": "assets/audio/voice/mentor_intro_1.mp3",
+      "source": "story"
+    },
+    {
+      "id": "mentor_intro_2",
+      "who": "mentor",
+      "text": "Mold is not bad luck. It is bad habits. I will teach you habits.",
+      "speak": "Mold is not bad luck. It is bad habits. I will teach you habits.",
+      "file": "assets/audio/voice/mentor_intro_2.mp3",
+      "source": "story"
+    },
+    {
+      "id": "guru_intro_1",
+      "who": "guru",
+      "text": "lol just inoculate on the counter bro, spores are everywhere anyway 🍄🔥",
+      "speak": "lol just inoculate on the counter bro, spores are everywhere anyway",
+      "file": "assets/audio/voice/guru_intro_1.mp3",
+      "source": "story"
+    },
+    {
+      "id": "mentor_stage_grain_1",
+      "who": "mentor",
+      "text": "Clean plates. Now grain. Rye, soaked, simmered, pressure-cooked. No shortcuts.",
+      "speak": "Clean plates. Now grain. Rye, soaked, simmered, pressure-cooked. No shortcuts.",
+      "file": "assets/audio/voice/mentor_stage_grain_1.mp3",
+      "source": "story"
+    },
+    {
+      "id": "guru_stage_grain_1",
+      "who": "guru",
+      "text": "Pasteurizing grain works fine if you believe in it.",
+      "speak": "Pasteurizing grain works fine if you believe in it.",
+      "file": "assets/audio/voice/guru_stage_grain_1.mp3",
+      "source": "story"
+    },
+    {
+      "id": "mentor_stage_grain_2",
+      "who": "mentor",
+      "text": "It does not. Grain is a buffet. Sterilize it or feed the mold.",
+      "speak": "It does not. Grain is a buffet. Sterilize it or feed the mold.",
+      "file": "assets/audio/voice/mentor_stage_grain_2.mp3",
+      "source": "story"
+    },
+    {
+      "id": "mentor_stage_substrate_1",
+      "who": "mentor",
+      "text": "Bulk substrate. The richer the mix, the more it yields, and the more it molds.",
+      "speak": "Bulk substrate. The richer the mix, the more it yields, and the more it molds.",
+      "file": "assets/audio/voice/mentor_stage_substrate_1.mp3",
+      "source": "story"
+    },
+    {
+      "id": "mentor_stage_substrate_2",
+      "who": "mentor",
+      "text": "Straw gets a hot bath. Anything with bran goes in the cooker. Write that on your hand.",
+      "speak": "Straw gets a hot bath. Anything with bran goes in the cooker. Write that on your hand.",
+      "file": "assets/audio/voice/mentor_stage_substrate_2.mp3",
+      "source": "story"
+    },
+    {
+      "id": "mentor_stage_fruiting_1",
+      "who": "mentor",
+      "text": "Fruiting. Pinks are tropical drama queens: warm, wet, and plenty of fresh air.",
+      "speak": "Fruiting. Pinks are tropical drama queens: warm, wet, and plenty of fresh air.",
+      "file": "assets/audio/voice/mentor_stage_fruiting_1.mp3",
+      "source": "story"
+    },
+    {
+      "id": "guru_stage_fruiting_1",
+      "who": "guru",
+      "text": "Golden oysters are way prettier tho, why not grow those?",
+      "speak": "Golden oysters are way prettier tho, why not grow those?",
+      "file": "assets/audio/voice/guru_stage_fruiting_1.mp3",
+      "source": "story"
+    },
+    {
+      "id": "mentor_golden_aside_1",
+      "who": "mentor",
+      "text": "Because goldens escaped grow kits and now crowd out native fungi in US forests. Pinks stay put. We grow pinks.",
+      "speak": "Because goldens escaped grow kits and now crowd out native fungi in US forests. Pinks stay put. We grow pinks.",
+      "file": "assets/audio/voice/mentor_golden_aside_1.mp3",
+      "source": "story"
+    },
+    {
+      "id": "mentor_stage_harvest_1",
+      "who": "mentor",
+      "text": "Harvest and market. A pink oyster is perfect for about a day, then it is soup.",
+      "speak": "Harvest and market. A pink oyster is perfect for about a day, then it is soup.",
+      "file": "assets/audio/voice/mentor_stage_harvest_1.mp3",
+      "source": "story"
+    },
+    {
+      "id": "mentor_stage_harvest_2",
+      "who": "mentor",
+      "text": "Sell it fresh, or dry it. Rotting it is not a sales strategy.",
+      "speak": "Sell it fresh, or dry it. Rotting it is not a sales strategy.",
+      "file": "assets/audio/voice/mentor_stage_harvest_2.mp3",
+      "source": "story"
+    },
+    {
+      "id": "mentor_first_mold_1",
+      "who": "mentor",
+      "text": "Green. GREEN. Do you see that? That is Trichoderma waving at you.",
+      "speak": "Green. GREEN. Do you see that? That is Trichoderma waving at you.",
+      "file": "assets/audio/voice/mentor_first_mold_1.mp3",
+      "source": "story"
+    },
+    {
+      "id": "mentor_first_mold_2",
+      "who": "mentor",
+      "text": "Toss it, don’t open it indoors, and read the lesson card. Then do better.",
+      "speak": "Toss it, don’t open it indoors, and read the lesson card. Then do better.",
+      "file": "assets/audio/voice/mentor_first_mold_2.mp3",
+      "source": "story"
+    },
+    {
+      "id": "mentor_coffee_yes_1",
+      "who": "mentor",
+      "text": "Week-old coffee grounds? They are already a mold farm. Watch that bag closely.",
+      "speak": "Week-old coffee grounds? They are already a mold farm. Watch that bag closely.",
+      "file": "assets/audio/voice/mentor_coffee_yes_1.mp3",
+      "source": "story"
+    },
+    {
+      "id": "mentor_coffee_no_1",
+      "who": "mentor",
+      "text": "You turned down free week-old grounds. Good. Fresh, same-day grounds only.",
+      "speak": "You turned down free week-old grounds. Good. Fresh, same-day grounds only.",
+      "file": "assets/audio/voice/mentor_coffee_no_1.mp3",
+      "source": "story"
+    },
+    {
+      "id": "mentor_cold_snap_1",
+      "who": "mentor",
+      "text": "Cold snap coming. Pinks stall below about 64°F. Heat mat on, garage jars inside.",
+      "speak": "Cold snap coming. Pinks stall below about 64°F. Heat mat on, garage jars inside.",
+      "file": "assets/audio/voice/mentor_cold_snap_1.mp3",
+      "source": "story"
+    },
+    {
+      "id": "mentor_species_done_1",
+      "who": "mentor",
+      "text": "Plate to market table. I may have to stop calling you “the kid next door.”",
+      "speak": "Plate to market table. I may have to stop calling you “the kid next door.”",
+      "file": "assets/audio/voice/mentor_species_done_1.mp3",
+      "source": "story"
+    },
+    {
+      "id": "mentor_species_done_2",
+      "who": "mentor",
+      "text": "Next, something fussier. Lion’s mane. Cool, clean, and it punishes a warm tent.",
+      "speak": "Next, something fussier. Lion’s mane. Cool, clean, and it punishes a warm tent.",
+      "file": "assets/audio/voice/mentor_species_done_2.mp3",
+      "source": "story"
+    },
+    {
+      "id": "mentor_lions_intro_1",
+      "who": "mentor",
+      "text": "Lion’s mane wants 60 to 70 degrees and air like a mountain morning. Heat mat OFF.",
+      "speak": "Lion’s mane wants 60 to 70 degrees and air like a mountain morning. Heat mat OFF.",
+      "file": "assets/audio/voice/mentor_lions_intro_1.mp3",
+      "source": "story"
+    },
+    {
+      "id": "guru_lions_intro_1",
+      "who": "guru",
+      "text": "it cures brain fog bro, I eat it raw every day 🧠",
+      "speak": "it cures brain fog bro, I eat it raw every day",
+      "file": "assets/audio/voice/guru_lions_intro_1.mp3",
+      "source": "story"
+    },
+    {
+      "id": "mentor_lions_intro_2",
+      "who": "mentor",
+      "text": "Cook it. And grow it on hardwood, not straw. It barely fruits on straw.",
+      "speak": "Cook it. And grow it on hardwood, not straw. It barely fruits on straw.",
+      "file": "assets/audio/voice/mentor_lions_intro_2.mp3",
+      "source": "story"
+    },
+    {
+      "id": "mentor_wood_chips_1",
+      "who": "mentor",
+      "text": "An arborist just dumped a free truckload of hardwood chips on my driveway. Wine caps love those.",
+      "speak": "An arborist just dumped a free truckload of hardwood chips on my driveway. Wine caps love those.",
+      "file": "assets/audio/voice/mentor_wood_chips_1.mp3",
+      "source": "story"
+    },
+    {
+      "id": "guru_wood_chips_1",
+      "who": "guru",
+      "text": "pine chips work too, chips are chips 🌲",
+      "speak": "pine chips work too, chips are chips",
+      "file": "assets/audio/voice/guru_wood_chips_1.mp3",
+      "source": "story"
+    },
+    {
+      "id": "mentor_wood_chips_2",
+      "who": "mentor",
+      "text": "Conifer resin stalls them. Hardwood. Grab a wheelbarrow.",
+      "speak": "Conifer resin stalls them. Hardwood. Grab a wheelbarrow.",
+      "file": "assets/audio/voice/mentor_wood_chips_2.mp3",
+      "source": "story"
+    },
+    {
+      "id": "mentor_winecap_intro_1",
+      "who": "mentor",
+      "text": "Wine caps live outside. You make the spawn indoors, then the weather does the rest.",
+      "speak": "Wine caps live outside. You make the spawn indoors, then the weather does the rest.",
+      "file": "assets/audio/voice/mentor_winecap_intro_1.mp3",
+      "source": "story"
+    },
+    {
+      "id": "mentor_winecap_intro_2",
+      "who": "mentor",
+      "text": "A good bed fruits for years. Keep it moist and be patient.",
+      "speak": "A good bed fruits for years. Keep it moist and be patient.",
+      "file": "assets/audio/voice/mentor_winecap_intro_2.mp3",
+      "source": "story"
+    },
+    {
+      "id": "mentor_stage_lc_1",
+      "who": "mentor",
+      "text": "Liquid culture. One jar of broth, six jars of grain. Also six ways to ruin everything at once.",
+      "speak": "Liquid culture. One jar of broth, six jars of grain. Also six ways to ruin everything at once.",
+      "file": "assets/audio/voice/mentor_stage_lc_1.mp3",
+      "source": "story"
+    },
+    {
+      "id": "guru_stage_lc_1",
+      "who": "guru",
+      "text": "more sugar = more food = faster growth, it’s just math 📈",
+      "speak": "more sugar = more food = faster growth, it’s just math",
+      "file": "assets/audio/voice/guru_stage_lc_1.mp3",
+      "source": "story"
+    },
+    {
+      "id": "mentor_stage_lc_2",
+      "who": "mentor",
+      "text": "More sugar is more food for bacteria. Two percent. Not one gram more.",
+      "speak": "More sugar is more food for bacteria. Two percent. Not one gram more.",
+      "file": "assets/audio/voice/mentor_stage_lc_2.mp3",
+      "source": "story"
+    },
+    {
+      "id": "mentor_stage_spawn_1",
+      "who": "mentor",
+      "text": "Grain into hardwood sawdust. More, cheaper spawn for a big outdoor bed.",
+      "speak": "Grain into hardwood sawdust. More, cheaper spawn for a big outdoor bed.",
+      "file": "assets/audio/voice/mentor_stage_spawn_1.mp3",
+      "source": "story"
+    },
+    {
+      "id": "mentor_stage_bed_1",
+      "who": "mentor",
+      "text": "Build the bed, seed it with spawn, and water it when it dries. Then wait.",
+      "speak": "Build the bed, seed it with spawn, and water it when it dries. Then wait.",
+      "file": "assets/audio/voice/mentor_stage_bed_1.mp3",
+      "source": "story"
+    },
+    {
+      "id": "guru_stage_bed_1",
+      "who": "guru",
+      "text": "just put the bag in the ground, nature handles it lol",
+      "speak": "just put the bag in the ground, nature handles it lol",
+      "file": "assets/audio/voice/guru_stage_bed_1.mp3",
+      "source": "story"
+    },
+    {
+      "id": "mentor_stage_bed_2",
+      "who": "mentor",
+      "text": "Nature handles dry beds by giving them to other fungi.",
+      "speak": "Nature handles dry beds by giving them to other fungi.",
+      "file": "assets/audio/voice/mentor_stage_bed_2.mp3",
+      "source": "story"
+    },
+    {
+      "id": "mentor_all_done_1",
+      "who": "mentor",
+      "text": "Three species. Indoors, outdoors, warm, cool. You’re a grower now.",
+      "speak": "Three species. Indoors, outdoors, warm, cool. You’re a grower now.",
+      "file": "assets/audio/voice/mentor_all_done_1.mp3",
+      "source": "story"
+    },
+    {
+      "id": "mentor_all_done_2",
+      "who": "mentor",
+      "text": "I am… proud. Tell anyone and I’ll deny it.",
+      "speak": "I am… proud. Tell anyone and I’ll deny it.",
+      "file": "assets/audio/voice/mentor_all_done_2.mp3",
+      "source": "story"
+    },
+    {
+      "id": "guru_quiz_open_1",
+      "who": "guru",
+      "text": "Posting this for the noobs. Trust me, I’ve grown for 3 months:",
+      "speak": "Posting this for the noobs. Trust me, I’ve grown for 3 months:",
+      "file": "assets/audio/voice/guru_quiz_open_1.mp3",
+      "source": "story"
+    },
+    {
+      "id": "guru_quiz_open_2",
+      "who": "guru",
+      "text": "Hot take, but I’m right as usual:",
+      "speak": "Hot take, but I’m right as usual:",
+      "file": "assets/audio/voice/guru_quiz_open_2.mp3",
+      "source": "story"
+    },
+    {
+      "id": "guru_quiz_open_3",
+      "who": "guru",
+      "text": "PSA, upvote so people see it:",
+      "speak": "PSA, upvote so people see it:",
+      "file": "assets/audio/voice/guru_quiz_open_3.mp3",
+      "source": "story"
+    },
+    {
+      "id": "mentor_guru_right_1",
+      "who": "mentor",
+      "text": "…He’s right. Once. Don’t tell him I said so.",
+      "speak": "…He’s right. Once. Don’t tell him I said so.",
+      "file": "assets/audio/voice/mentor_guru_right_1.mp3",
+      "source": "story"
+    },
+    {
+      "id": "mentor_guru_right_2",
+      "who": "mentor",
+      "text": "Fine. A broken clock, et cetera. That one is true.",
+      "speak": "Fine. A broken clock, et cetera. That one is true.",
+      "file": "assets/audio/voice/mentor_guru_right_2.mp3",
+      "source": "story"
+    },
+    {
+      "id": "mentor_guru_wrong_1",
+      "who": "mentor",
+      "text": "Confidently wrong again. Remarkable consistency.",
+      "speak": "Confidently wrong again. Remarkable consistency.",
+      "file": "assets/audio/voice/mentor_guru_wrong_1.mp3",
+      "source": "story"
+    },
+    {
+      "id": "mentor_guru_wrong_2",
+      "who": "mentor",
+      "text": "Forty years of research, and I lose to a man with a ring light.",
+      "speak": "Forty years of research, and I lose to a man with a ring light.",
+      "file": "assets/audio/voice/mentor_guru_wrong_2.mp3",
+      "source": "story"
+    },
+    {
+      "id": "mentor_review_mastered_1",
+      "who": "mentor",
+      "text": "Fine. FINE. That was clean work. Don’t let it go to your head.",
+      "speak": "Fine. FINE. That was clean work. Don’t let it go to your head.",
+      "file": "assets/audio/voice/mentor_review_mastered_1.mp3",
+      "source": "review"
+    },
+    {
+      "id": "mentor_review_mastered_2",
+      "who": "mentor",
+      "text": "You did the boring parts right, which is the whole secret. Next stage.",
+      "speak": "You did the boring parts right, which is the whole secret. Next stage.",
+      "file": "assets/audio/voice/mentor_review_mastered_2.mp3",
+      "source": "review"
+    },
+    {
+      "id": "mentor_review_checklist_1",
+      "who": "mentor",
+      "text": "You’re rushing. Do the list first; the yield comes after the habits.",
+      "speak": "You’re rushing. Do the list first; the yield comes after the habits.",
+      "file": "assets/audio/voice/mentor_review_checklist_1.mp3",
+      "source": "review"
+    },
+    {
+      "id": "mentor_review_checklist_2",
+      "who": "mentor",
+      "text": "Not yet. Technique before numbers. Look at the list again.",
+      "speak": "Not yet. Technique before numbers. Look at the list again.",
+      "file": "assets/audio/voice/mentor_review_checklist_2.mp3",
+      "source": "review"
+    },
+    {
+      "id": "mentor_review_units_1",
+      "who": "mentor",
+      "text": "Habits are there. Now show me you can do it more than once.",
+      "speak": "Habits are there. Now show me you can do it more than once.",
+      "file": "assets/audio/voice/mentor_review_units_1.mp3",
+      "source": "review"
+    },
+    {
+      "id": "mentor_review_units_2",
+      "who": "mentor",
+      "text": "Good list. Thin results. Another week, same care, more of it.",
+      "speak": "Good list. Thin results. Another week, same care, more of it.",
+      "file": "assets/audio/voice/mentor_review_units_2.mp3",
+      "source": "review"
+    },
+    {
+      "id": "mentor_review_mold_1",
+      "who": "mentor",
+      "text": "Green. GREEN. I can smell it from here. Toss it, wipe down, start clean.",
+      "speak": "Green. GREEN. I can smell it from here. Toss it, wipe down, start clean.",
+      "file": "assets/audio/voice/mentor_review_mold_1.mp3",
+      "source": "review"
+    },
+    {
+      "id": "mentor_review_mold_2",
+      "who": "mentor",
+      "text": "Mold isn’t bad luck, it’s feedback. Read the cards below.",
+      "speak": "Mold isn’t bad luck, it’s feedback. Read the cards below.",
+      "file": "assets/audio/voice/mentor_review_mold_2.mp3",
+      "source": "review"
+    },
+    {
+      "id": "mentor_species_mastered_1",
+      "who": "mentor",
+      "text": "Plate to market table. I may have to stop calling you “the kid next door.”",
+      "speak": "Plate to market table. I may have to stop calling you “the kid next door.”",
+      "file": "assets/audio/voice/mentor_species_mastered_1.mp3",
+      "source": "review"
+    },
+    {
+      "id": "guru_claim_myth_01",
+      "who": "guru",
+      "text": "Pink oysters stay bright pink after cooking.",
+      "speak": "Pink oysters stay bright pink after cooking.",
+      "file": "assets/audio/voice/guru_claim_myth_01.mp3",
+      "source": "quiz"
+    },
+    {
+      "id": "guru_claim_myth_02",
+      "who": "guru",
+      "text": "Pink oysters fruit best around 70–85°F.",
+      "speak": "Pink oysters fruit best around 70–85°F.",
+      "file": "assets/audio/voice/guru_claim_myth_02.mp3",
+      "source": "quiz"
+    },
+    {
+      "id": "guru_claim_myth_03",
+      "who": "guru",
+      "text": "Fresh pink oysters keep about a week in the fridge.",
+      "speak": "Fresh pink oysters keep about a week in the fridge.",
+      "file": "assets/audio/voice/guru_claim_myth_03.mp3",
+      "source": "quiz"
+    },
+    {
+      "id": "guru_claim_myth_04",
+      "who": "guru",
+      "text": "A richer, sweeter liquid culture grows faster.",
+      "speak": "A richer, sweeter liquid culture grows faster.",
+      "file": "assets/audio/voice/guru_claim_myth_04.mp3",
+      "source": "quiz"
+    },
+    {
+      "id": "guru_claim_myth_05",
+      "who": "guru",
+      "text": "Grain spawn must be pressure-sterilized, not pasteurized.",
+      "speak": "Grain spawn must be pressure-sterilized, not pasteurized.",
+      "file": "assets/audio/voice/guru_claim_myth_05.mp3",
+      "source": "quiz"
+    },
+    {
+      "id": "guru_claim_myth_06",
+      "who": "guru",
+      "text": "Growing from spores gives you a clone of the parent.",
+      "speak": "Growing from spores gives you a clone of the parent.",
+      "file": "assets/audio/voice/guru_claim_myth_06.mp3",
+      "source": "quiz"
+    },
+    {
+      "id": "guru_claim_myth_07",
+      "who": "guru",
+      "text": "Plain straw should be pasteurized, not sterilized.",
+      "speak": "Plain straw should be pasteurized, not sterilized.",
+      "file": "assets/audio/voice/guru_claim_myth_07.mp3",
+      "source": "quiz"
+    },
+    {
+      "id": "guru_claim_myth_08",
+      "who": "guru",
+      "text": "More bran always means more yield.",
+      "speak": "More bran always means more yield.",
+      "file": "assets/audio/voice/guru_claim_myth_08.mp3",
+      "source": "quiz"
+    },
+    {
+      "id": "guru_claim_myth_09",
+      "who": "guru",
+      "text": "Softwood sawdust like pine inhibits growth.",
+      "speak": "Softwood sawdust like pine inhibits growth.",
+      "file": "assets/audio/voice/guru_claim_myth_09.mp3",
+      "source": "quiz"
+    },
+    {
+      "id": "guru_claim_myth_10",
+      "who": "guru",
+      "text": "Low fresh air is fine as long as humidity is high.",
+      "speak": "Low fresh air is fine as long as humidity is high.",
+      "file": "assets/audio/voice/guru_claim_myth_10.mp3",
+      "source": "quiz"
+    },
+    {
+      "id": "guru_claim_myth_11",
+      "who": "guru",
+      "text": "Alkaline conditions (lime) help suppress Trichoderma.",
+      "speak": "Alkaline conditions (lime) help suppress Trichoderma.",
+      "file": "assets/audio/voice/guru_claim_myth_11.mp3",
+      "source": "quiz"
+    },
+    {
+      "id": "guru_claim_myth_12",
+      "who": "guru",
+      "text": "Pink oysters are hard to colonize.",
+      "speak": "Pink oysters are hard to colonize.",
+      "file": "assets/audio/voice/guru_claim_myth_12.mp3",
+      "source": "quiz"
+    },
+    {
+      "id": "guru_claim_myth_13",
+      "who": "guru",
+      "text": "Pinks give you 1–2 strong flushes, then drop off.",
+      "speak": "Pinks give you 1–2 strong flushes, then drop off.",
+      "file": "assets/audio/voice/guru_claim_myth_13.mp3",
+      "source": "quiz"
+    }
+  ]
+}

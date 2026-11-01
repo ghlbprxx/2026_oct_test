@@ -361,3 +361,5 @@ td code{font-family:var(--mono);font-size:12px}
 /* ===== Phase 6: species look (until species art exists, tint the shared cluster art) ===== */
 .slot.sp-lions-mane .art img{filter:saturate(0) brightness(1.18) contrast(.9)}
 .slot.sp-wine-cap .art img:not(:first-child){filter:hue-rotate(-28deg) saturate(1.4) brightness(.8)}
+.vols{display:grid;gap:6px;margin:12px auto;max-width:320px;text-align:left}
+.vols label{display:grid;grid-template-columns:120px 1fr;align-items:center;gap:10px;font-size:14px}

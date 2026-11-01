@@ -23,7 +23,7 @@ import { money, fmtLb, shelfLifeDays } from '../sim/economy.js';
 import * as eco from '../sim/economy.js';
 import { layers, status, badge, barPct, barColor, slotCls, tipFor, fitOf, zoneReadout } from './views.js';
 import { manifest, src } from '../images.js';
-import { unlock, play, setMuted } from '../audio.js';
+import { unlock, play, setMuted, audioStatus } from '../audio.js';
 import { reduceMotion } from '../fx.js';
 import { GUIDE, NUMS, PREP } from '../content/guide.js';
 import { MYTHS } from '../content/myths.js';
@@ -108,7 +108,7 @@ export function startNextSpecies() { if (S.g && sim.startSpecies(S.g)) { play('g
 export const App = {
   template,
   data() {
-    return { ui, S, CONFIG, manifest, RULES, GUIDE, NUMS, PREP, MYTHS, LESSONS, LESSON_IDS, MEDIA, LC_MEDIA, NB_TABS, SPEEDS, SUPPLIES, ZONES, EQUIPMENT, EQUIPMENT_ORDER, STAGES, PRODUCTS, CAST, TUTORIAL };
+    return { ui, S, CONFIG, manifest, RULES, GUIDE, NUMS, PREP, MYTHS, LESSONS, LESSON_IDS, MEDIA, LC_MEDIA, NB_TABS, SPEEDS, SUPPLIES, ZONES, EQUIPMENT, EQUIPMENT_ORDER, STAGES, PRODUCTS, CAST, TUTORIAL, audioStatus };
   },
   computed: {
     g() { return S.g; },
@@ -244,6 +244,7 @@ export const App = {
     autoClimate() { const g = S.g, c = spg(g).climate || packOf('pink-oyster').climate; g.heater = g.gear.heatmat ? c.heater : 0; g.fae = c.fae; g.mist = g.gear.humidifier ? c.mist : c.handMist; play('good'); },
     buildBed(i, t) { done(sim.buildBed(S.g, i, t)); },
     prepLC(i, k) { done(sim.prepLC(S.g, i, k)); },
+    audioFound(kind) { return Object.values(audioStatus[kind]).filter(s => s === 'loaded').length; },
     toggleAuto(id) { auto.setAuto(S.g, id, !auto.autoOn(S.g, id)); play('tap'); },
     waterBed(i) { done(sim.water(S.g, i)); },
     startNextSpecies,

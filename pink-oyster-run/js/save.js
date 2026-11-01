@@ -5,7 +5,7 @@ export const SAVE_KEY = 'por:profile';
 export const SAVE_VERSION = 1;
 const LEGACY = { best: 'por2-best', lessons: 'por2-lessons', muted: 'por2-mute' };
 
-export const blankProfile = () => ({ v: SAVE_VERSION, best: null, lessons: {}, muted: false, expert: false, playMode: 'basic', tutorialDone: false });
+export const blankProfile = () => ({ v: SAVE_VERSION, best: null, lessons: {}, muted: false, expert: false, playMode: 'basic', tutorialDone: false, vol: { music: 0.5, sfx: 1, voice: 1 } });
 
 function read(storage, key) { try { const v = storage.getItem(key); return v == null ? undefined : JSON.parse(v); } catch (e) { return undefined; } }
 
@@ -13,6 +13,7 @@ function read(storage, key) { try { const v = storage.getItem(key); return v == 
 export function migrate(data) {
   const p = { ...blankProfile(), ...(data && typeof data === 'object' ? data : {}) };
   if (!p.lessons || typeof p.lessons !== 'object') p.lessons = {};
+  p.vol = { music: 0.5, sfx: 1, voice: 1, ...(p.vol && typeof p.vol === 'object' ? p.vol : {}) };
   p.v = SAVE_VERSION;
   return p;
 }

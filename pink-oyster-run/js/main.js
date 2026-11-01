@@ -15,7 +15,7 @@ import { clearRun } from './save.js';
 import { persist as persistProfile } from './ui/state.js';
 import { unlocked } from './sim/stages.js';
 import { loadManifest, manifest } from './images.js';
-import { play, unlock, setMuted } from './audio.js';
+import { play, unlock, setMuted, loadAudioManifest, setMusic, sting, say, stopVoice, setVolumes } from './audio.js';
 import { toast, float, burst, wobble, pop, placed, moved, pluck, zoneAlarm, cash, revealCard, enterHouse, bought } from './fx.js';
 import { watch } from 'vue';
 import { zoneOf } from './sim/zones.js';
@@ -27,8 +27,8 @@ import { packOf } from './content/species/index.js';
 setConfig(CONFIG);
 attachAdminHelp();
 setAdminVisible(ui.playMode === 'advanced');
-setMuted(ui.muted);
-loadManifest();
+setMuted(ui.muted); setVolumes(ui.vol);
+loadManifest(); loadAudioManifest();
 
 /* ---------- sim events -> feedback ---------- */
 on((type, d) => {
@@ -84,7 +84,16 @@ on((type, d) => {
 ui.saved = savedSummary();
 createApp(App).mount('#app');
 watch(() => ui.modal, m => { if (m && (m.type === 'week' || m.type === 'review')) revealCard(); });
-watch(() => ui.screen, s => { if (s === 'play') enterHouse(); });
+watch(() => ui.screen, s => { if (s === 'play') enterHouse(); setMusic(s === 'play' ? 'music_farm' : s === 'report' ? null : 'music_title'); }, { immediate: true });
+watch(() => ui.vol, v => { setVolumes(v); persist(); }, { deep: true });
+// Voice: speak whatever line is on screen (scene bubble, review mentor, guru post + mentor reaction). Missing files are silent.
+watch(() => { const m = ui.modal; return m ? [m.type, m.i, m.ans, m.key, m.r && m.r.week] : null; }, (k) => {
+  const m = ui.modal; if (!m) return stopVoice();
+  if (m.type === 'scene') say(m.lines[m.i].id);
+  else if (m.type === 'review') { say(m.r.mentor.id); if (m.r.mastered) sting('music_review'); }
+  else if (m.type === 'quiz' && m.guru) say(m.ans === null ? [m.guru.open.id, m.guru.claim.id] : m.guru.react.id);
+  else stopVoice();
+});
 window.__porBooted = true;
 
 /* ---------- loop ---------- */

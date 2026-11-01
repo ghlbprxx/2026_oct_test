@@ -1,0 +1,12 @@
+{
+  "$comment": [
+    "Fill in `command` with YOUR text-to-speech CLI as an argv array (no shell).",
+    "Tokens: {text} (the line, emoji removed), {who} (mentor|guru), {voice} (from `voices` below), {voiceDescription} (casting notes from audio-manifest.json), {file} (absolute .mp3 path), {id}.",
+    "`voices`: whatever your CLI needs to pick a voice for each speaker (a voice id or name). Leave null to use {voiceDescription} with a voice-design model instead.",
+    "The flags in `shape` are placeholders, not real flags. Learn the real ones from your CLI's --help (the generate-media skill does this)."
+  ],
+  "command": null,
+  "shape": ["<your-cli>", "<tts-subcommand>", "<text-flag>", "{text}", "<voice-flag>", "{voice}", "<output-flag>", "{file}"],
+  "voices": { "mentor": null, "guru": null },
+  "timeoutSeconds": 300
+}

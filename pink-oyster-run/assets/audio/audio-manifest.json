@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "game": "Pink Oyster Run",
+  "howToUse": [
+    "Every entry is one sound the game can play. 'file' is where to save it, relative to pink-oyster-run/index.html. MP3 works in every browser.",
+    "Missing files are fine: sound effects fall back to the built-in WebAudio synth, music and voice are simply silent. Notebook › Art (Media) shows what the game found.",
+    "sfx ids match the synth names in js/audio.js; keep them short (under ~1.5 s), dry (no reverb tail), and normalized to about −14 LUFS.",
+    "music: 'prompt' is written for Suno-style song generators (style tags, no lyrics). Loops should start and end on the same chord.",
+    "voice: the lines are in assets/audio/voice-lines.json (generated from the game script by `node assets/tools/build-voice-lines.mjs`). 'cast' below describes each speaker's voice.",
+    "To generate with a CLI (e.g. fal.ai): fill in assets/tools/audio.config.json and voice.config.json, then `node assets/tools/gen-audio.mjs --dry-run` and `node assets/tools/gen-voice.mjs --dry-run`. Claude Code: run the generate-media skill (.claude/skills/generate-media)."
+  ],
+  "sfxStyle": "Clean, cozy, soft game UI sound effect, dry studio recording, no music, no voices, no reverb tail.",
+  "sfx": [
+    { "id": "tap", "file": "assets/audio/sfx/tap.mp3", "seconds": 0.4, "usedFor": "Any button or spot tap.", "prompt": "A soft, short wooden tap, like a fingertip on a small wooden block." },
+    { "id": "build", "file": "assets/audio/sfx/build.mp3", "seconds": 0.6, "usedFor": "A plate, jar, bag or bed is placed.", "prompt": "A glass jar set down gently on a wooden counter, small clink." },
+    { "id": "harvest", "file": "assets/audio/sfx/harvest.mp3", "seconds": 0.8, "usedFor": "Picking a cluster.", "prompt": "A crisp, satisfying snap of a fresh mushroom cluster twisted off a block, with a light leafy rustle." },
+    { "id": "coin", "file": "assets/audio/sfx/coin.mp3", "seconds": 0.7, "usedFor": "Market sales, tips, buying gear.", "prompt": "Two bright, friendly coin chimes, rising." },
+    { "id": "mold", "file": "assets/audio/sfx/mold.mp3", "seconds": 1.0, "usedFor": "Mold becomes visible.", "prompt": "A low, slightly ominous squelchy wobble, cartoonish rather than scary." },
+    { "id": "bad", "file": "assets/audio/sfx/bad.mp3", "seconds": 0.5, "usedFor": "Something went wrong (rot, not enough cash).", "prompt": "A short, muted, gentle error buzz, two descending notes." },
+    { "id": "good", "file": "assets/audio/sfx/good.mp3", "seconds": 0.7, "usedFor": "Something went right (colonized, mastered).", "prompt": "A gentle two-note marimba success chime, rising." },
+    { "id": "hiss", "file": "assets/audio/sfx/hiss.mp3", "seconds": 1.2, "usedFor": "The pressure cooker starts a batch.", "prompt": "A pressure cooker releasing a short burst of steam, soft hiss fading out." },
+    { "id": "shake", "file": "assets/audio/sfx/shake.mp3", "seconds": 0.8, "usedFor": "Breaking and shaking a grain jar.", "prompt": "A glass jar of dry rye grain shaken three times, rattling kernels." },
+    { "id": "pop", "file": "assets/audio/sfx/pop.mp3", "seconds": 0.4, "usedFor": "Growth stage reached (colonized, pins, peak).", "prompt": "A soft, bubbly, cheerful pop." },
+    { "id": "sale", "file": "assets/audio/sfx/sale.mp3", "seconds": 0.6, "usedFor": "An online shop sale.", "prompt": "A light, short notification ding, like a small shop bell." }
+  ],
+  "music": [
+    { "id": "music_title", "file": "assets/audio/music/title.mp3", "seconds": 60, "loop": true, "usedFor": "Title and setup screens.", "prompt": "cozy acoustic folk, warm nylon guitar, soft glockenspiel, light brushed percussion, gentle and curious, morning garden, instrumental, 92 bpm, loopable" },
+    { "id": "music_farm", "file": "assets/audio/music/farm.mp3", "seconds": 120, "loop": true, "usedFor": "While playing (quiet under the sound effects).", "prompt": "calm lo-fi chillhop, mellow electric piano, soft upright bass, vinyl crackle, relaxed focus, home workshop, instrumental, 80 bpm, unobtrusive background, loopable" },
+    { "id": "music_review", "file": "assets/audio/music/review.mp3", "seconds": 8, "loop": false, "usedFor": "Short sting when a stage is mastered at the weekly review.", "prompt": "short triumphant cozy sting, marimba and pizzicato strings, small cymbal swell, bright resolution, instrumental, 8 seconds" }
+  ],
+  "cast": {
+    "mentor": { "name": "Dr. Ines Marlow", "voice": "Woman in her late 60s, American, retired scientist. Dry wit, crisp diction, unhurried; turns theatrical when she sees mold. Warm underneath." },
+    "guru": { "name": "u/SporeLord_9000", "voice": "Man in his late 20s, American, upbeat and overconfident internet poster. Fast, casual, grinning delivery; says emoji out loud only as tone, never as words." }
+  },
+  "voiceLines": "assets/audio/voice-lines.json"
+}

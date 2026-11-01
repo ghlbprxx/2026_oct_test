@@ -501,6 +501,9 @@ export default `
       <h3 style="font-size:28px">Paused</h3>
       <p class="muted">Week {{ g.week }} of {{ CONFIG.time.seasonWeeks }} · {{ money(g.cash) }}</p>
       <div class="actions" style="justify-content:center"><button class="btn big" @click="resume">Resume</button><button class="btn ghost" @click="openNb()">Notebook</button><button class="btn ghost" @click="quit">End season now</button></div>
+      <div class="vols" role="group" aria-label="Volume">
+        <label v-for="k in ['music','sfx','voice']" :key="k"><span>{{ {music:'Music',sfx:'Sound effects',voice:'Voices'}[k] }}</span><input type="range" min="0" max="1" step="0.05" v-model.number="ui.vol[k]" :aria-label="k+' volume'"></label>
+      </div>
       <p class="muted" style="font-size:13.5px">Play style: <b>{{ ui.playMode==='advanced' ? 'Advanced' : 'Basic' }}</b> · <button class="linkbtn" @click="setPlayMode(ui.playMode==='advanced'?'basic':'advanced')">switch to {{ ui.playMode==='advanced' ? 'Basic' : 'Advanced' }}</button></p>
     </div>
   </div>
@@ -586,6 +589,7 @@ export default `
           <tbody><tr v-for="m in manifest.images" :key="m.id"><td><code>{{ m.id }}</code></td><td><code>{{ m.file }}</code></td><td class="mono">{{ m.width }}×{{ m.height }}</td><td :class="manifest.status[m.id]==='loaded'?'ok-t':'muted'">{{ manifest.status[m.id]==='loaded' ? 'custom' : manifest.status[m.id]==='missing' ? 'placeholder' : 'checking…' }}</td></tr></tbody>
         </table></div>
         <p class="muted" style="margin-top:8px;font-size:13.5px">Manifest source: {{ manifest.source }}.</p>
+        <p style="margin-top:12px" data-media="audio"><b>Sound</b> (<code>assets/audio/audio-manifest.json</code>): {{ audioFound('sfx') }} of {{ Object.keys(audioStatus.sfx).length }} sound effects and {{ audioFound('music') }} of {{ Object.keys(audioStatus.music).length }} music tracks found{{ audioStatus.voiceTotal ? '; voice lines are checked as they play ('+Object.values(audioStatus.voice).filter(s=>s==='loaded').length+' of '+audioStatus.voiceTotal+' heard so far)' : '' }}. Missing effects use the built-in synth; missing music and voices are silent. Click once anywhere first: browsers only load sound after a click.</p>
       </template>
     </div>
   </div>

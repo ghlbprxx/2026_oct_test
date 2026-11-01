@@ -8,7 +8,7 @@ test('profile round-trips', () => {
   const s = memory();
   saveProfile({ best: 42, lessons: { rot: true }, muted: true }, s);
   const p = loadProfile(s);
-  assert.deepEqual(p, { v: SAVE_VERSION, best: 42, lessons: { rot: true }, muted: true, expert: false, playMode: 'basic', tutorialDone: false });
+  assert.deepEqual(p, { v: SAVE_VERSION, best: 42, lessons: { rot: true }, muted: true, expert: false, playMode: 'basic', tutorialDone: false, vol: { music: 0.5, sfx: 1, voice: 1 } });
 });
 test('migrates the single-file build’s loose keys (v0)', () => {
   const s = memory({ 'por2-best': '17', 'por2-lessons': '{"shake":true}', 'por2-mute': 'true' });
