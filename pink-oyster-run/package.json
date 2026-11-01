@@ -4,7 +4,7 @@
   "type": "module",
   "description": "Home mushroom-growing game. No build step; package.json exists for ES-module tests and a static server.",
   "scripts": {
-    "test": "node --test tests/",
+    "test": "node --test \"tests/*.test.js\"",
     "serve": "npx serve ."
   }
 }

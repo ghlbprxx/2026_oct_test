@@ -1,0 +1,87 @@
+// Boot: wire config into the sim, sim events into UI feedback, mount Vue, run the loop, handle input.
+import { createApp } from 'vue';
+import { CONFIG, ISF } from './config.js';
+import { setConfig } from './sim/cfg.js';
+import { on } from './sim/events.js';
+import * as sim from './sim/game.js';
+import { gameDaysFor } from './sim/clock.js';
+import { envNow, baseTemp } from './sim/environment.js';
+import { canShake } from './sim/growth.js';
+import { ui, S, persist } from './ui/state.js';
+import { App, start, tapSlot, setHeater, toggleMute, dryAll } from './ui/app.js';
+import { loadManifest, manifest } from './images.js';
+import { play, unlock, setMuted } from './audio.js';
+import { toast, float, burst, wobble } from './fx.js';
+import { LESSONS } from './content/lessons.js';
+
+setConfig(CONFIG);
+setMuted(ui.muted);
+loadManifest();
+
+/* ---------- sim events -> feedback ---------- */
+on((type, d) => {
+  switch (type) {
+    case 'toast': toast(d.text, d.c); break;
+    case 'sfx': play(d.name); break;
+    case 'float': float(d.slot, d.text, d.c); break;
+    case 'burst': burst(d.slot); break;
+    case 'wobble': wobble(d.slot); break;
+    case 'track': ISF.track(d.type, d.data); break;
+    case 'quiz': ui.modal = { type: 'quiz', m: d.m, ans: null }; break;
+    case 'coffee': ui.modal = { type: 'coffee' }; break;
+    case 'lesson': {
+      const first = !ui.lessons[d.id];
+      if (first) { ui.lessons[d.id] = true; persist(); }
+      const L = LESSONS[d.id];
+      toast(L.fix, 'lesson', (L.good ? '✓ ' : '') + L.title + (first ? ' · new lesson' : ''));
+      break;
+    }
+    case 'end': {
+      ui.newBest = ui.best == null || d.profit > ui.best;
+      if (ui.newBest) { ui.best = d.profit; persist(); }
+      ui.sheet = null; ui.modal = null; ui.paused = false; ui.screen = 'report'; window.scrollTo({ top: 0 });
+      break;
+    }
+  }
+});
+
+createApp(App).mount('#app');
+window.__porBooted = true;
+
+/* ---------- loop ---------- */
+const menuPause = () => ui.notebook || !!ui.modal || (ui.sheet && CONFIG.time.pauseInMenus);
+let last = performance.now();
+function frame(now) {
+  const raw = (now - last) / 1000; last = now;
+  if (ui.screen === 'play' && S.g) sim.update(S.g, gameDaysFor(raw, ui.paused || ui.autoPaused || menuPause()));
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+/* ---------- lifecycle + input ---------- */
+const autoPause = () => { if (ui.screen === 'play') ui.autoPaused = true; };
+document.addEventListener('visibilitychange', () => { if (document.hidden) autoPause(); });
+window.addEventListener('blur', autoPause);
+window.addEventListener('pointerdown', () => unlock(), { capture: true });
+window.addEventListener('keydown', e => {
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  const tag = (document.activeElement && document.activeElement.tagName) || '';
+  if (e.key === 'Escape') { if (ui.sheet) ui.sheet = null; else if (ui.notebook) ui.notebook = false; else if (ui.modal && ui.modal.type === 'quiz' && ui.modal.ans !== null) ui.modal = null; return; }
+  if (ui.screen !== 'play' || ['INPUT', 'TEXTAREA', 'SELECT'].includes(tag)) return;
+  if (e.key === ' ') { e.preventDefault(); if (ui.autoPaused) { ui.autoPaused = false; ui.paused = false; } else ui.paused = !ui.paused; return; }
+  if (ui.modal || ui.sheet || ui.notebook) return;
+  const n = '123456789'.indexOf(e.key);
+  if (n >= 0 && n < S.g.slots.length) { e.preventDefault(); tapSlot(n); return; }
+  const k = e.key.toLowerCase();
+  if (k === 'd') dryAll(); else if (k === 'h') setHeater((S.g.heater + 1) % 3); else if (k === 'n') ui.notebook = true; else if (k === 'm') toggleMute();
+});
+
+/* ---------- admin hooks ---------- */
+ISF.onRestart(() => { if (ui.screen !== 'title') start(); });
+ISF.action('Skip 5 days', () => { if (S.g && ui.screen === 'play') for (let k = 0; k < 100; k++) sim.update(S.g, 0.05); });
+ISF.action('Mold on a shelf', () => { const v = S.g && S.g.slots.find(x => x && x.state !== 'lost' && x.contam.onset == null); if (v) { v.contam.onset = S.g.day - 99; v.contam.why = 'luck'; } });
+ISF.action('+ $50', () => { if (S.g) S.g.cash += 50; });
+ISF.action('Image check', () => { const miss = manifest.images.filter(m => manifest.status[m.id] !== 'loaded').map(m => m.file); console.table(manifest.images.map(m => ({ id: m.id, file: m.file, status: manifest.status[m.id] }))); toast(`${manifest.images.length - miss.length}/${manifest.images.length} custom images found. Details in the Notebook > Art tab.`); });
+
+// Debug/test handle (devtools, Playwright bots). Not used by the game itself.
+window.POR = { S, ui, CONFIG, ISF, sim, start, envNow, baseTemp, canShake, manifest };

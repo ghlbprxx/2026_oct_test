@@ -8,3 +8,4 @@
 - 2026-11-01 Added `sim/game.js` (newGame, update, player actions) beyond the brief's file list — needs a home for orchestration that isn't one subsystem.
 - 2026-11-01 Embedded manifest copy + tools/sync-manifest.mjs removed — brief: fetch assets/images.json; on failure use SVG placeholders. ES modules already require a server, so the file:// reason for the copy is gone.
 - 2026-11-01 Testing in this sandbox routes the jsDelivr Vue URL to the identical npm tarball file — the sandbox blocks CDNs; shipped code still uses the CDN.
+- 2026-11-01 package.json test script is `node --test "tests/*.test.js"`, not `node --test tests/` — Node 22 treats positional args as files/globs and fails on a bare directory; the quoted glob is expanded by Node itself (works on Windows too) and skips tests/helpers.js.

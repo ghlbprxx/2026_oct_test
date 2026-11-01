@@ -6,17 +6,17 @@
 ## Phase 1 — restructure, ES modules, no behavior change
 - [x] Move root Walk This Way project into walk-this-way/; root README.md lists projects
 - [x] pink-oyster-run/package.json (type module, test, serve)
-- [ ] css/styles.css extracted
-- [ ] js/config-schema.js + js/config.js (ISF verbatim)
-- [ ] content/: guide.js, myths.js, lessons.js, species/pink-oyster.js
-- [ ] sim/: cfg, rng, events, clock, environment, contamination, growth, economy, equipment, game
-- [ ] save.js (versioned profile + migration from por2-* keys)
-- [ ] art.js, images.js (fetch manifest, no embedded copy), audio.js (synth), fx.js (toasts/floats)
-- [ ] ui/app.js (template + component), ui/views.js (layers/status/tips)
-- [ ] main.js (boot, loop, input, admin hooks); index.html shell + file:// / CDN-failure message
-- [ ] Remove tools/sync-manifest.mjs; move tests into pink-oyster-run/tests
-- [ ] tests: clock, environment, contamination, growth, save, manifest
-- [ ] Verify: Playwright smoke + bot parity with pre-refactor numbers
+- [x] css/styles.css extracted
+- [x] js/config-schema.js + js/config.js (ISF verbatim)
+- [x] content/: guide.js, myths.js, lessons.js, species/pink-oyster.js
+- [x] sim/: cfg, rng, events, clock, environment, contamination, growth, economy, equipment, game
+- [x] save.js (versioned profile + migration from por2-* keys)
+- [x] art.js, images.js (fetch manifest, no embedded copy), audio.js (synth), fx.js (toasts/floats)
+- [x] ui/app.js (template + component), ui/views.js (layers/status/tips)
+- [x] main.js (boot, loop, input, admin hooks); index.html shell + file:// / CDN-failure message
+- [x] Remove tools/sync-manifest.mjs; move tests into pink-oyster-run/tests
+- [x] tests: clock, environment, contamination, growth, save, manifest
+- [x] Verify: Playwright smoke + bot parity with pre-refactor numbers
 
 ## Phase 2 — time, realism, difficulty, slow start
 - [ ] clock: playback 0/0.5/1/2/4/8×, bioDaysPerGameDay, secondsPerDay range 30–600

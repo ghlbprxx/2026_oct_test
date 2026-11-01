@@ -2,18 +2,33 @@
 
 You run a tiny pink oyster (*Pleurotus djamor*) farm for one season, from petri dish to market table. It's a rebuild of the original quiz-and-simulator page (`original.html`) as a real-time game. All the cultivation content is still there, but you now learn it by doing it, and by watching what goes wrong when you don't.
 
-- **Stack:** one `index.html`, Vue 3.4.21 from cdnjs, no build step. Placeholder art is generated inline as SVG, so it runs with zero image files.
+- **Stack:** ES modules, Vue 3.4.21 (pinned ESM build from jsDelivr), no build step. Placeholder art is generated inline as SVG, so it runs with zero image files.
 - **Session:** about 5 to 8 minutes per season. Works on desktop and phones.
 
 ## Run it
 
-Open `index.html` in a browser (Vue and fonts load from a CDN, so you need internet), or serve the folder:
+ES modules don't load from `file://`, so serve this folder (the page tells you this if you open the file directly):
 
 ```bash
-python3 -m http.server 8000
+npx serve .
 ```
 
-Then open `http://localhost:8000/pink-oyster-run/`.
+Or use `python3 -m http.server 8000` and open `http://localhost:8000`. You need internet the first time, for Vue and the fonts.
+
+## Code layout
+
+| Path | What's there |
+|---|---|
+| `index.html` | Shell: import map, `file://` / CDN-failure messages, loads `js/main.js` |
+| `css/styles.css` | Design tokens, dark mode, layout |
+| `js/main.js` | Boot, sim-event → UI wiring, game loop, keyboard, admin hooks |
+| `js/config-schema.js`, `js/config.js` | Tuning knobs; the ISF admin panel (template verbatim) |
+| `js/sim/` | Pure simulation (no DOM, no Vue): clock, environment, growth, contamination, economy, equipment, game |
+| `js/content/` | Data: field guide, myths, lessons, species recipes |
+| `js/ui/` | Vue template, root component, view helpers |
+| `js/art.js`, `js/images.js` | SVG placeholders; image-manifest loader |
+| `js/audio.js`, `js/fx.js`, `js/save.js` | Synth SFX; toasts/floats; versioned profile save |
+| `.ai/` | Working notes: design, plan, progress log, decisions |
 
 ## How it plays
 
@@ -51,13 +66,7 @@ Workflow:
 1. Generate each entry and save it at its `file` path. Do the non-`alignWith` ones first.
 2. Reload the game. Any missing file falls back to placeholder art, so you can replace images one at a time.
 3. Check **Notebook › Art** in the game to see which files it found. You can also flip `look.customImages` in the admin panel to compare against the placeholders.
-4. If you change `images.json` (paths, new framing numbers), run:
-
-   ```bash
-   node pink-oyster-run/tools/sync-manifest.mjs
-   ```
-
-   This copies the manifest into `index.html`, so it also works when the page is opened from disk, where the browser blocks reading the JSON. Over http the game reads `images.json` directly.
+4. Edits to `images.json` (paths, framing numbers) take effect on reload. If the JSON is missing or invalid, the game says so in Notebook › Art and uses placeholders for everything.
 
 ## Tuning (admin panel)
 
@@ -75,7 +84,7 @@ Tune these first:
 npm test
 ```
 
-This runs from the repo root. It checks that the manifest is valid, that the embedded copy is in sync, and that every image the game draws has a manifest entry and placeholder art.
+Run it from this folder (Node 18+, no dependencies). It covers the clock, environment, contamination, growth, save/migration, the image manifest, and a headless bot check (idle play earns nothing; careful play beats sloppy play).
 
 ## Design notes (ISF pass 1)
 

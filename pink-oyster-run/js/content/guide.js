@@ -1,0 +1,91 @@
+// Field-guide content, carried over unchanged from the original Pink Oyster Run.
+export const GUIDE = [
+ {id:'agar', name:'Agar', icon:'plate',
+  what:'Start or clean a culture on petri dishes, where you can see contamination and pick the strongest growth.',
+  target:'Genetic purity, early contamination detection, vigor screening.',
+  success:'Clean, fast, rhizomorphic-leaning mycelium you can read at a glance.',
+  picks:[['MEA','Malt extract agar. Gold standard for Pleurotus: cheap, rich, predictable.'],['MYA / MYPA','MEA plus yeast extract (± peptone). Faster, more robust growth.'],['PDA','Easiest to buy pre-made. Slightly leaner than MEA.'],['DFA','Dog food agar. Budget DIY, fine for hobby work.'],['CMA','Cornmeal agar. Lean on purpose: slower, but forces rhizomorphic growth and makes contamination easy to read.']],
+  mistakes:[
+   ['Expanding from a contaminated plate','“It’s mostly white” still carries spores into every jar downstream.','Cut a wedge of clean leading edge, far from the contamination, onto a fresh plate.'],
+   ['Over-rich custom media','Mycelium races across and hides slow contaminants. Agar’s main job is detection.','Stick to MEA or MYA. Use CMA when you need to read growth clearly.'],
+   ['Growing on plain water agar','It has no nutrients. Use it only to germinate spores or run clean mycelium away from contamination.','Move to MEA once the culture is clean.'],
+   ['Using old, dried-out plates','Degraded nutrients give weak, misleading growth.','Pour fresh plates.'],
+   ['Treating spores as a clone','Spores are sexually recombined. Every spore plate is a genetic lottery.','Tissue-clone to keep a strain. Screen spore sectors for vigor.'],
+   ['Leaning on antibiotics','Gentamicin is niche lab tooling and can mask poor technique.','Fix sterile technique first.']],
+  adds:[['Yeast extract / peptone','vigor and recovery'],['Activated charcoal 0.5–1%','adsorbs inhibitory metabolites; helps a stressed culture'],['Gentamicin','niche, real-lab bacterial suppression']]},
+ {id:'lc', name:'Liquid culture', icon:'flask',
+  what:'Grow mycelium in a dilute sugar broth so it can be pulled into a syringe and spread over many jars.',
+  target:'Rapid, even biomass expansion in suspension.',
+  success:'Dispersed white mycelial fragments in a sterile broth, fast grain takeover.',
+  picks:[['Light malt extract 1–4%','Cleanest and most defined. Best signal-to-noise for spotting contamination.'],['Honey water 1–4%','Cheap, with mild natural antimicrobials.'],['Light corn syrup 1–4%','Basically honey’s equivalent.'],['Dextrose / glucose','Simple, clean, predictable.'],['Sugar + pinch of yeast extract','Works, but unnecessary and raises bacterial-bloom risk.']],
+  mistakes:[
+   ['Sugar above 5–6%','Osmotic stress on mycelium. Bacteria and yeast thrive on it.','Keep it dilute: 1–4%.'],
+   ['No agitation','You get one oxygen-starved blob instead of injectable fragments.','Use a magnetic stir bar, or shake daily.'],
+   ['Believing richer LC is faster','Rich broth feeds contaminants, not your culture.','Pink oyster LC does not need to be nutrient-rich.'],
+   ['Plain table sugar only','It works, but malt and honey colonize cleaner and faster.','Switch to light malt extract or honey.'],
+   ['Overdoing yeast extract','Raises bacterial-bloom risk for no real gain on Pleurotus.','A tiny pinch at most.']],
+  adds:[['Magnetic stir bar','the single biggest upgrade'],['A few rye/barley kernels','nucleation sites and trace nutrition'],['Pinch of yeast extract','optional vigor']]},
+ {id:'grain', name:'Grain spawn', icon:'jar',
+  what:'Colonize sterilized grain. Each kernel becomes an inoculation point when you mix it into bulk substrate.',
+  target:'Maximum inoculation points, stored nutrition, shakeability.',
+  success:'Fully colonized, loose kernels. No clumps, no free water.',
+  picks:[['Rye berries','Classic gold standard: holds moisture, nutritious, shakes loose.'],['Millet-heavy bird seed (WBS)','Tons of small kernels. Very cheap. Pleurotus loves it.'],['Millet','Maximum inoculation points, fast.'],['Wheat berries','Rye’s cheaper cousin.'],['Oats','Good, slightly stickier.'],['Popcorn / corn / milo','Cheap, but big kernels mean fewer inoculation points.']],
+  mistakes:[
+   ['Grain too wet','Pooled water causes bacterial wet-spot. Hydration is the #1 grain failure.','Hydrate to field capacity: moist kernels, no free water.'],
+   ['Grain too dry','Colonization comes out patchy and slow.','Simmer or soak until kernels are hydrated through, then drain and surface-dry.'],
+   ['Pasteurizing grain','Grain is too nutritious to pasteurize. Contaminants win.','Pressure-sterilize 90–120 min at 15 psi.'],
+   ['Skipping gypsum','Kernels clump into a brick you can’t shake.','Add 1–2% gypsum.'],
+   ['Brown rice / flour cakes for bulk','PF-style cakes are poor for shakeable bulk spawn.','Use rye, WBS or millet.'],
+   ['Spawning before full colonization','Uncolonized kernels are free food for mold.','Wait until jars are fully white.']],
+  adds:[['Gypsum 1–2%','prevents clumping, buffers pH, adds Ca/S'],['Calcium carbonate (pinch)','extra pH buffering']]},
+ {id:'sub', name:'Substrate', icon:'bag',
+  what:'Mix spawn into the bulk material the mushrooms fruit from. Most of your yield is won or lost here.',
+  target:'Biological efficiency (fresh yield ÷ dry substrate), selectivity, cost.',
+  success:'High BE, good water retention and air exchange, resists mold, affordable.',
+  picks:[['Masters Mix','50% hardwood pellets + 50% soy hulls. Highest practical BE. Sterilize.'],['Hardwood sawdust + soy hulls','Top-tier BE. Sterilize.'],['Sawdust + 10–20% bran','Classic high-yield block. Sterilize.'],['Pasteurized straw','Traditional oyster substrate. Cheap, forgiving, low-tech.'],['Coir + vermiculite (CVG)','Beginner-friendly, easy to pasteurize, lower yield.'],['Spent coffee grounds','Fresh (<24 h) or pasteurized, cut with straw. High contamination risk.'],['Cardboard / paper','Lowest-tech, great for tiny grows, low yield.']],
+  mistakes:[
+   ['Pasteurizing a supplemented mix','Bran or soy with pasteurization only means near-guaranteed Trichoderma.','Sterilize anything with bran or soy.'],
+   ['Sterilizing plain straw','Leaves a nutrient vacuum that contaminants exploit.','Pasteurize straw: hot water or cold lime.'],
+   ['Softwood sawdust','Pine and cedar resins and oils inhibit growth.','Hardwood only.'],
+   ['Whole, unchopped straw','It colonizes poorly whether dry or soggy.','Chop it, then hydrate to field capacity.'],
+   ['Too much supplement','Diminishing returns past ~10–20% while contamination risk climbs.','Stay around 10–20% bran.'],
+   ['Old coffee grounds','Nutritious and non-sterile. Mold gets there first.','Use grounds under 24 h old, or pasteurize them, cut with straw.'],
+   ['Manure-based mixes','That’s the Agaricus playbook, not the lane for pinks.','Use lignocellulose: wood or straw.']],
+  adds:[['Wheat / oat / rice bran 10–20%','biggest yield lever (rice = highest yield and risk)'],['Soybean hulls','the engine of Masters Mix'],['Gypsum ~1%','structure; prevents anaerobic clumping'],['Hydrated lime','raises pH; selective against Trichoderma'],['Calcium carbonate','pH buffer for sawdust']]},
+ {id:'fruit', name:'Fruiting', icon:'cluster',
+  what:'Move colonized blocks to warm, humid conditions with fresh air so they form pins and then clusters.',
+  target:'Warmth, fresh air, and humidity kept high despite that airflow.',
+  success:'Fast pinning, short stems, broad ruffled pink caps.',
+  picks:[['70–85°F (21–30°C)','The fruiting sweet spot. Pinks are tropical.'],['Fresh air exchange','Low CO₂ gives short stems and wide caps.'],['High, managed humidity','Mist or humidify to offset the drying effect of fresh air.']],
+  mistakes:[
+   ['A cold room','Below ~64°F pinks sulk or won’t pin. The #1 silent beginner failure.','Keep it 70–85°F. A heat mat or a warm room fixes it.'],
+   ['Sealed, stale air','High CO₂ gives leggy, long-stemmed, small-capped clusters.','Increase fresh air exchange.'],
+   ['Fresh air without humidity','Air exchange dries caps. Edges crack and curl.','Raise misting or humidity as you add airflow.'],
+   ['Copying a blue oyster setup','Blue and grey oysters like cold. Pinks are the opposite.','Treat pinks as a warm-room species.']],
+  adds:[]},
+ {id:'harvest', name:'Harvest', icon:'knife',
+  what:'Pick clusters, then eat, sell or dry them fast.',
+  target:'Pick at peak and move product within 1–2 days.',
+  success:'Plan for 1–2 strong flushes; nothing spoils in the fridge.',
+  picks:[['Eat or sell fresh within 1–2 days','Shelf life is brutal.'],['Dehydrate the surplus','Drying beats rotting.'],['Plan 1–2 flushes','Pinks flush fast and hard early, then drop off.']],
+  mistakes:[
+   ['Storing like button mushrooms','Pinks last about 1–2 days fresh, not a week.','Eat, sell or dry right away.'],
+   ['Expecting pink on the plate','Heat fades them to tan-brown.','Sell the color raw. Plate them for flavor.'],
+   ['Expecting a long tail of flushes','After 1–2 strong flushes, yields drop off quickly.','Plan production around early flushes; replace blocks.']],
+  adds:[]}
+];
+
+export const NUMS = [
+ ['70–85°F','fruiting sweet spot (21–30°C)'],['< 64°F','pinks stall or won’t pin'],['1–2 days','fresh shelf life'],
+ ['1–4%','LC sugar strength'],['> 5–6%','LC sugar: too rich'],['90–120 min','grain at 15 psi'],
+ ['1–2%','gypsum in grain'],['~1%','gypsum in substrate'],['10–20%','bran supplement (dry wt)'],
+ ['0.5–1%','activated charcoal in agar'],['< 24 h','coffee grounds age'],['1–2','strong flushes to plan on']
+];
+export const PREP = [
+ ['Grain spawn','Very rich','Pressure-sterilize','Pasteurize'],
+ ['Masters Mix / sawdust + soy','Supplemented','Sterilize','Pasteurize only'],
+ ['Sawdust + bran','Supplemented','Sterilize','Pasteurize only'],
+ ['Plain straw','Unsupplemented','Pasteurize (hot water or cold lime)','Sterilize'],
+ ['Coir + vermiculite','Lean','Pasteurize','—'],
+ ['Coffee grounds','Rich, non-sterile','Fresh <24 h or pasteurize; cut with straw','Old grounds']
+];
