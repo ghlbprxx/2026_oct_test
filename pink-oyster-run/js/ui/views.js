@@ -24,7 +24,8 @@ export function fruitImg(v, st) {
 }
 export function layers(v) {
   const L = [], st = v.state === 'lost' ? v.lostFrom : v.state, add = (id, style = {}) => L.push({ id, style });
-  if (v.kind === 'bed') { add('bed'); if (FRUIT.includes(st) && !['pinning', 'resting', 'spent'].includes(st)) add(fruitImg(v, st), { transform: 'scale(.7) translateY(-8%)' }); }
+  if (v.kind === 'lc') { add('lc_jar'); if (v.prog > 0) add('lc_growth', { opacity: (0.25 + 0.75 * v.prog).toFixed(2) }); }
+  else if (v.kind === 'bed') { add('bed'); if (FRUIT.includes(st) && !['pinning', 'resting', 'spent'].includes(st)) add(fruitImg(v, st), { transform: 'scale(.7) translateY(-8%)' }); }
   else if (v.kind === 'plate') { add('plate_empty'); if (v.prog > 0) add('plate_colonized', revealStyle('plate_colonized', v.prog)); }
   else if (v.kind === 'jar') { add('jar_empty'); if (['colonizing', 'colonized'].includes(st) && v.prog > 0) add('jar_colonized', revealStyle('jar_colonized', v.prog)); }
   else if (FRUIT.includes(st)) add(fruitImg(v, st), st === 'growing' ? { transform: `scale(${(0.88 + 0.12 * v.prog).toFixed(3)})` } : {});

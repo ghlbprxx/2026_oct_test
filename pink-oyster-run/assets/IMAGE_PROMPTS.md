@@ -404,3 +404,22 @@ Cozy storybook character portrait for a casual mobile game, same art style as th
 Cozy storybook illustration for a casual mobile game. Clean vector-like shapes, soft cel shading and gentle gradients, confident dark plum outlines (#2a1b2e). Warm palette: flamingo pink (#e2557a), deep rose (#b8325a), cream-white mycelium (#fbf8f1), honey-amber agar (#ead7a8), wheat straw (#d9b65a), sawdust brown (#8a6040). One centered subject, front view tilted slightly from above, soft contact shadow directly underneath, even studio lighting, readable at small sizes. A low rounded mound of fresh hardwood wood chips mixed with a little straw, a few white threads of mycelium showing at the edge, viewed slightly from the side. Framing: Mound centered along the bottom third, filling about 85% of the width, empty space above for mushrooms drawn on top. Isolated subject on a fully transparent background (PNG alpha channel). Nothing else in frame.
 ```
 
+## lc_jar
+
+- **Save as:** `assets/img/lc_jar.png` (256×256, transparent)
+- **Used for:** Expert mode: a liquid-culture jar (amber broth, lid with an injection port). Growth is drawn on top.
+
+```text
+Cozy storybook illustration for a casual mobile game. Clean vector-like shapes, soft cel shading and gentle gradients, confident dark plum outlines (#2a1b2e). Warm palette: flamingo pink (#e2557a), deep rose (#b8325a), cream-white mycelium (#fbf8f1), honey-amber agar (#ead7a8), wheat straw (#d9b65a), sawdust brown (#8a6040). One centered subject, front view tilted slightly from above, soft contact shadow directly underneath, even studio lighting, readable at small sizes. A clear glass mason jar about two-thirds full of clear amber malt broth, a metal lid with a small grey self-healing injection port, simple and clean. Framing: Jar centered, filling about 80% of the height. Isolated subject on a fully transparent background (PNG alpha channel). Nothing else in frame.
+```
+
+## lc_growth
+
+- **Save as:** `assets/img/lc_growth.png` (256×256, transparent)
+- **Used for:** Overlay on lc_jar: white mycelium clouds and strands growing in the broth; faded in as the culture colonizes.
+- **Align with:** `lc_jar` (assets/img/lc_jar.png)
+
+```text
+Cozy storybook illustration for a casual mobile game. Clean vector-like shapes, soft cel shading and gentle gradients, confident dark plum outlines (#2a1b2e). Warm palette: flamingo pink (#e2557a), deep rose (#b8325a), cream-white mycelium (#fbf8f1), honey-amber agar (#ead7a8), wheat straw (#d9b65a), sawdust brown (#8a6040). One centered subject, front view tilted slightly from above, soft contact shadow directly underneath, even studio lighting, readable at small sizes. Only the contents of the jar: soft white wispy mycelium clouds and thin strands suspended in liquid, settled into a fluffy white mat at the bottom. Nothing else. Framing: Match lc_jar exactly: same position and size as the broth inside the jar. Isolated subject on a fully transparent background (PNG alpha channel). Nothing else in frame.
+```
+

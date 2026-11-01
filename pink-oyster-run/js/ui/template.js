@@ -309,6 +309,12 @@ export default `
         <div class="choice">
           <button v-for="(m,k) in mediaShown" :key="k" class="opt" @click="pourPlate(ui.sheet.slot,k)"><span><b>{{ m.full }}</b><small>{{ m.blurb }}</small></span><span class="cost" :title="'Real growers: about '+plateDaysFor(k)+' days'">{{ plateDaysFor(k) }} real d<br><small>{{ gameDays(plateDaysFor(k)) }} game d</small></span></button>
         </div>
+        <template v-if="isOpen('lc')">
+          <div class="secth"><b>Mix a liquid culture <span class="chip">Expert</span></b><span class="mono muted">{{ money(SUPPLIES.lc) }} · pressure-cooked, then seeded from a plate</span></div>
+          <div class="choice">
+            <button v-for="(m,k) in LC_MEDIA" :key="k" class="opt" :data-lc="k" :disabled="!g.cookers.length" @click="prepLC(ui.sheet.slot,k)"><span><b>{{ m.full }}</b><small>{{ g.cookers.length ? '' : 'Needs a pressure cooker (shop). ' }}{{ m.blurb }}</small></span><span class="cost">cooker</span></button>
+          </div>
+        </template>
         <div class="secth"><b>Prep a grain jar</b><span class="mono muted">{{ money(SUPPLIES.jar) }} · rye, field capacity, 1% gypsum</span></div>
         <p v-if="!isOpen('jar')" class="locked">🔒 Grain jars open when you master agar. Get clean plates going first.</p>
         <div class="choice" v-else>
@@ -349,7 +355,7 @@ export default `
 
         <!-- inoculation sources -->
         <template v-if="sv.state==='ready'">
-          <div class="secth"><b>Inoculate from {{ sv.kind==='jar' ? 'a colonized plate' : sv.kind==='bed' ? 'a colonized spawn bag' : 'a colonized grain jar' }}</b></div>
+          <div class="secth"><b>Inoculate from {{ sv.kind==='jar' ? (isOpen('lc') ? 'a colonized plate or liquid culture' : 'a colonized plate') : sv.kind==='lc' ? 'a colonized plate' : sv.kind==='bed' ? 'a colonized spawn bag' : 'a colonized grain jar' }}</b></div>
           <div class="choice" v-if="sources(sv).length">
             <button v-for="s in sources(sv)" :key="s.v.id" class="opt" :class="{warn:s.v.contam.vis>0}" @click="inoculate(ui.sheet.slot,s.i)">
               <span><b>#{{ s.v.id }} {{ vName(s.v) }}</b><small>{{ s.v.uses }} use{{ s.v.uses>1?'s':'' }} left{{ s.v.contam.vis>0 ? ' · ⚠ mold visible on it' : ' · looks clean' }}</small></span><span class="cost">use</span>

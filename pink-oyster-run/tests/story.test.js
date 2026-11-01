@@ -51,14 +51,15 @@ test('myths have stable unique ids; the guru is right about half the time', () =
   assert.ok(GURU.guruRight.includes(guruQuiz(MYTHS.find(m => m.a), () => 0.99).react), 'mentor grudgingly admits it when the guru is right');
 });
 
-test('director: story runs get each once-only scene once; free play and expert get none', () => {
+test('director: story runs get each once-only scene once; free play gets none', () => {
   setup(1);
   const g = newGame('normal', 'story');
   assert.ok(isStory(g));
   assert.equal(scene(g, 'intro').lines.length, 3);
   assert.equal(scene(g, 'intro'), null, 'intro plays once');
   assert.equal(scene(g, 'nope'), null);
-  for (const t of ['free', 'expert']) assert.equal(scene(newGame('normal', t), 'intro'), null, t);
+  assert.equal(scene(newGame('normal', 'free'), 'intro'), null, 'free play has no script');
+  assert.ok(scene(newGame('normal', 'expert'), 'intro'), 'expert keeps the story (Phase 6)');
   assert.ok(isStory(newGame('normal', 'tutorial')));
   assert.deepEqual(RUN_TYPES, ['tutorial', 'story', 'free', 'expert']);
   assert.equal(sceneKeyFor('stage', { stage: 1 }), 'stage_grain');

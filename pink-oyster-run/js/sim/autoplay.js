@@ -33,7 +33,7 @@ function tend(g, { moveToTent = true, cutPlates = true } = {}) {
     if (v.kind === 'bed' && (v.water ?? 1) < 0.4) return sim.water(g, i);
     if (v.state === 'spent') return sim.retire(g, i);
     if (canShake(v)) return sim.shake(g, i);
-    if (v.state === 'ready') { const s = sim.sources(g, v).filter(x => !(x.v.contam.vis > 0)); if (s.length) return sim.inoculate(g, i, s[0].i); }
+    if (v.state === 'ready') { const s = sim.sources(g, v).filter(x => !(x.v.contam.vis > 0)); const lc = s.find(x => x.v.kind === 'lc'); if (s.length) return sim.inoculate(g, i, (lc || s[0]).i); }
     if (moveToTent && isBlock(v) && zoneOf(i) !== 'tent') { const t = spotsIn('tent').find(j => !g.slots[j] && spotOpen(g, j)); if (t != null) return sim.move(g, i, t); }
     if (['kitchen', 'garage'].includes(zoneOf(i)) && v.state === 'colonizing') { const c = spotsIn('closet').find(j => !g.slots[j]); if (c != null) sim.move(g, i, c); }
   });
@@ -69,7 +69,7 @@ export const STRATEGIES = {
 };
 
 /** Pipeline decisions follow the current species' ladder (for pinks this equals unlocked()). */
-const atStage = (g, what) => (g.stage ?? 0) >= (OPENS[what] ?? 0);
+import { atStage, currentStage, isExpert } from './stages.js';
 
 function careful(g, { online }) {
   const reserve = g.mode === 'hardcore' ? 60 : 120;
@@ -106,13 +106,19 @@ function careful(g, { online }) {
   if (!atStage(g, 'jar')) { if (growingPlates < 3 && g.cash > 10) sim.pourPlate(g, e, 'mea'); return; }
   if (plates < 1 && g.cash > 10) return void sim.pourPlate(g, e, 'mea');
   const kitsWanted = online && productOpen(g, 'kit') ? 2 : 0;
+  if (unlocked(g, 'lc') && canJars && g.cash > 10) { // Expert: keep LC going, and give a finished LC a fresh jar to seed
+    const lcStage = currentStage(g).id === 'lc', lcs = g.slots.filter(v => v && v.kind === 'lc');
+    if (lcs.filter(v => v.state !== 'colonized').length < (lcStage ? 2 : 1) && lcs.length < 2 && plates > 0) return void sim.prepLC(g, e, 'dilute');
+    if (lcs.some(v => v.state === 'colonized') && !count(v => v.kind === 'jar' && ['queued', 'cooking', 'ready'].includes(v.state))) return void sim.prepJar(g, e, 'ster');
+  }
   if (P.id === 'wine-cap') { // spawn bags feed outdoor beds; build a chip bed when spawn is on the way
     const yard = spotsIn('yard').filter(j => !g.slots[j] && spotOpen(g, j));
     if (yard.length && count(v => v.kind === 'bag') > 0) sim.buildBed(g, yard[0], 'chips');
     const beds = count(v => v.kind === 'bed');
     if (canBags && jars > 0 && bags < Math.max(2, 2 - beds + spotsIn('yard').length) && g.cash > 30) return void sim.prepBag(g, e, 'sawspawn', 'ster');
   } else if (canBags && jars > 0 && bags < 2 + tentFree + kitsWanted && g.cash > 30) return void sim.prepBag(g, e, 'masters', 'ster');
-  if (canJars && jars < (canBags ? 2 : 3) && g.cash > 20) return void sim.prepJar(g, e, 'ster');
+  const jarCap = isExpert(g) && currentStage(g).id === 'grain' ? count(v => v.kind === 'jar' && v.state !== 'colonized') : jars; // Expert: jars seeded during the LC stage don't count as grain units
+  if (canJars && jarCap < (canBags ? 2 : 3) && g.cash > 20 && currentStage(g).id !== 'lc') return void sim.prepJar(g, e, 'ster');
   if (online && productOpen(g, 'plate') && plates < 2 && g.cash > 10) sim.pourPlate(g, e, 'mea'); // spare room: plates sell for ~$10
 }
 
@@ -120,9 +126,9 @@ function careful(g, { online }) {
  * Play a whole game headlessly. Returns a summary: weeks to master each stage, weekly cash, lowest cash,
  * revenue by source, gear spend, and whether the run went broke.
  */
-export function autoplay({ strategy = 'careful', mode = 'normal', weeks = 20, step = 0.05, onWeek, start = null, continueSpecies = false } = {}) {
+export function autoplay({ strategy = 'careful', mode = 'normal', weeks = 20, step = 0.05, onWeek, start = null, continueSpecies = false, runType = 'free' } = {}) {
   const base = typeof strategy === 'function' ? strategy : STRATEGIES[strategy];
-  const g = sim.newGame(mode);
+  const g = sim.newGame(mode, runType);
   if (start) sim.startSpecies(g, start, true); // begin directly at a later species (earlier ones count as mastered)
   const play = continueSpecies ? gg => { if (gg.speciesDone && nextSpecies(gg.species)) sim.startSpecies(gg); base(gg); } : base;
   const res = { strategy: typeof strategy === 'string' ? strategy : 'custom', mode, startCash: g.cash, masteredAt: {}, cashByWeek: [], minCash: g.cash, broke: false };

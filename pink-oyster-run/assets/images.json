@@ -472,6 +472,27 @@
       "usedFor": "A wine cap bed of wood chips in the back yard (yard spots). Wine cap clusters are drawn on top when it fruits.",
       "prompt": "A low rounded mound of fresh hardwood wood chips mixed with a little straw, a few white threads of mycelium showing at the edge, viewed slightly from the side.",
       "framing": "Mound centered along the bottom third, filling about 85% of the width, empty space above for mushrooms drawn on top."
+    },
+    {
+      "id": "lc_jar",
+      "file": "assets/img/lc_jar.png",
+      "width": 256,
+      "height": 256,
+      "background": "transparent",
+      "usedFor": "Expert mode: a liquid-culture jar (amber broth, lid with an injection port). Growth is drawn on top.",
+      "prompt": "A clear glass mason jar about two-thirds full of clear amber malt broth, a metal lid with a small grey self-healing injection port, simple and clean.",
+      "framing": "Jar centered, filling about 80% of the height."
+    },
+    {
+      "id": "lc_growth",
+      "file": "assets/img/lc_growth.png",
+      "width": 256,
+      "height": 256,
+      "background": "transparent",
+      "alignWith": "lc_jar",
+      "usedFor": "Overlay on lc_jar: white mycelium clouds and strands growing in the broth; faded in as the culture colonizes.",
+      "prompt": "Only the contents of the jar: soft white wispy mycelium clouds and thin strands suspended in liquid, settled into a fluffy white mat at the bottom. Nothing else.",
+      "framing": "Match lc_jar exactly: same position and size as the broth inside the jar."
     }
   ],
   "styles": {

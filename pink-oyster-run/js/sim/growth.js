@@ -35,7 +35,9 @@ export function phaseDays(v) {
   const B = spv(v).bio, s = C.growth.growthScale;
   switch (v.kind + ':' + v.state) {
     case 'plate:colonizing': return B.plateDays / mediumSpeed(v.medium) * s;
-    case 'jar:colonizing': return B.jarDays * s;
+    case 'jar:colonizing': return B.jarDays * s * (v.fromLC ? RULES.lcJarSpeed : 1);
+    case 'lc:colonizing': return (B.lcDays ?? RULES.lcDays) * s;
+    case 'lc:bath': return B.bathDays;
     case 'bag:colonizing': case 'bed:colonizing': return recipeOf(v).colDays * s;
     case 'bag:pinning': case 'bed:pinning': return B.pinDays * s;
     case 'bag:growing': case 'bed:growing': return B.growDays * s;
@@ -85,6 +87,7 @@ export function stepVessel(g, v, dd, env, i) {
   if (v.state === 'colonizing' && env.temp < 60) { v.coldT = (v.coldT || 0) + db; if (v.coldT > RULES.garageLesson) learn(g, 'garage_swing'); }
   switch (v.kind + ':' + v.state) {
     case 'plate:colonizing': v.prog += db / dur * cf; if (v.prog >= 1) { v.prog = 1; v.state = 'colonized'; v.uses = RULES.plateUses; count(g, 'finished'); count(g, 'cleanPlates'); if (env.zone === 'closet') count(g, 'closetPlates'); emit('sfx', { name: 'pop' }); emit('float', { slot: i, text: 'Colonized!', c: 'good' }); log(g, `Plate #${v.id} is fully colonized.`); } break;
+    case 'lc:colonizing': v.prog += db / dur * cf; if (v.prog >= 1) { v.prog = 1; v.state = 'colonized'; v.uses = RULES.lcUses; count(g, 'finished'); count(g, 'cleanLC'); emit('sfx', { name: 'pop' }); emit('float', { slot: i, text: 'LC ready!', c: 'good' }); log(g, `Liquid culture #${v.id} is colonized: ${RULES.lcUses} grain jars' worth.`); } break;
     case 'jar:bath': case 'bag:bath': v.t += db; if (v.t >= dur) { v.state = 'ready'; v.t = 0; } break;
     case 'jar:colonizing': v.prog += db / dur * cf; if (v.prog >= 1) { v.prog = 1; v.state = 'colonized'; v.uses = Math.max(1, Math.round(RULES.jarUses * v.salvage)); count(g, 'finished'); count(g, 'cleanJars'); emit('sfx', { name: 'pop' }); log(g, `Jar #${v.id} is fully colonized.`); } break;
     case 'bag:colonizing': v.prog += db / dur * cf; if (v.prog >= 1) {

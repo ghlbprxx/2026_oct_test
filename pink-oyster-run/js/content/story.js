@@ -65,6 +65,11 @@ export const SCENES = {
     L('mentor_winecap_intro_1', 'mentor', 'Wine caps live outside. You make the spawn indoors, then the weather does the rest.'),
     L('mentor_winecap_intro_2', 'mentor', 'A good bed fruits for years. Keep it moist and be patient.'),
   ] },
+  stage_lc: { once: true, lines: [
+    L('mentor_stage_lc_1', 'mentor', 'Liquid culture. One jar of broth, six jars of grain. Also six ways to ruin everything at once.'),
+    L('guru_stage_lc_1', 'guru', 'more sugar = more food = faster growth, it’s just math 📈'),
+    L('mentor_stage_lc_2', 'mentor', 'More sugar is more food for bacteria. Two percent. Not one gram more.'),
+  ] },
   stage_spawn: { once: true, lines: [
     L('mentor_stage_spawn_1', 'mentor', 'Grain into hardwood sawdust. More, cheaper spawn for a big outdoor bed.'),
   ] },

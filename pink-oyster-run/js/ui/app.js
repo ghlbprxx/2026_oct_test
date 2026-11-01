@@ -28,7 +28,7 @@ import { reduceMotion } from '../fx.js';
 import { GUIDE, NUMS, PREP } from '../content/guide.js';
 import { MYTHS } from '../content/myths.js';
 import { LESSONS, LESSON_IDS } from '../content/lessons.js';
-import { MEDIA, SUPPLIES } from '../content/species/pink-oyster.js';
+import { MEDIA, SUPPLIES, LC_MEDIA } from '../content/species/pink-oyster.js';
 import { spg, packOf, nextSpecies, recipeOf, SPECIES_BY } from '../content/species/index.js';
 import { WEEK_INTRO } from '../content/weeks.js';
 import { CAST } from '../content/story.js';
@@ -64,7 +64,7 @@ export function showScene(s) { if (s && s.lines.length) showModal({ type: 'scene
 export const ESSENTIAL_GEAR = ['sab', 'cooker23', 'rack', 'hygrometer', 'tent', 'heatmat', 'humidifier', 'dehydrator'];
 export function savedSummary() {
   const g = loadRun(); if (!g || g.over) return null;
-  const L = ladderOf(g.species);
+  const L = ladder(g);
   return { week: g.week, stage: L[Math.min(g.stage, L.length - 1)].name, species: packOf(g.species).name, mode: g.mode, cash: g.cash, runType: g.runType || 'free' };
 }
 export function autosave() { if (S.g && ui.screen === 'play' && !S.g.over) { saveRun(S.g); ui.saved = savedSummary(); } }
@@ -106,7 +106,7 @@ export function startNextSpecies() { if (S.g && sim.startSpecies(S.g)) { play('g
 export const App = {
   template,
   data() {
-    return { ui, S, CONFIG, manifest, RULES, GUIDE, NUMS, PREP, MYTHS, LESSONS, LESSON_IDS, MEDIA, NB_TABS, SPEEDS, SUPPLIES, ZONES, EQUIPMENT, EQUIPMENT_ORDER, STAGES, PRODUCTS, CAST, TUTORIAL };
+    return { ui, S, CONFIG, manifest, RULES, GUIDE, NUMS, PREP, MYTHS, LESSONS, LESSON_IDS, MEDIA, LC_MEDIA, NB_TABS, SPEEDS, SUPPLIES, ZONES, EQUIPMENT, EQUIPMENT_ORDER, STAGES, PRODUCTS, CAST, TUTORIAL };
   },
   computed: {
     g() { return S.g; },
@@ -122,7 +122,7 @@ export const App = {
         { id: 'tutorial', name: 'Tutorial', blurb: 'Story mode, plus a paused walkthrough of week 0. Best for a first run.' },
         { id: 'story', name: 'Story', blurb: 'Your mentor next door and a confidently wrong forum guru, in short scenes.' },
         { id: 'free', name: 'Free play', blurb: 'Same systems, no script. Market customers ask the myth questions.' },
-        { id: 'expert', name: 'Expert', locked: !ui.expert, blurb: ui.expert ? 'Free play without the “Next:” coaching line. Liquid culture comes in a later update.' : 'Unlocks when you master your first species.' },
+        { id: 'expert', name: 'Expert', locked: !ui.expert, blurb: ui.expert ? 'Adds a liquid-culture stage after agar for every species. No “Next:” coaching line.' : 'Unlocks when you master your first species.' },
       ];
     },
     story() { return isStory(S.g); },
@@ -187,6 +187,8 @@ export const App = {
     sheetFacts() {
       const v = this.sv, out = [['Status', status(S.g, v)]];
       if (v.kind === 'plate') out.push(['Medium', MEDIA[v.medium].name]);
+      if (v.kind === 'lc') out.push(['Broth', LC_MEDIA[v.lc].name]);
+      if (v.fromLC) out.push(['Spawned from', 'liquid culture']);
       if (v.kind !== 'plate' && v.kind !== 'bed') out.push(['Prep', v.prep === 'ster' ? 'Sterilized' : 'Pasteurized']);
       if (v.kind === 'bag' || v.kind === 'bed') out.push([v.kind === 'bed' ? 'Bed' : 'Substrate', recipeOf(v).name]);
       if (v.sp && v.sp !== 'pink-oyster') out.push(['Species', packOf(v.sp).name]);
@@ -201,7 +203,7 @@ export const App = {
     },
     sheetNote() {
       const v = this.sv; if (!v) return '';
-      if (v.state === 'colonized') return v.kind === 'plate' ? 'Tap a ready grain jar to spawn from this plate.' : 'Tap a ready substrate bag to spawn from this jar.';
+      if (v.state === 'colonized') return v.kind === 'plate' ? 'Tap a ready grain jar to spawn from this plate.' : v.kind === 'lc' ? 'Tap a ready grain jar to seed it from this liquid culture.' : v.kind === 'bag' ? 'Tap a ready yard bed to inoculate it with this spawn.' : 'Tap a ready substrate bag to spawn from this jar.';
       if (v.kind === 'bed') return v.state === 'ready' ? 'Inoculate it with a colonized spawn bag. Then keep it moist.' : v.state === 'pinning' && v.water < 0.5 ? 'Colonized. Wine caps flush after a good soak: rain, or the hose.' : '';
       const F = packOf(v.sp).fruiting, t = zoneEnv(S.g, zoneOf(ui.sheet.slot)).temp;
       if (v.state === 'pinning' && t < F.minTemp) return `${packOf(v.sp).name} won’t pin below ~${F.minTemp}°F. Warm it up.`;
@@ -233,6 +235,7 @@ export const App = {
     cast(who) { return CAST[who]; },
     autoClimate() { const g = S.g, c = spg(g).climate || packOf('pink-oyster').climate; g.heater = g.gear.heatmat ? c.heater : 0; g.fae = c.fae; g.mist = g.gear.humidifier ? c.mist : c.handMist; play('good'); },
     buildBed(i, t) { done(sim.buildBed(S.g, i, t)); },
+    prepLC(i, k) { done(sim.prepLC(S.g, i, k)); },
     waterBed(i) { done(sim.water(S.g, i)); },
     startNextSpecies,
     spName(id) { return packOf(id).name; },

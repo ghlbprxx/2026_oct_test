@@ -3,22 +3,26 @@
 import { C } from './cfg.js';
 import { weekOf } from './clock.js';
 import { RULES } from './rules.js';
-import { STAGES, OPENS, ladderOf } from '../content/stages.js';
+import { STAGES, OPENS, ladderOf, opensIndex, OPENS_BY } from '../content/stages.js';
 
 export const MODES = ['relaxed', 'normal', 'hardcore'];
 /** The stage ladder of the species being grown. */
-export const ladder = g => ladderOf(g && g.species);
-/** Is a system open? Everything a mastered species opened stays open; outdoor beds are wine cap only. */
+export const isExpert = g => !!g && g.runType === 'expert';
+export const ladder = g => ladderOf(g && g.species, isExpert(g));
+/** Has the current ladder reached the stage where `what` opens? */
+export const atStage = (g, what) => (g.stage ?? 0) >= opensIndex(ladder(g), what);
+/** Is a system open? Everything a mastered species opened stays open; outdoor beds are wine cap only; LC is Expert only. */
 export function unlocked(g, what) {
-  if (what === 'bed') return g.species === 'wine-cap' && (g.stage ?? 0) >= OPENS.bed;
+  if (what === 'bed') return g.species === 'wine-cap' && atStage(g, 'bed');
+  if (what === 'lc') return isExpert(g) && ((g.speciesMastered || []).length > 0 || atStage(g, 'lc'));
   if ((g.speciesMastered || []).length) return true;
-  return (g.stage ?? 0) >= (OPENS[what] ?? 0);
+  return atStage(g, what);
 }
 export const currentStage = g => { const L = ladder(g); return L[Math.min(g.stage, L.length - 1)]; };
-export const stageNameFor = what => STAGES[OPENS[what] ?? 0].name.toLowerCase();
+export const stageNameFor = what => (what === 'lc' ? 'liquid culture' : STAGES[OPENS[what] ?? 0].name.toLowerCase());
 /** Systems that open when stage index s begins (for the intro card). First species only, except the wine cap bed. */
-export const opensAt = (s, g) => Object.keys(OPENS).filter(k => OPENS[k] === s && k !== 'market' &&
-  (k === 'bed' ? g && g.species === 'wine-cap' : !(g && (g.speciesMastered || []).length)));
+export const opensAt = (s, g) => Object.keys(OPENS_BY).filter(k => opensIndex(ladder(g), k) === s && k !== 'market' &&
+  (k === 'bed' ? g && g.species === 'wine-cap' : k === 'lc' ? isExpert(g) : !(g && (g.speciesMastered || []).length)));
 /** Has stage index i been mastered on any species? (online-shop products stay open across species) */
 export const everMastered = (g, i) => Object.values({ ...(g.masteredBy || {}), now: g.mastered })
   .some(list => (list || []).includes(STAGES[i].id));

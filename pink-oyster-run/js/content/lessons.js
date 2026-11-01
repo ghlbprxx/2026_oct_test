@@ -23,6 +23,7 @@ export const LESSONS = {
   too_warm:        { stage: 'fruit', title: 'Too warm for lion’s mane', why: 'Lion’s mane is a cool-weather fungus. Above the mid-70s °F it stalls, and heads turn yellow and sour.', fix: 'Heat mat off. Aim for 60–70°F with lots of fresh air.' },
   pine_chips:      { stage: 'sub', title: 'Conifer chips', why: 'Pine and other conifers carry resins that hold wine cap back. Beds colonize slowly and fruit weakly.', fix: 'Use fresh hardwood chips: arborists often give them away.' },
   dry_bed:         { stage: 'sub', title: 'Dry bed', why: 'A wood-chip bed that dries out stalls, and competitor fungi move in.', fix: 'Water during dry spells. Wine caps flush after a good soak.' },
+  rich_lc:         { stage: 'agar', title: 'Sugar-bomb liquid culture', why: 'A rich LC doesn’t grow faster. It feeds bacteria, the broth clouds over, and every jar you inoculate from it carries the infection.', fix: 'Keep LC at 1–4% light malt or honey. Test a drop on agar before trusting it.' },
   dry_save:        { stage: 'harvest', good: true, title: 'Drying beats rotting', why: 'Dried pinks keep for months.', fix: 'Dehydrate whatever won’t sell fresh within a day or two.' },
 };
 export const LESSON_IDS = Object.keys(LESSONS);

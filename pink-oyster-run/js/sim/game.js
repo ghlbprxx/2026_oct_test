@@ -17,7 +17,7 @@ import { weekOf, toBio } from './clock.js';
 import { unlocked, startCash, hazardMult, canSalvage } from './stages.js';
 import { fmtLb } from './economy.js';
 import { inheritedCause } from './contamination.js';
-import { MEDIA, SUPPLIES } from '../content/species/pink-oyster.js';
+import { MEDIA, SUPPLIES, LC_MEDIA } from '../content/species/pink-oyster.js';
 import { spg, spv, packOf, nextSpecies, SPECIES_BY } from '../content/species/index.js';
 import { ladderOf } from '../content/stages.js';
 
@@ -128,8 +128,8 @@ export function prepBag(g, i, recipe, prep) {
 }
 /** Colonized vessels that can inoculate target t (plates → jars, jars → bags, spawn bags → beds), same species only. */
 export function sources(g, t) {
-  const want = t.kind === 'jar' ? 'plate' : t.kind === 'bed' ? 'bag' : 'jar';
-  return g.slots.map((v, i) => ({ v, i })).filter(s => s.v && s.v.kind === want && s.v.state === 'colonized' && s.v.uses > 0 && (s.v.sp || 'pink-oyster') === (t.sp || 'pink-oyster'));
+  const want = t.kind === 'jar' ? ['plate', 'lc'] : t.kind === 'lc' ? ['plate'] : t.kind === 'bed' ? ['bag'] : ['jar'];
+  return g.slots.map((v, i) => ({ v, i })).filter(s => s.v && want.includes(s.v.kind) && s.v.state === 'colonized' && s.v.uses > 0 && (s.v.sp || 'pink-oyster') === (t.sp || 'pink-oyster'));
 }
 export function inoculate(g, ti, si) {
   const t = g.slots[ti], s = g.slots[si];
@@ -140,7 +140,8 @@ export function inoculate(g, ti, si) {
     t.contam.onset = g.day; t.contam.why = workspace(g) === 'open' ? 'open_air' : 'luck'; // spores got in while the jar/bag was open
   }
   if (s.medium === 'super') t.medium = 'super'; // remember the super-agar lineage for hidden-mold attribution
-  if (!(s.contam.vis > 0)) count(g, t.kind === 'jar' ? 'cleanSpawn' : t.kind === 'bed' ? 'bedSpawned' : 'bagSpawned');
+  if (s.kind === 'lc') t.fromLC = true;
+  if (!(s.contam.vis > 0)) { count(g, t.kind === 'jar' ? 'cleanSpawn' : t.kind === 'bed' ? 'bedSpawned' : t.kind === 'lc' ? 'lcSpawned' : 'bagSpawned'); if (s.kind === 'lc' && s.lc === 'dilute') count(g, 'lcToGrain'); }
   emit('sfx', { name: 'build' }); emit('float', { slot: ti, text: 'Spawned!', c: 'good' });
   log(g, `Spawned #${t.id} from #${s.id}${s.contam.vis > 0 ? ' (it had visible mold)' : ''}.`, s.contam.vis > 0 ? 'bad' : '');
   if (s.uses <= 0) { g.slots[si] = null; log(g, `#${s.id} is used up.`); }
@@ -242,4 +243,15 @@ export function startSpecies(g, id = nextSpecies(g.species), force = false) {
   emit('speciesStart', { species: id });
   emit('stage', { stage: 0, id: ladderOf(id)[0].id, species: id });
   return true;
+}
+
+/* ---------- Expert: liquid culture ---------- */
+/** Mix an LC jar ('dilute' or 'rich') and queue it for the pressure cooker. Expert runs only. */
+export function prepLC(g, i, lc) {
+  if (!LC_MEDIA[lc] || !unlocked(g, 'lc') || !spotOpen(g, i) || g.slots[i]) return false;
+  if (!canSterilizeJars(g)) { emit('toast', { text: 'Liquid culture has to be pressure-cooked. Buy a cooker in the shop.', c: 'bad' }); return false; }
+  if (!pay(g, SUPPLIES.lc)) return false;
+  const v = mk(g, 'lc', { lc, prep: 'ster', state: 'queued' }); g.queue.push(v.id);
+  if (lc === 'dilute') count(g, 'diluteLC');
+  return place(g, i, v, `Liquid culture #${v.id} (${LC_MEDIA[lc].name}): queued for the pressure cooker.`);
 }

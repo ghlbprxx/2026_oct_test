@@ -31,8 +31,14 @@ export const MEDIA = {
   super: { name: 'Super agar', full: 'Max-sugar “super agar”', blurb: 'Twice as fast, but hides mold for much longer.' },
   cma:   { name: 'CMA', full: 'CMA · cornmeal agar (lean)', blurb: 'Slow, but mold shows almost immediately.' },
 };
+/** Liquid culture broths (Expert). Real practice: 1–4% light malt extract or honey in water, pressure-cooked.
+ *  Rich broths don't colonize faster; they feed bacteria (cloudy LC). hz = infection chance per real day while colonizing. */
+export const LC_MEDIA = {
+  dilute: { name: '2% light malt', full: 'Dilute LC · 2% light malt extract', hz: 0.006, blurb: 'Clear broth: mycelium shows as white clouds and strands. The standard.' },
+  rich: { name: '8% honey', full: 'Rich LC · 8% honey “sugar bomb”', hz: 0.05, blurb: 'Feels generous. Feeds bacteria, and cloudy broth hides it.' },
+};
 /** Consumables (US hobby prices, approximate). */
-export const SUPPLIES = { plate: 1.5, jar: 3, sab: 15 };
+export const SUPPLIES = { plate: 1.5, jar: 3, sab: 15, lc: 2 };
 
 /** Everything the sim needs about this species, in one object (see species/index.js). */
 export const PACK = { ...SPECIES, recipes: RECIPES, buyable: BUYABLE, basic: ['straw', 'masters'], flushMult: [1, 0.5, 0.15] };

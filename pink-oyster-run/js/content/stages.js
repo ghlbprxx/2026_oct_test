@@ -72,7 +72,23 @@ export const WINE_STAGES = [
     ] },
 ];
 export const LADDERS = { 'pink-oyster': STAGES, 'lions-mane': LIONS_STAGES, 'wine-cap': WINE_STAGES };
-export const ladderOf = species => LADDERS[species] || STAGES;
+
+/** Expert mode only: liquid culture between agar and grain. Dilute broth, sterilized; one LC seeds many grain jars, and hides infection well. */
+export const LC_STAGE = { id: 'lc', name: 'Liquid culture', product: null, unitName: 'grain jars seeded from clean, dilute LC', units: 3, unitKey: 'lcToGrain', guide: 'agar',
+  checklist: [
+    { key: 'diluteLC', n: 2, text: 'Mix and pressure-cook 2 LC jars at 1–4% light malt (not a rich “sugar bomb”)' },
+    { key: 'cleanLC', n: 1, text: 'Colonize a liquid culture with no contamination' },
+  ] };
+/** A species' ladder; Expert runs insert the liquid-culture stage after agar. */
+export const ladderOf = (species, expert = false) => { const L = LADDERS[species] || STAGES; return expert ? [L[0], LC_STAGE, ...L.slice(1)] : L; };
+
+/** System → the stage ids that open it (the earliest one present in a ladder wins). */
+export const OPENS_BY = { plate: ['agar'], lc: ['lc'], jar: ['lc', 'grain'], bag: ['substrate', 'spawn'], room: ['fruiting', 'bed'], market: ['fruiting', 'bed'], bed: ['bed'] };
+/** Index in ladder L where `what` opens (Infinity if never). */
+export function opensIndex(L, what) {
+  const ix = (OPENS_BY[what] || []).map(id => L.findIndex(s => s.id === id)).filter(i => i >= 0);
+  return OPENS_BY[what] ? (ix.length ? Math.min(...ix) : Infinity) : 0;
+}
 
 /** What opens while learning stage index s (and stays open after). `bed` is wine cap only. */
 export const OPENS = { plate: 0, jar: 1, bag: 2, room: 3, market: 3, bed: 3 };

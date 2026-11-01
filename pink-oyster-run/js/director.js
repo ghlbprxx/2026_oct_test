@@ -1,11 +1,11 @@
 // Story director: decides which scene (if any) a sim event triggers in story runs. Pure: no DOM, no Vue.
-// Free play and expert runs get no script; the simulation is identical in every run type.
+// Free play gets no script; the simulation is identical in every run type.
 import { SCENES, GURU } from './content/story.js';
 import { STAGES } from './content/stages.js';
 
 /** Run types offered at setup. Expert unlocks after the first species win. */
 export const RUN_TYPES = ['tutorial', 'story', 'free', 'expert'];
-export const isStory = g => !!g && (g.runType === 'story' || g.runType === 'tutorial');
+export const isStory = g => !!g && ['story', 'tutorial', 'expert'].includes(g.runType); // expert keeps the cast (and adds the LC scene)
 
 /** The scene for `key`, marking once-only scenes as seen. Null in free play, for unknown keys, or when already seen. */
 export function scene(g, key) {
