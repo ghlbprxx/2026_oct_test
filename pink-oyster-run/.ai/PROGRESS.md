@@ -79,3 +79,8 @@
 - Fixed during verification: the "Read the room" ring pointed at the kitchen move option (now the closet); on 390px the coach card covered its own target (now placed on the free side, scrolls target clear); toasts covered the coach card and then the speed-bar ring (toasts move up or to mid-screen while the coach shows).
 - Unverified: real CDN loading (sandbox), screen readers on the dialogue bar, how the guru's tone lands with players.
 - Next step: Phase 6 task 1 — lion's mane species (content/species/lions-mane.js, stage ladder reuse, species select after pinks).
+
+## 2026-11-01 03:19 UTC — Phase 6 checkpoint: species sim (lion's mane, wine cap) — UI not yet
+- Changed: content/species/{index,lions-mane,wine-cap}.js (+ PACK in pink-oyster.js); per-species ladders in content/stages.js (LADDERS, ladderOf); vessels carry v.sp, lots carry l.sp; env/growth/contamination/economy look species up per vessel/lot; g.species, speciesMastered, masteredBy, countsBy; startSpecies(); wine cap beds (buildBed, water, rain, stepBed); unitsNeeded halves for stages mastered on an earlier species (RULES.transferUnits); 3 lessons; run save v4; autoplay: start / continueSpecies options and species-aware careful play.
+- Verified: npm test 75/75 (tests/species.test.js); playtest table for pinks byte-identical to before the refactor; full journey bot (70 wks): 4/5 seeds master all three species, never broke, cash profit $800–2,400.
+- Next step: UI for species (HUD/notebook/build menu per species, yard beds sheet, "Start next species" button, stage modal per ladder, species art tint, story scenes).

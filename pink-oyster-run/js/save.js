@@ -32,16 +32,17 @@ export function saveProfile(profile, storage = globalThis.localStorage) {
 
 /* ---------- the current run (autosaved at each weekly review and when the tab is hidden) ---------- */
 export const RUN_KEY = 'por:run';
-export const RUN_VERSION = 3; // v1 = phase-3 runs (no stage ladder / online shop fields); v2 = phase 4; v3 = phase 5 (runType, story)
+export const RUN_VERSION = 4; // v1 = phase-3 runs (no stage ladder / online shop fields); v2 = phase 4; v3 = phase 5 (runType, story); v4 = phase 6 (species)
 const deep = o => JSON.parse(JSON.stringify(o));
 
 /** Bring an older saved run up to the current shape. Returns null for anything unusable. */
 export function migrateRun(data) {
   if (!data || typeof data !== 'object' || !data.g || typeof data.g !== 'object' || !Array.isArray(data.g.slots)) return null;
   const g = { stage: 0, units: 0, mastered: [], counts: {}, speciesDone: false, weeksRepeated: 0, reviews: [],
-    stock: { plate: [], jar: [], kit: [], dried: [] }, prices: {}, rep: 50, runType: 'free', story: { seen: [] }, marketMode: 'auto', gear: {}, cookers: [], lots: [], log: [], learned: [], asked: [], ...deep(data.g) };
+    stock: { plate: [], jar: [], kit: [], dried: [] }, prices: {}, rep: 50, runType: 'free', story: { seen: [] }, species: 'pink-oyster', speciesMastered: [], masteredBy: {}, countsBy: {}, marketMode: 'auto', gear: {}, cookers: [], lots: [], log: [], learned: [], asked: [], ...deep(data.g) };
   for (const k of ['plate', 'jar', 'kit', 'dried']) if (!Array.isArray(g.stock[k])) g.stock[k] = [];
   if (!g.story || !Array.isArray(g.story.seen)) g.story = { seen: [] };
+  if (g.speciesDone && !g.speciesMastered.length) g.speciesMastered = [g.species]; // v3 runs that already mastered pinks
   if (!g.weekStart) g.weekStart = deep({ stats: g.stats || {}, counts: g.counts, cash: g.cash, day: g.day });
   return g;
 }

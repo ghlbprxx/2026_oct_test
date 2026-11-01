@@ -20,5 +20,8 @@ export const RULES = {
   coldSnapDrop: 8, coldSnapDays: 4,   // game days
   quizTip: 3, quizChance: 0.35,
   relaxedRotMult: 1.5,                // Relaxed: fresh lasts longer, peak lasts longer
+  transferUnits: 0.5,                 // later species: stages already mastered on an earlier species need half the units
+  rainChance: 0.3,                    // per game day, outdoors (wine cap beds)
+  bedDryRate: 0.12,                   // bed moisture lost per real day without rain
   LB: 2.20462,
 };

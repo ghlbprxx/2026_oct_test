@@ -15,7 +15,7 @@ export const ZONES = [
     purpose: 'The pressure cooker and cheap storage. Temperature follows the weather.',
     env: { outdoor: true, dT: -4, swing: 7, rh: 60, co2: 500, dirt: 1.2 }, best: [] },
   { id: 'yard', name: 'Back yard', short: 'Yard', spots: 2, img: 'zone_yard',
-    purpose: 'Outdoor wood-chip beds for wine cap.', locked: 'Wine cap beds open with the wine cap species.',
+    purpose: 'Outdoor wood-chip beds for wine cap. Rain waters them; dry spells need the hose.', opens: 'bed', locked: 'Wine cap beds open at the wine cap “outdoor bed” stage.',
     env: { outdoor: true, dT: 0, swing: 10, rh: 70, co2: 420, dirt: 1.5 }, best: ['bed'] },
 ];
 export const ZONE_BY_ID = Object.fromEntries(ZONES.map(z => [z.id, z]));

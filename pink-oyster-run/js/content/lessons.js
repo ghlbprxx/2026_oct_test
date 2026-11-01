@@ -20,6 +20,9 @@ export const LESSONS = {
   flush3:          { stage: 'harvest', title: 'Chasing a long tail', why: 'After 1–2 strong flushes, yields fall off fast and old blocks invite mold.', fix: 'Plan around 1–2 flushes, then replace blocks.' },
   agar_job:        { stage: 'agar', good: true, title: 'Agar did its job', why: 'You caught mold on a plate and left it behind.', fix: 'Catch it early on agar so it never reaches grain.' },
   shake:           { stage: 'grain', good: true, title: 'Break and shake', why: 'Shaking at ~30% spreads colonized kernels so jars finish faster.', fix: 'Shake partway through; gypsum keeps kernels loose.' },
+  too_warm:        { stage: 'fruit', title: 'Too warm for lion’s mane', why: 'Lion’s mane is a cool-weather fungus. Above the mid-70s °F it stalls, and heads turn yellow and sour.', fix: 'Heat mat off. Aim for 60–70°F with lots of fresh air.' },
+  pine_chips:      { stage: 'sub', title: 'Conifer chips', why: 'Pine and other conifers carry resins that hold wine cap back. Beds colonize slowly and fruit weakly.', fix: 'Use fresh hardwood chips: arborists often give them away.' },
+  dry_bed:         { stage: 'sub', title: 'Dry bed', why: 'A wood-chip bed that dries out stalls, and competitor fungi move in.', fix: 'Water during dry spells. Wine caps flush after a good soak.' },
   dry_save:        { stage: 'harvest', good: true, title: 'Drying beats rotting', why: 'Dried pinks keep for months.', fix: 'Dehydrate whatever won’t sell fresh within a day or two.' },
 };
 export const LESSON_IDS = Object.keys(LESSONS);

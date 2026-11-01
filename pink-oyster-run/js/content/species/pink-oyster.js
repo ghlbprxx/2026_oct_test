@@ -13,7 +13,10 @@ export const SPECIES = {
     cookerDays: 1, bathDays: 0.5,
   },
   contam: { plateOpenAir: 0.06, jarSterile: 0.007, jarPasteurized: 0.13, fruitingMult: 0.3 },
-  fruiting: { minTemp: 64, bestLo: 70, bestHi: 85 },
+  fruiting: { minTemp: 64, bestLo: 70, bestHi: 85, rhLo: 85, rhHi: 95 },
+  short: 'pinks', priceMult: 1, shelfMult: 1, bagFruits: true, colShift: 0,
+  climate: { heater: 1, fae: 5, mist: 98, handMist: 88, label: 'heat mat Low, fan 5' },
+  climateText: '70–85°F, 85–95% RH, plenty of fresh air',
 };
 export const RECIPES = {
   coir:    { name: 'Coir + vermiculite', short: 'Coir', img: 'bag_coir', be: 0.35, cost: 3, rich: 1, colDays: 12, colReal: '10–14 days', hz: { ster: 0.005, past: 0.0067 }, blurb: 'Lean and forgiving, low yield.' },
@@ -30,3 +33,6 @@ export const MEDIA = {
 };
 /** Consumables (US hobby prices, approximate). */
 export const SUPPLIES = { plate: 1.5, jar: 3, sab: 15 };
+
+/** Everything the sim needs about this species, in one object (see species/index.js). */
+export const PACK = { ...SPECIES, recipes: RECIPES, buyable: BUYABLE, basic: ['straw', 'masters'], flushMult: [1, 0.5, 0.15] };

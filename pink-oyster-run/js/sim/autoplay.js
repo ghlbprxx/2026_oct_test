@@ -6,12 +6,13 @@ import { rand } from './rng.js';
 import * as sim from './game.js';
 import { buy, canBuy, priceOf } from './equipment.js';
 import { listVessel, listDried, productFor, productOpen } from './shop.js';
-import { dryAll } from './economy.js';
+import { dryAll, shelfLifeDays } from './economy.js';
 import { canShake } from './growth.js';
 import { isBlock } from './contamination.js';
 import { spotsIn, spotOpen, zoneOf } from './zones.js';
 import { unlocked } from './stages.js';
-import { STAGES } from '../content/stages.js';
+import { STAGES, OPENS } from '../content/stages.js';
+import { spg, packOf, nextSpecies } from '../content/species/index.js';
 
 const INCUBATE = ['closet', 'kitchen', 'garage'];
 const free = (g, zones = INCUBATE) => zones.flatMap(spotsIn).find(i => !g.slots[i] && spotOpen(g, i));
@@ -20,7 +21,8 @@ const n = (g, f) => g.slots.filter(v => v && f(v)).length;
 /** Gear the careful player buys, in order, once the stage needs it and cash allows (keeping a reserve). */
 const KIT = [['sab', 0], ['hygrometer', 0], ['cooker23', 1], ['rack', 1], ['tent', 3], ['heatmat', 3], ['humidifier', 3], ['dehydrator', 3]];
 function shopFor(g, reserve) {
-  for (const [id, stage] of KIT) if (g.stage >= stage && !g.gear[id] && canBuy(g, id).ok && g.cash - priceOf(id) >= reserve) buy(g, id);
+  const indoor = spg(g).bagFruits; // outdoor wine cap needs no tent gear
+  for (const [id, stage] of KIT) if (g.stage >= stage && !g.gear[id] && (indoor || !['tent', 'heatmat', 'humidifier'].includes(id)) && canBuy(g, id).ok && g.cash - priceOf(id) >= reserve) buy(g, id);
 }
 function tend(g, { moveToTent = true, cutPlates = true } = {}) {
   g.slots.forEach((v, i) => {
@@ -28,6 +30,7 @@ function tend(g, { moveToTent = true, cutPlates = true } = {}) {
     if (v.state === 'lost' || (v.contam.vis > 0 && v.kind !== 'plate')) return sim.toss(g, i);
     if (v.contam.vis > 0) return cutPlates && g.cash > 20 ? sim.cutEdge(g, i) : sim.toss(g, i);
     if (v.state === 'peak' || v.state === 'overripe') return sim.harvest(g, i);
+    if (v.kind === 'bed' && (v.water ?? 1) < 0.4) return sim.water(g, i);
     if (v.state === 'spent') return sim.retire(g, i);
     if (canShake(v)) return sim.shake(g, i);
     if (v.state === 'ready') { const s = sim.sources(g, v).filter(x => !(x.v.contam.vis > 0)); if (s.length) return sim.inoculate(g, i, s[0].i); }
@@ -65,17 +68,22 @@ export const STRATEGIES = {
   careful(g) { careful(g, { online: true }); },
 };
 
+/** Pipeline decisions follow the current species' ladder (for pinks this equals unlocked()). */
+const atStage = (g, what) => (g.stage ?? 0) >= (OPENS[what] ?? 0);
+
 function careful(g, { online }) {
   const reserve = g.mode === 'hardcore' ? 60 : 120;
   shopFor(g, reserve);
-  if (g.gear.heatmat) g.heater = 1; g.fae = 5; g.mist = 98;
+  const P = spg(g);
+  if (P.id === 'pink-oyster') { if (g.gear.heatmat) g.heater = 1; g.fae = 5; g.mist = 98; }
+  else if (P.climate) { g.heater = g.gear.heatmat ? P.climate.heater : 0; g.fae = P.climate.fae; g.mist = P.climate.mist; }
   // the game's own 'auto' booking (haul worth 3× the fee); book anyway if the checklist still needs a market day
   g.marketMode = g.stage === 4 && !(g.counts.marketDays > 0) && g.lots.length ? 'book' : 'auto';
   tend(g);
-  if (g.lots.length && g.gear.dehydrator && (g.lots.some(l => l.age > 1.8) || !unlocked(g, 'market'))) dryAll(g);
+  if (g.lots.length && g.gear.dehydrator && (g.lots.some(l => l.age > (l.sp && l.sp !== 'pink-oyster' ? 0.85 * shelfLifeDays(g, l.sp) : 1.8)) || !atStage(g, 'market'))) dryAll(g);
   if (online) {
     // list surplus: keep 1 colonized plate (2 once jars are open) and enough jars for the bags we still need
-    const keepPlates = unlocked(g, 'jar') ? 2 : 0, keepJars = unlocked(g, 'bag') ? 2 : 0;
+    const keepPlates = atStage(g, 'jar') ? 2 : 0, keepJars = atStage(g, 'bag') ? 2 : 0;
     let plates = 0, jars = 0;
     g.slots.forEach((v, i) => {
       const p = productFor(v); if (!p || !productOpen(g, p)) return;
@@ -92,13 +100,18 @@ function careful(g, { online }) {
   const jars = count(v => v.kind === 'jar'), bags = count(v => v.kind === 'bag' && !isBlock(v)), blocks = count(v => isBlock(v));
   const tentFree = g.gear.tent ? spotsIn('tent').filter(j => !g.slots[j]).length : 0;
   // colonized plates with no use yet: clear the oldest so plate work continues (agar stage only)
-  if (e == null && readyPlates >= (unlocked(g, 'jar') ? 2 : 3)) { const old = g.slots.findIndex(v => v && plate(v) && v.state === 'colonized'); if (old >= 0) (online && productOpen(g, 'plate') ? listVessel(g, old) : sim.toss(g, old)); return; }
+  if (e == null && readyPlates >= (atStage(g, 'jar') ? 2 : 3)) { const old = g.slots.findIndex(v => v && plate(v) && v.state === 'colonized'); if (old >= 0) (online && productOpen(g, 'plate') ? listVessel(g, old) : sim.toss(g, old)); return; }
   if (e == null) return;
-  const canBags = unlocked(g, 'bag') && g.cookers.some(k => k.id === 'cooker23'), canJars = unlocked(g, 'jar') && g.cookers.length;
-  if (!unlocked(g, 'jar')) { if (growingPlates < 3 && g.cash > 10) sim.pourPlate(g, e, 'mea'); return; }
+  const canBags = atStage(g, 'bag') && g.cookers.some(k => k.id === 'cooker23'), canJars = atStage(g, 'jar') && g.cookers.length;
+  if (!atStage(g, 'jar')) { if (growingPlates < 3 && g.cash > 10) sim.pourPlate(g, e, 'mea'); return; }
   if (plates < 1 && g.cash > 10) return void sim.pourPlate(g, e, 'mea');
   const kitsWanted = online && productOpen(g, 'kit') ? 2 : 0;
-  if (canBags && jars > 0 && bags < 2 + tentFree + kitsWanted && g.cash > 30) return void sim.prepBag(g, e, 'masters', 'ster');
+  if (P.id === 'wine-cap') { // spawn bags feed outdoor beds; build a chip bed when spawn is on the way
+    const yard = spotsIn('yard').filter(j => !g.slots[j] && spotOpen(g, j));
+    if (yard.length && count(v => v.kind === 'bag') > 0) sim.buildBed(g, yard[0], 'chips');
+    const beds = count(v => v.kind === 'bed');
+    if (canBags && jars > 0 && bags < Math.max(2, 2 - beds + spotsIn('yard').length) && g.cash > 30) return void sim.prepBag(g, e, 'sawspawn', 'ster');
+  } else if (canBags && jars > 0 && bags < 2 + tentFree + kitsWanted && g.cash > 30) return void sim.prepBag(g, e, 'masters', 'ster');
   if (canJars && jars < (canBags ? 2 : 3) && g.cash > 20) return void sim.prepJar(g, e, 'ster');
   if (online && productOpen(g, 'plate') && plates < 2 && g.cash > 10) sim.pourPlate(g, e, 'mea'); // spare room: plates sell for ~$10
 }
@@ -107,9 +120,11 @@ function careful(g, { online }) {
  * Play a whole game headlessly. Returns a summary: weeks to master each stage, weekly cash, lowest cash,
  * revenue by source, gear spend, and whether the run went broke.
  */
-export function autoplay({ strategy = 'careful', mode = 'normal', weeks = 20, step = 0.05, onWeek } = {}) {
-  const play = typeof strategy === 'function' ? strategy : STRATEGIES[strategy];
+export function autoplay({ strategy = 'careful', mode = 'normal', weeks = 20, step = 0.05, onWeek, start = null, continueSpecies = false } = {}) {
+  const base = typeof strategy === 'function' ? strategy : STRATEGIES[strategy];
   const g = sim.newGame(mode);
+  if (start) sim.startSpecies(g, start, true); // begin directly at a later species (earlier ones count as mastered)
+  const play = continueSpecies ? gg => { if (gg.speciesDone && nextSpecies(gg.species)) sim.startSpecies(gg); base(gg); } : base;
   const res = { strategy: typeof strategy === 'string' ? strategy : 'custom', mode, startCash: g.cash, masteredAt: {}, cashByWeek: [], minCash: g.cash, broke: false };
   let week = g.week;
   for (let t = 0; t < weeks * 5 && !g.over; t += step) {
@@ -124,7 +139,7 @@ export function autoplay({ strategy = 'careful', mode = 'normal', weeks = 20, st
   const bp = g.stats.byProduct || {};
   return {
     ...res, broke: g.over && g.endReason === 'broke', endCash: Math.round(g.cash), profit: Math.round(g.cash - g.startCash), gear: Math.round(g.stats.gear || 0),
-    stages: g.mastered.length, speciesDone: g.speciesDone, weeksRepeated: g.weeksRepeated, rep: Math.round(g.rep),
+    stages: g.mastered.length, speciesDone: g.speciesDone, species: g.species, speciesMastered: [...(g.speciesMastered || [])], weeksRepeated: g.weeksRepeated, rep: Math.round(g.rep),
     revenue: { total: Math.round(g.stats.revenue), online: Math.round(Object.values(bp).reduce((a, b) => a + b, 0)), market: Math.round(g.stats.revenue - Object.values(bp).reduce((a, b) => a + b, 0)), byProduct: Object.fromEntries(Object.entries(bp).map(([k, v]) => [k, Math.round(v)])) },
     harvestLb: +(g.stats.harvestKg * 2.20462).toFixed(1), freshLb: +(g.stats.freshKg * 2.20462).toFixed(1), driedLb: +(g.stats.driedKg * 2.20462).toFixed(1), rotLb: +(g.stats.rotKg * 2.20462).toFixed(1), lostToMold: Object.values(g.stats.lost).reduce((a, b) => a + b, 0),
   };

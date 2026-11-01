@@ -30,8 +30,52 @@ export const STAGES = [
       { key: 'driedBatches', n: 1, text: 'Dehydrate a surplus instead of letting it rot' },
     ] },
 ];
-/** What opens while learning stage index s (and stays open after). */
-export const OPENS = { plate: 0, jar: 1, bag: 2, room: 3, market: 3 };
+
+/** Lion's mane: same shape as pinks, with a cool, fresh-air fruiting checklist. Agar and grain repeat what you learned on pinks. */
+export const LIONS_STAGES = [
+  { ...STAGES[0], checklist: [{ key: 'platesClean', n: 2, text: 'Pour 2 lion’s mane plates in the still-air box (it’s slower than pinks)' }, STAGES[0].checklist[1]] },
+  STAGES[1],
+  { id: 'substrate', name: 'Substrate', product: 'kit', unitName: 'clean colonized hardwood blocks', units: 2, unitKey: 'cleanBags', guide: 'sub',
+    checklist: [
+      { key: 'hardwoodBags', n: 2, text: 'Sterilize 2 supplemented hardwood bags (lion’s mane barely fruits on straw)' },
+      { key: 'bagSpawned', n: 1, text: 'Spawn a bag from a clean grain jar' },
+    ] },
+  { id: 'fruiting', name: 'Fruiting', product: null, unitName: 'heads picked at peak with good quality', units: 2, unitKey: 'goodHarvests', guide: 'fruit',
+    checklist: [
+      { key: 'movedToTent', n: 1, text: 'Move a colonized block into the grow tent' },
+      { key: 'goodTent', n: 1, text: 'Hold a block at 60–70°F and 85–95% RH for a real day while it pins (heat mat off)' },
+    ] },
+  { id: 'harvest', name: 'Harvest & market', product: 'dried', unitName: 'lb of lion’s mane sold at the farmers market', units: 5, unitKey: 'marketLb', guide: 'harvest',
+    checklist: [
+      { key: 'marketDays', n: 1, text: 'Sell fresh lion’s mane at a farmers market' },
+    ] },
+];
+/** Wine cap: indoor agar and grain, then sawdust spawn, an outdoor bed, and harvest from the yard. */
+export const WINE_STAGES = [
+  { ...STAGES[0], checklist: [{ key: 'platesClean', n: 2, text: 'Pour 2 wine cap plates in the still-air box' }, STAGES[0].checklist[1]] },
+  STAGES[1],
+  { id: 'spawn', name: 'Sawdust spawn', product: null, unitName: 'clean colonized spawn bags', units: 2, unitKey: 'cleanBags', guide: 'sub',
+    checklist: [
+      { key: 'spawnBags', n: 2, text: 'Sterilize 2 hardwood sawdust spawn bags' },
+      { key: 'bagSpawned', n: 1, text: 'Spawn a bag from a clean grain jar' },
+    ] },
+  { id: 'bed', name: 'Outdoor bed', product: null, unitName: 'real days of a moist bed colonizing (summed over beds)', units: 20, unitKey: 'bedMoistDays', guide: 'sub',
+    checklist: [
+      { key: 'hardwoodBed', n: 1, text: 'Build a bed from fresh hardwood chips (not conifer)' },
+      { key: 'bedSpawned', n: 1, text: 'Inoculate a bed with a clean spawn bag' },
+      { key: 'watered', n: 1, text: 'Water a bed when it dries out' },
+    ] },
+  { id: 'harvest', name: 'Harvest & market', product: null, unitName: 'lb of wine caps sold at the farmers market', units: 3, unitKey: 'marketLb', guide: 'harvest',
+    checklist: [
+      { key: 'bedHarvests', n: 1, text: 'Pick a wine cap flush from the bed before the veil tears' },
+      { key: 'marketDays', n: 1, text: 'Sell wine caps at a farmers market' },
+    ] },
+];
+export const LADDERS = { 'pink-oyster': STAGES, 'lions-mane': LIONS_STAGES, 'wine-cap': WINE_STAGES };
+export const ladderOf = species => LADDERS[species] || STAGES;
+
+/** What opens while learning stage index s (and stays open after). `bed` is wine cap only. */
+export const OPENS = { plate: 0, jar: 1, bag: 2, room: 3, market: 3, bed: 3 };
 
 /** Online-shop products. Base prices are approximate US hobby retail; shop.stageMult scales later stages up. */
 export const PRODUCTS = {

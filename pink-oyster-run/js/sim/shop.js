@@ -7,16 +7,18 @@ import { log, learn } from './journal.js';
 import { count } from './mastery.js';
 import { money, lb } from './economy.js';
 import { STAGES, PRODUCTS } from '../content/stages.js';
+import { everMastered } from './stages.js';
+import { spv } from '../content/species/index.js';
 
 /** Which product a vessel would be, if any. Colonized plate → plate, colonized jar → jar, colonized bag not yet fruiting → kit. */
 export function productFor(v) {
   if (!v || v.contam.vis > 0 || v.state === 'lost') return null;
   if (v.kind === 'plate' && v.state === 'colonized') return 'plate';
   if (v.kind === 'jar' && v.state === 'colonized') return 'jar';
-  if (v.kind === 'bag' && v.state === 'pinning' && v.flush === 1 && !v.q.n) return 'kit';
+  if (v.kind === 'bag' && spv(v).bagFruits && v.state === 'pinning' && v.flush === 1 && !v.q.n) return 'kit';
   return null;
 }
-export const productOpen = (g, p) => g.mastered.includes(STAGES[PRODUCTS[p].stage].id);
+export const productOpen = (g, p) => everMastered(g, PRODUCTS[p].stage);
 export const basePrice = p => +(p === 'dried' ? C.economy.priceDried : PRODUCTS[p].base * Math.pow(C.shop.stageMult, PRODUCTS[p].stage)).toFixed(2);
 export const priceOf = (g, p) => g.prices[p] ?? basePrice(p);
 /** Expected sales per game day for product p at its current price and the current reputation. */
@@ -38,7 +40,7 @@ export function listDried(g) {
   if (!productOpen(g, 'dried')) return false;
   const n = Math.floor(lb(g.dried)); if (n < 1) return false;
   for (let k = 0; k < n; k++) g.stock.dried.push({ bad: false, meh: false });
-  g.dried -= n / 2.20462; emit('sfx', { name: 'build' }); log(g, `Listed ${n} lb (fresh weight) of dried pinks online.`); return true;
+  g.dried -= n / 2.20462; emit('sfx', { name: 'build' }); log(g, `Listed ${n} lb (fresh weight) of dried mushrooms online.`); return true;
 }
 
 function sell(g, p) {

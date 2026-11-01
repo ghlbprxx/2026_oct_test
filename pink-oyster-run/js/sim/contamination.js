@@ -2,7 +2,7 @@
 import { C } from './cfg.js';
 import { RULES } from './rules.js';
 import { hazardMult } from './stages.js';
-import { RECIPES, SPECIES } from '../content/species/pink-oyster.js';
+import { spv, recipeOf } from '../content/species/index.js';
 import { workFactor } from './equipment.js';
 
 export const FRUIT = ['pinning', 'growing', 'peak', 'overripe', 'resting', 'spent'];
@@ -14,11 +14,15 @@ export function baseHazard(v, env) {
   return rawHazard(v, env) * (env.dirt ?? 1) * (v.scaled ? RULES.scaleFactor : 1) * (v.sealed ? RULES.sealerFactor : 1);
 }
 function rawHazard(v, env) {
-  const K = SPECIES.contam;
+  const K = spv(v).contam;
+  if (v.kind === 'bed') { // outdoors: competitor fungi, worse when the bed dries out
+    if (v.state === 'spent') return 0;
+    return recipeOf(v).hz.bed * ((v.water ?? 1) < 0.25 ? 2.5 : 1);
+  }
   if (v.kind === 'plate') return K.plateOpenAir * workFactor(v.ws || 'open') * (v.state === 'colonized' ? 0.5 : 1);
   if (['queued', 'cooking', 'bath', 'spent'].includes(v.state)) return 0;
   if (v.kind === 'jar') { const h = v.prep === 'ster' ? K.jarSterile : K.jarPasteurized; return h * (v.state === 'ready' ? 0.5 : v.state === 'colonized' ? 0.3 : 1); }
-  let h = RECIPES[v.recipe].hz[v.prep];
+  let h = recipeOf(v).hz[v.prep];
   if (v.state === 'ready') return h * 0.5;
   if (v.state === 'colonizing') return h;
   h *= K.fruitingMult;
@@ -34,7 +38,8 @@ export const hazard = (g, v, env) => baseHazard(v, env) * C.contam.hazardScale *
 export function causeOf(v, env) {
   if (v.kind === 'plate') return v.ws === 'open' || !v.ws ? 'open_air' : 'luck';
   if (v.kind === 'jar') return v.prep === 'past' ? 'past_grain' : 'luck';
-  const R = RECIPES[v.recipe];
+  if (v.kind === 'bed') return (v.water ?? 1) < 0.25 ? 'dry_bed' : 'luck';
+  const R = recipeOf(v);
   if (v.recipe === 'coffee') return 'coffee';
   if (v.prep === 'past' && R.rich >= 3) return 'past_supplement';
   if (v.prep === 'ster' && v.recipe === 'straw') return 'steril_straw';

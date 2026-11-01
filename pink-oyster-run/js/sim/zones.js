@@ -1,10 +1,12 @@
 // Zones: where each spot is, what conditions it has, and whether a vessel belongs there.
 import { C } from './cfg.js';
 import { RULES } from './rules.js';
-import { envFrom, envModel, lerp, clamp } from './environment.js';
+import { envFrom, envModel, lerp, clamp, forSpecies } from './environment.js';
 import { seasonDays } from './clock.js';
 import { FRUIT } from './contamination.js';
 import { ZONES, ZONE_BY_ID } from '../content/zones.js';
+import { spg, spv } from '../content/species/index.js';
+import { unlocked } from './stages.js';
 
 /** Flat spot list in zone order: index -> { zone, k }. g.slots uses the same indices. */
 export const SPOTS = ZONES.flatMap(z => Array.from({ length: z.spots }, (_, k) => ({ zone: z.id, k })));
@@ -13,6 +15,7 @@ export const spotsIn = zid => SPOTS.map((s, i) => s.zone === zid ? i : -1).filte
 
 export function zoneOpen(g, zid) {
   const z = ZONE_BY_ID[zid];
+  if (z.opens) return unlocked(g, z.opens);
   if (z.locked) return false;
   return z.needs ? !!g.gear[z.needs] : true;
 }
@@ -36,10 +39,10 @@ export function zoneEnv(g, zid) {
   if (zid === 'tent') {
     const temp = houseTemp(g) + (g.gear.heatmat ? g.heater * RULES.heaterStep : 0);
     const mist = Math.min(g.mist, g.gear.humidifier ? 110 : RULES.handMistMax);
-    return { ...envModel(temp, g.fae, mist), dirt: E.dirt, zone: zid };
+    return { ...envModel(temp, g.fae, mist, spg(g).fruiting), dirt: E.dirt, zone: zid };
   }
   const temp = E.outdoor ? outdoorTemp(g, E.swing) + E.dT : houseTemp(g) + E.dT;
-  return { ...envFrom(temp, E.co2, E.rh), dirt: E.dirt, zone: zid };
+  return { ...envFrom(temp, E.co2, E.rh, spg(g).fruiting), dirt: E.dirt, zone: zid };
 }
 export const allEnvs = g => Object.fromEntries(ZONES.map(z => [z.id, zoneEnv(g, z.id)]));
 
@@ -47,6 +50,7 @@ export const allEnvs = g => Object.fromEntries(ZONES.map(z => [z.id, zoneEnv(g, 
 export function role(v) {
   if (!v) return null;
   const st = v.state === 'lost' ? v.lostFrom : v.state;
+  if (v.kind === 'bed') return 'bed';
   if (v.kind === 'bag' && FRUIT.includes(st)) return st === 'spent' ? 'spent' : 'block';
   if (['queued', 'cooking', 'bath', 'ready', 'colonized'].includes(st) || st === 'lost') return 'storage';
   return v.kind; // colonizing plate / jar / bag
@@ -58,9 +62,11 @@ export function role(v) {
 export function zoneFit(g, zid, v) {
   const r = role(v), env = zoneEnv(g, zid), z = ZONE_BY_ID[zid];
   if (!r || r === 'storage' || r === 'spent') return { level: 'good', note: '' };
+  if (r === 'bed') return { level: 'good', note: '' };
   if (r === 'block') {
-    if (zid === 'tent') return env.score > 0.8 ? { level: 'good', note: 'Fruiting conditions are right.' } : { level: 'ok', note: 'Right place; tune heat, air and mist.' };
-    const why = env.temp < 64 ? `too cold (${env.temp}°F) to pin` : env.co2 > 1500 ? `stale air (${env.co2} ppm CO₂) makes leggy clusters` : env.rh < 80 ? `dry air (${env.rh}% RH) cracks the caps` : 'not set up for fruiting';
+    const F = spv(v).fruiting, e = forSpecies(env, F);
+    if (zid === 'tent') return e.score > 0.8 ? { level: 'good', note: 'Fruiting conditions are right.' } : e.temp > F.bestHi ? { level: 'ok', note: `Too warm for ${spv(v).short} (${e.temp}°F; best ${F.bestLo}–${F.bestHi}°F). Turn the heat mat down.` } : { level: 'ok', note: 'Right place; tune heat, air and mist.' };
+    const why = env.temp < F.minTemp ? `too cold (${env.temp}°F) to pin` : env.co2 > 1500 ? `stale air (${env.co2} ppm CO₂) makes leggy clusters` : env.rh < 80 ? `dry air (${env.rh}% RH) cracks the caps` : 'not set up for fruiting';
     return { level: 'bad', note: `${z.short}: ${why}. Move it to the grow tent.` };
   }
   // colonizing plate / jar / bag

@@ -8,11 +8,17 @@ import { RULES } from './rules.js';
 import { toBio } from './clock.js';
 import { rotMult, unlocked } from './stages.js';
 import { count } from './mastery.js';
+import { packOf, spg } from '../content/species/index.js';
 
 /** Display helpers: yields are kg internally, players see pounds. */
 export const lb = kg => kg * RULES.LB;
 export const fmtLb = kg => lb(kg).toFixed(2) + ' lb';
-export const shelfLifeDays = g => C.economy.shelfLife * rotMult(g);
+/** Real days fresh product keeps: the shelfLife knob (pinks) × the species' keeping multiplier (lion's mane keeps longer). */
+export const shelfLifeDays = (g, sp = g.species) => C.economy.shelfLife * rotMult(g) * packOf(sp).shelfMult;
+/** $/lb at market for a species: the priceFresh knob (pinks) × the species' price multiplier. */
+export const freshPrice = sp => C.economy.priceFresh * packOf(sp).priceMult;
+export const driedPrice = g => C.economy.priceDried * spg(g).priceMult;
+const lotValue = l => lb(l.kg) * freshPrice(l.sp);
 
 /** $1.50 keeps its cents; whole and large amounts don't. */
 export const money = (v, d) => { const a = Math.abs(v); d ??= (a < 100 && Math.abs(a - Math.round(a)) > 0.004) ? 2 : 0; return (v < 0 ? '−$' : '$') + a.toFixed(d); };
@@ -23,11 +29,11 @@ export function pay(g, cost) {
 export function stepLots(g, dd) {
   if (C.dev.god) return;
   let rot = 0; const keep = [];
-  const db = toBio(dd), life = shelfLifeDays(g);
-  for (const l of g.lots) { l.age += db; if (l.age > life) rot += l.kg; else keep.push(l); }
+  const db = toBio(dd);
+  for (const l of g.lots) { l.age += db; if (l.age > shelfLifeDays(g, l.sp)) rot += l.kg; else keep.push(l); }
   if (rot > 0) {
     g.lots = keep; g.stats.rotKg += rot;
-    emit('toast', { text: `${fmtLb(rot)} of fresh pinks turned to mush.`, c: 'bad' }); emit('sfx', { name: 'bad' });
+    emit('toast', { text: `${fmtLb(rot)} of fresh mushrooms turned to mush.`, c: 'bad' }); emit('sfx', { name: 'bad' });
     log(g, `${fmtLb(rot)} rotted in the crate.`, 'bad');
     learn(g, 'rot'); emit('track', { type: 'death', data: { cause: 'rot' } });
   }
@@ -45,9 +51,9 @@ export function sellAtMarket(g) {
   if (!(fresh > 0 || g.dried > 0)) return { fresh: 0, dried: 0, rev: 0, fee: 0 };
   if (g.cash < P.boothFee) { emit('toast', { text: `Couldn’t afford the ${money(P.boothFee)} booth fee this market day.`, c: 'bad' }); return { fresh: 0, dried: 0, rev: 0, fee: 0 }; }
   g.cash -= P.boothFee; g.stats.spent += P.boothFee; emit('cash', { delta: -P.boothFee });
-  let sold = 0; const keep = [];
-  for (const l of [...g.lots].sort((a, b) => b.age - a.age)) { const take = Math.min(l.kg, cap - sold); sold += take; if (l.kg - take > 1e-6) keep.push({ ...l, kg: l.kg - take }); }
-  const dried = g.dried, rev = lb(sold) * P.priceFresh + lb(dried) * P.priceDried;
+  let sold = 0, freshRev = 0; const keep = [];
+  for (const l of [...g.lots].sort((a, b) => b.age - a.age)) { const take = Math.min(l.kg, cap - sold); sold += take; freshRev += lb(take) * freshPrice(l.sp); if (l.kg - take > 1e-6) keep.push({ ...l, kg: l.kg - take }); }
+  const dried = g.dried, rev = freshRev + lb(dried) * driedPrice(g);
   g.lots = keep; g.dried = 0; g.cash += rev; g.stats.revenue += rev; g.stats.freshKg += sold; g.stats.driedKg += dried;
   if (rev > 0) emit('cash', { delta: rev });
   if (sold > 0) { count(g, 'marketDays'); count(g, 'marketLb', lb(sold)); }
@@ -55,8 +61,8 @@ export function sellAtMarket(g) {
 }
 /** Is today's haul worth a booth? (fresh + dried value at least 3× the fee) */
 export function haulWorthIt(g) {
-  const P = C.economy, fresh = lb(g.lots.reduce((a, l) => a + l.kg, 0)), dried = lb(g.dried);
-  return fresh * P.priceFresh + dried * P.priceDried >= 3 * P.boothFee;
+  const P = C.economy;
+  return g.lots.reduce((a, l) => a + lotValue(l), 0) + lb(g.dried) * driedPrice(g) >= 3 * P.boothFee;
 }
 /** Market mode: 'auto' books only when the haul is worth it; 'book' always; 'skip' never. */
 export const attending = g => (g.marketMode || (g.attend === false ? 'skip' : 'auto')) === 'auto' ? haulWorthIt(g) : g.marketMode === 'book' || (!g.marketMode && g.attend !== false);

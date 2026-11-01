@@ -17,7 +17,9 @@ import { weekOf, toBio } from './clock.js';
 import { unlocked, startCash, hazardMult, canSalvage } from './stages.js';
 import { fmtLb } from './economy.js';
 import { inheritedCause } from './contamination.js';
-import { RECIPES, MEDIA, SUPPLIES } from '../content/species/pink-oyster.js';
+import { MEDIA, SUPPLIES } from '../content/species/pink-oyster.js';
+import { spg, spv, packOf, nextSpecies, SPECIES_BY } from '../content/species/index.js';
+import { ladderOf } from '../content/stages.js';
 
 /** `runType` ('tutorial' | 'story' | 'free' | 'expert') is stored for the UI and saves; the sim never reads it. */
 export function newGame(mode = 'normal', runType = 'free') {
@@ -25,7 +27,7 @@ export function newGame(mode = 'normal', runType = 'free') {
   const g = { mode, day, week: weekOf(day), cash: startCash(mode), slots: Array(SPOTS.length).fill(null), queue: [], cookers: [], gear: {},
     heater: 0, fae: 2, mist: 80, lots: [], lotSeq: 0, dried: 0, nextMarket: day + C.economy.marketEvery, marketMode: 'auto', snap: null, forecast: null,
     coffeeAt: null, coffeeDone: false, log: [], learned: [], asked: [], seq: 0, over: false, endReason: '',
-    runType, story: { seen: [] },
+    runType, story: { seen: [] }, species: 'pink-oyster', speciesMastered: [], masteredBy: {}, countsBy: {},
     stage: 0, units: 0, mastered: [], counts: {}, speciesDone: false, weeksRepeated: 0, reviews: [],
     stock: { plate: [], jar: [], kit: [], dried: [] }, prices: {}, rep: C.shop.startReputation,
     stats: { harvestKg: 0, freshKg: 0, driedKg: 0, rotKg: 0, dropped: 0, lost: {}, revenue: 0, spent: 0, energy: 0, rescued: 0 } };
@@ -71,6 +73,13 @@ function stepEvents(g, dd) {
   }
   if (g.forecast && g.day >= g.forecast.start) { g.forecast = null; g.snap = { end: g.day + RULES.coldSnapDays }; emit('toast', { text: 'Cold snap! The room just lost ' + RULES.coldSnapDrop + '°F.', c: 'bad' }); }
   if (g.snap && g.day >= g.snap.end) { g.snap = null; emit('toast', { text: 'The cold snap is over.' }); }
+  if (g.slots.some(v => v && v.kind === 'bed') && Math.floor(g.day) !== g.rainDay) { // one weather roll per game day
+    g.rainDay = Math.floor(g.day);
+    if (rand() < RULES.rainChance) {
+      g.slots.forEach(v => { if (v && v.kind === 'bed') v.water = 1; });
+      emit('toast', { text: 'Rain overnight: the wood-chip beds are soaked.' }); log(g, 'Rain overnight soaked the beds.', 'good'); emit('rain', {});
+    }
+  }
   if (!g.coffeeDone && unlocked(g, 'bag')) {
     if (g.coffeeAt == null) g.coffeeAt = g.day + 2 + rand() * 6;
     if (g.day >= g.coffeeAt) { g.coffeeDone = true; if (g.slots.some(v => !v)) emit('coffee'); }
@@ -109,23 +118,29 @@ export function prepJar(g, i, prep) {
 export function prepBag(g, i, recipe, prep) {
   if (!unlocked(g, 'bag') || !spotOpen(g, i) || g.slots[i]) return false;
   if (prep === 'ster' && !canSterilizeBags(g)) { emit('toast', { text: 'Grow bags only fit the 23 qt pressure canner.', c: 'bad' }); return false; }
-  if (!pay(g, RECIPES[recipe].cost)) return false;
+  const R = spg(g).recipes[recipe]; if (!R || R.bed) return false;
+  if (!pay(g, R.cost)) return false;
   const v = mk(g, 'bag', { recipe, prep, state: prep === 'ster' ? 'queued' : 'bath', scaled: !!g.gear.scale, sealed: !!g.gear.sealer });
-  if ((RECIPES[recipe].rich >= 3) === (prep === 'ster') && recipe !== 'coffee') count(g, 'matchedPrep'); if (prep === 'ster') g.queue.push(v.id);
-  return place(g, i, v, `${RECIPES[recipe].name} bag #${v.id}: ${prep === 'ster' ? 'queued for the pressure cooker' : 'pasteurizing'}.`);
+  if ((R.rich >= 3) === (prep === 'ster') && recipe !== 'coffee') count(g, 'matchedPrep');
+  if (prep === 'ster' && R.rich >= 3) count(g, recipe === 'sawspawn' ? 'spawnBags' : 'hardwoodBags');
+  if (prep === 'ster') g.queue.push(v.id);
+  return place(g, i, v, `${R.name} bag #${v.id}: ${prep === 'ster' ? 'queued for the pressure cooker' : 'pasteurizing'}.`);
 }
-/** Colonized vessels that can inoculate target t (plates → jars, jars → bags). */
-export function sources(g, t) { const want = t.kind === 'jar' ? 'plate' : 'jar'; return g.slots.map((v, i) => ({ v, i })).filter(s => s.v && s.v.kind === want && s.v.state === 'colonized' && s.v.uses > 0); }
+/** Colonized vessels that can inoculate target t (plates → jars, jars → bags, spawn bags → beds), same species only. */
+export function sources(g, t) {
+  const want = t.kind === 'jar' ? 'plate' : t.kind === 'bed' ? 'bag' : 'jar';
+  return g.slots.map((v, i) => ({ v, i })).filter(s => s.v && s.v.kind === want && s.v.state === 'colonized' && s.v.uses > 0 && (s.v.sp || 'pink-oyster') === (t.sp || 'pink-oyster'));
+}
 export function inoculate(g, ti, si) {
   const t = g.slots[ti], s = g.slots[si];
   t.state = 'colonizing'; t.prog = 0; t.parent = s.id; s.uses--;
   const why = inheritedCause(s);
   if (why) { t.contam.onset = g.day; t.contam.why = why; }
-  else if (!C.dev.god && rand() < C.contam.openAirInoc * workFactor(workspace(g)) * C.contam.hazardScale * hazardMult(g)) {
+  else if (t.kind !== 'bed' && !C.dev.god && rand() < C.contam.openAirInoc * workFactor(workspace(g)) * C.contam.hazardScale * hazardMult(g)) {
     t.contam.onset = g.day; t.contam.why = workspace(g) === 'open' ? 'open_air' : 'luck'; // spores got in while the jar/bag was open
   }
   if (s.medium === 'super') t.medium = 'super'; // remember the super-agar lineage for hidden-mold attribution
-  if (!(s.contam.vis > 0)) count(g, t.kind === 'jar' ? 'cleanSpawn' : 'bagSpawned');
+  if (!(s.contam.vis > 0)) count(g, t.kind === 'jar' ? 'cleanSpawn' : t.kind === 'bed' ? 'bedSpawned' : 'bagSpawned');
   emit('sfx', { name: 'build' }); emit('float', { slot: ti, text: 'Spawned!', c: 'good' });
   log(g, `Spawned #${t.id} from #${s.id}${s.contam.vis > 0 ? ' (it had visible mold)' : ''}.`, s.contam.vis > 0 ? 'bad' : '');
   if (s.uses <= 0) { g.slots[si] = null; log(g, `#${s.id} is used up.`); }
@@ -149,11 +164,12 @@ export function shake(g, i) {
 }
 export function harvest(g, i) {
   const v = g.slots[i], h = harvestKg(v);
-  g.lots.push({ kg: h.kg, age: 0, id: ++g.lotSeq }); g.stats.harvestKg += h.kg;
+  g.lots.push({ kg: h.kg, age: 0, id: ++g.lotSeq, sp: v.sp || 'pink-oyster' }); g.stats.harvestKg += h.kg;
+  if (v.kind === 'bed' && h.stage === 'peak') count(g, 'bedHarvests');
   if (h.qc < 0.8) learn(g, 'leggy');
   if (h.qh < 0.8) learn(g, 'dry_caps');
   if (v.flush >= 3) learn(g, 'flush3');
-  if (h.stage === 'peak' && h.qual >= 0.8) count(g, 'goodHarvests');
+  if (h.stage === 'peak' && h.qual >= 0.8 && v.kind !== 'bed') count(g, 'goodHarvests');
   emit('sfx', { name: 'harvest' }); emit('float', { slot: i, text: '+' + fmtLb(h.kg) }); emit('burst', { slot: i });
   log(g, `Picked ${fmtLb(h.kg)} from #${v.id} (flush ${v.flush}, ${h.stage}${h.qual < 0.95 ? ', quality ' + Math.round(h.qual * 100) + '%' : ''}).`, 'good');
   afterFlush(v); return true;
@@ -169,7 +185,7 @@ export function salvage(g, i) {
 /** Move a vessel to an empty, open spot (e.g. a colonized block from the closet into the grow tent). */
 export function move(g, from, to) {
   const v = g.slots[from];
-  if (!v || from === to || g.slots[to] || !spotOpen(g, to)) return false;
+  if (!v || from === to || g.slots[to] || !spotOpen(g, to) || v.kind === 'bed') return false;
   if (['cooking', 'queued'].includes(v.state)) { emit('toast', { text: 'It’s waiting for the pressure cooker. Move it after.', c: 'bad' }); return false; }
   g.slots[to] = v; g.slots[from] = null;
   if (zoneOf(to) === 'tent' && zoneOf(from) !== 'tent' && ['pinning', 'growing', 'resting'].includes(v.state)) count(g, 'movedToTent');
@@ -192,3 +208,38 @@ export function answerQuiz(g, myth, answer) {
   return right;
 }
 export { money };
+
+/* ---------- wine cap beds (yard) ---------- */
+/** Build an outdoor bed on a yard spot: 'chips' (free arborist hardwood chips), 'straw' or 'pine'. Waits for spawn. */
+export function buildBed(g, i, type) {
+  const B = (spg(g).beds || {})[type];
+  if (!B || !unlocked(g, 'bed') || zoneOf(i) !== 'yard' || !spotOpen(g, i) || g.slots[i] || !pay(g, B.cost)) return false;
+  if (type === 'chips') count(g, 'hardwoodBed');
+  return place(g, i, mk(g, 'bed', { recipe: type, state: 'ready', water: 1 }), `Built a ${B.name.toLowerCase()} bed in the yard. It needs sawdust spawn.`);
+}
+/** Run the hose over a bed. */
+export function water(g, i) {
+  const v = g.slots[i]; if (!v || v.kind !== 'bed') return false;
+  if ((v.water ?? 1) < 0.5) count(g, 'watered');
+  v.water = 1; emit('sfx', { name: 'tap' }); emit('float', { slot: i, text: 'Watered' }); log(g, `Watered bed #${v.id}.`);
+  return true;
+}
+
+/* ---------- species ---------- */
+/** Move on to the next species once the current one is mastered. Stages repeat; what you learned carries over. */
+export function startSpecies(g, id = nextSpecies(g.species), force = false) {
+  if (!SPECIES_BY[id] || id === g.species) return false;
+  if (!force && (!g.speciesDone || id !== nextSpecies(g.species))) return false;
+  const prev = g.species || 'pink-oyster';
+  g.masteredBy = { ...(g.masteredBy || {}), [prev]: [...g.mastered] };
+  g.countsBy = { ...(g.countsBy || {}), [prev]: g.counts };
+  if (!(g.speciesMastered || []).includes(prev) && force) g.speciesMastered = [...(g.speciesMastered || []), prev];
+  g.species = id; g.stage = 0; g.units = 0; g.mastered = []; g.counts = {}; g.speciesDone = false;
+  g.weekStart = weekSnapshot(g);
+  const P = packOf(id);
+  log(g, `New species: ${P.name} (${P.latin}). Back to agar, with everything you learned.`, 'good');
+  emit('track', { type: 'speciesStart', data: { species: id, week: g.week } });
+  emit('speciesStart', { species: id });
+  emit('stage', { stage: 0, id: ladderOf(id)[0].id, species: id });
+  return true;
+}

@@ -3,14 +3,25 @@
 import { C } from './cfg.js';
 import { weekOf } from './clock.js';
 import { RULES } from './rules.js';
-import { STAGES, OPENS } from '../content/stages.js';
+import { STAGES, OPENS, ladderOf } from '../content/stages.js';
 
 export const MODES = ['relaxed', 'normal', 'hardcore'];
-export const unlocked = (g, what) => (g.stage ?? 0) >= (OPENS[what] ?? 0);
-export const currentStage = g => STAGES[Math.min(g.stage, STAGES.length - 1)];
+/** The stage ladder of the species being grown. */
+export const ladder = g => ladderOf(g && g.species);
+/** Is a system open? Everything a mastered species opened stays open; outdoor beds are wine cap only. */
+export function unlocked(g, what) {
+  if (what === 'bed') return g.species === 'wine-cap' && (g.stage ?? 0) >= OPENS.bed;
+  if ((g.speciesMastered || []).length) return true;
+  return (g.stage ?? 0) >= (OPENS[what] ?? 0);
+}
+export const currentStage = g => { const L = ladder(g); return L[Math.min(g.stage, L.length - 1)]; };
 export const stageNameFor = what => STAGES[OPENS[what] ?? 0].name.toLowerCase();
-/** Systems that open when stage index s begins (for the intro card). */
-export const opensAt = s => Object.keys(OPENS).filter(k => OPENS[k] === s && k !== 'market');
+/** Systems that open when stage index s begins (for the intro card). First species only, except the wine cap bed. */
+export const opensAt = (s, g) => Object.keys(OPENS).filter(k => OPENS[k] === s && k !== 'market' &&
+  (k === 'bed' ? g && g.species === 'wine-cap' : !(g && (g.speciesMastered || []).length)));
+/** Has stage index i been mastered on any species? (online-shop products stay open across species) */
+export const everMastered = (g, i) => Object.values({ ...(g.masteredBy || {}), now: g.mastered })
+  .some(list => (list || []).includes(STAGES[i].id));
 
 export function startCash(mode) { const D = C.difficulty; return mode === 'relaxed' ? D.relaxedCash : mode === 'hardcore' ? D.hardcoreCash : D.normalCash; }
 /** Contamination multiplier from difficulty: grace weeks first (Hardcore: week 0 only), then mode. */

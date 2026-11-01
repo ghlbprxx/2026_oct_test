@@ -2,8 +2,9 @@
 // Order matters (brief): units only count once the current stage's checklist is complete.
 import { C } from './cfg.js';
 import { emit } from './events.js';
-import { currentStage } from './stages.js';
-import { STAGES, MENTOR } from '../content/stages.js';
+import { currentStage, ladder } from './stages.js';
+import { MENTOR } from '../content/stages.js';
+import { RULES } from './rules.js';
 import { LESSONS } from '../content/lessons.js';
 import { rand } from './rng.js';
 
@@ -16,7 +17,9 @@ export function count(g, key, n = 1) {
 export const checklist = g => currentStage(g).checklist.map(it => ({ ...it, have: Math.min(it.n, g.counts[it.key] || 0), done: (g.counts[it.key] || 0) >= it.n }));
 export const checklistDone = g => checklist(g).every(it => it.done);
 /** Units needed for the current stage (progression.unitsScale; fewer once the player has learned lessons on earlier species — Phase 6). */
-export const unitsNeeded = g => Math.max(1, Math.round(currentStage(g).units * C.progression.unitsScale));
+/** Units needed for the current stage. Skills transfer: on later species, stages you already mastered need fewer units. */
+export const unitsNeeded = g => Math.max(1, Math.round(currentStage(g).units * C.progression.unitsScale *
+  ((g.speciesMastered || []).length && Object.values(g.masteredBy || {}).some(l => l.includes(currentStage(g).id)) ? RULES.transferUnits : 1)));
 export const isMastered = g => !g.speciesDone && checklistDone(g) && g.units >= unitsNeeded(g);
 
 /** Snapshot of the numbers a weekly report diffs against. */
@@ -39,7 +42,7 @@ export function buildReview(g) {
   if (d('rotKg') > 0) tips.push(`${LESSONS.rot.title}: ${LESSONS.rot.fix}`);
   const mood = mastered ? 'mastered' : infected > Math.max(1, finished) ? 'mold' : !todo ? 'units' : 'checklist';
   return {
-    week: g.week, stage: st.id, stageName: st.name, mastered, last: g.stage >= STAGES.length - 1,
+    week: g.week, stage: st.id, stageName: st.name, mastered, last: g.stage >= ladder(g).length - 1, species: g.species || 'pink-oyster',
     money: { in: d('revenue'), out: d('spent') + d('energy'), net: g.cash - s0.cash },
     yield: { harvestKg: d('harvestKg'), rotKg: d('rotKg'), plates: d('cleanPlates', 'counts'), jars: d('cleanJars', 'counts'), bags: d('cleanBags', 'counts'), sales: d('sales', 'counts'), refunds: d('refunds', 'counts') },
     cleanRate: finished + infected ? finished / (finished + infected) : null, finished, infected,
@@ -55,8 +58,13 @@ export function applyVerdict(g, r) {
   if (r.mastered) {
     g.mastered.push(r.stage);
     emit('track', { type: 'mastered', data: { stage: r.stage, week: g.week } });
-    if (g.stage >= STAGES.length - 1) { g.speciesDone = true; after.push(['species', {}]); }
-    else { g.stage++; g.units = 0; after.push(['stage', { stage: g.stage }]); }
+    if (g.stage >= ladder(g).length - 1) {
+      g.speciesDone = true; const sp = g.species || 'pink-oyster';
+      g.speciesMastered = [...new Set([...(g.speciesMastered || []), sp])];
+      emit('track', { type: 'speciesMastered', data: { species: sp, week: g.week } });
+      after.push(['species', { species: sp }]);
+    }
+    else { g.stage++; g.units = 0; after.push(['stage', { stage: g.stage, id: currentStage(g).id, species: g.species || 'pink-oyster' }]); }
   } else {
     g.weeksRepeated = (g.weeksRepeated || 0) + 1;
     emit('track', { type: 'weekRepeated', data: { stage: r.stage, week: g.week } });
