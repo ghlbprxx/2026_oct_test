@@ -25,7 +25,7 @@ test('every manifest entry has the fields an image generator needs', () => {
 
 test('every image id the game draws is in the manifest, and has placeholder art', () => {
   const used = new Set([...code.matchAll(/(?<![.\w])(?:src|add)\('([a-z_]+)'/g)].map(x => x[1]));
-  for (const k of ["'block_ready'", "'block_pins'", "'cluster_young'", "'cluster_peak'", "'cluster_leggy'", "'cluster_dry'", "'cluster_overripe'", "'block_spent'", "'bag_straw'", "'bag_sawdust'", "'bag_coir'"]) used.add(k.slice(1, -1));
+  for (const k of ["'block_ready'", "'block_pins'", "'cluster_young'", "'cluster_peak'", "'cluster_leggy'", "'cluster_dry'", "'cluster_overripe'", "'block_spent'", "'bag_straw'", "'bag_sawdust'", "'bag_coir'", "'lm_young'", "'lm_peak'", "'lm_overripe'", "'wc_young'", "'wc_peak'", "'wc_overripe'"]) used.add(k.slice(1, -1));
   const ids = new Set(manifest.images.map(m => m.id));
   for (const id of used) {
     assert.ok(ids.has(id), `game uses ${id} but images.json lacks it`);

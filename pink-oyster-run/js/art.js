@@ -101,6 +101,26 @@ export const ART = (() => {
     overripe: { col: '#efb4c3', deep: '#cf8ea1', gill: '#fbeef2', n: 9, size: 64, stem: 12, seed: 4, amp: 0.13, freq: 11, flat: true, dust: true },
   };
   function clusterImg(p, v) { const c = cluster(p, 256, 334, VARIANTS[v]); return wrap(512, 512, c.d, block() + c.b); }
+  /* lion's mane: white pom-pom heads of hanging spines on the block; v = young | peak | overripe (yellowing) */
+  function lions(v) {
+    const r = rngFrom(11), R = v === 'young' ? 52 : 96, col = v === 'overripe' ? '#f1dca0' : '#fbf8f1', tip = v === 'overripe' ? '#c9a24f' : '#e9e2d2';
+    let b = block() + `<ellipse cx="256" cy="${330 - R * 0.55}" rx="${R}" ry="${f(R * 0.82)}" fill="${col}" stroke="${OL}" stroke-width="5"/>`;
+    const n = v === 'young' ? 28 : 70;
+    for (let i = 0; i < n; i++) { const x = 256 + (r() - 0.5) * R * 1.7, y = 330 - R * 0.55 + (r() - 0.2) * R * 0.9, len = (v === 'young' ? 8 : 18) + r() * (v === 'young' ? 8 : 22); b += `<path d="M${f(x)} ${f(y)} l${f((r() - 0.5) * 3)} ${f(len)}" stroke="${tip}" stroke-width="3" stroke-linecap="round"/>`; }
+    return wrap(512, 512, '', b);
+  }
+  /* wine cap: burgundy caps on thick white stems, drawn over the 'bed' image (same 256 canvas) */
+  function winecaps(v) {
+    const caps = v === 'young' ? [[110, 150, 16], [150, 160, 13], [178, 150, 11]] : [[96, 126, 30], [146, 140, 26], [186, 120, 22], [122, 168, 14]];
+    let b = '';
+    for (const [x, y, s] of caps) {
+      const col = v === 'overripe' ? '#8a6a52' : '#8c1d2c', flat = v === 'overripe' ? 0.32 : 0.62;
+      b += `<rect x="${x - s * 0.22}" y="${y}" width="${f(s * 0.44)}" height="${f(s * 1.3)}" rx="${f(s * 0.2)}" fill="#f4eee2" stroke="${OL}" stroke-width="3"/>`;
+      if (v !== 'young') b += `<path d="M${f(x - s * 0.3)} ${f(y + s * 0.5)} h${f(s * 0.6)}" stroke="#d8cdb6" stroke-width="3"/>`;
+      b += `<ellipse cx="${x}" cy="${y}" rx="${s}" ry="${f(s * flat)}" fill="${col}" stroke="${OL}" stroke-width="3.5"/><ellipse cx="${f(x - s * 0.3)}" cy="${f(y - s * 0.2)}" rx="${f(s * 0.3)}" ry="${f(s * 0.14)}" fill="#fff" opacity=".25"/>`;
+    }
+    return wrap(256, 256, '', b);
+  }
   function pins() { const r = rngFrom(9); let b = block(); for (let i = 0; i < 18; i++) { const a = r() * 6.283, d = r() * 26; b += `<circle cx="${f(256 + Math.cos(a) * d)}" cy="${f(330 + Math.sin(a) * d * 0.7)}" r="${f(4 + r() * 6)}" fill="#e2557a" stroke="${OL}" stroke-width="2"/>`; } return wrap(512, 512, '', b); }
   function spent() { let b = block('#e6dcc6', 12); b += `<path d="M246 330 l-6 -16 M258 328 l2 -18 M268 332 l8 -12" stroke="#8a6040" stroke-width="7" stroke-linecap="round"/>`; return wrap(512, 512, '', b); }
   function mold(p) {
@@ -229,6 +249,8 @@ export const ART = (() => {
     zone_kitchen: () => zone('kitchen'), zone_closet: () => zone('closet'), zone_tent: () => zone('tent'), zone_garage: () => zone('garage'), zone_yard: () => zone('yard'),
     gear_sab: () => gear('sab'), gear_flowhood: () => gear('flowhood'), gear_cooker16: () => gear('cooker16'), gear_cooker23: () => gear('cooker23'), gear_scale: () => gear('scale'), gear_sealer: () => gear('sealer'),
     gear_tent: () => gear('tent'), gear_heatmat: () => gear('heatmat'), gear_humidifier: () => gear('humidifier'), gear_hygrometer: () => gear('hygrometer'), gear_co2: () => gear('co2'), gear_dehydrator: () => gear('dehydrator'), gear_rack: () => gear('rack'),
+    lm_young: () => lions('young'), lm_peak: () => lions('peak'), lm_overripe: () => lions('overripe'),
+    wc_young: () => winecaps('young'), wc_peak: () => winecaps('peak'), wc_overripe: () => winecaps('overripe'),
     lc_jar: () => wrap(256, 256, '', `<rect x="78" y="70" width="100" height="150" rx="18" fill="#f6efe4" stroke="${OL}" stroke-width="6"/><rect x="84" y="118" width="88" height="96" rx="12" fill="#e7b96a" opacity=".75"/><rect x="72" y="50" width="112" height="28" rx="8" fill="#9aa5ad" stroke="${OL}" stroke-width="6"/><circle cx="128" cy="64" r="6" fill="#fff" stroke="${OL}" stroke-width="3"/>`),
     lc_growth: () => wrap(256, 256, '', [...Array(9)].map((_, k) => `<path d="M${96 + (k * 17) % 64} ${200 - (k * 11) % 50} q${10 - k % 3 * 8} -18 ${k % 2 ? 14 : -10} -30" stroke="#fff" stroke-width="5" fill="none" stroke-linecap="round" opacity=".9"/>`).join('') + `<ellipse cx="128" cy="196" rx="34" ry="10" fill="#fff" opacity=".85"/>`),
     bed: () => wrap(256, 256, '', `<path d="M14 214 Q30 128 128 118 Q226 128 242 214 Z" fill="#a8774a" stroke="${OL}" stroke-width="5"/>` +

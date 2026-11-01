@@ -13,7 +13,11 @@ import { sources } from '../sim/game.js';
 const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
 import { revealStyle } from '../images.js';
 
+/** Species art for growing / peak / overripe stages (pinning, resting and spent blocks are shared). */
+const SPECIES_ART = { 'lions-mane': 'lm', 'wine-cap': 'wc' };
 export function fruitImg(v, st) {
+  const pre = SPECIES_ART[v.sp];
+  if (pre && ['growing', 'peak', 'overripe'].includes(st)) return `${pre}_${st === 'overripe' ? 'overripe' : st === 'growing' && v.prog < 0.7 ? 'young' : 'peak'}`;
   const qc = v.q.n ? v.q.c / v.q.n : 1, qh = v.q.n ? v.q.h / v.q.n : 1;
   if (st === 'pinning') return v.prog < 0.5 ? 'block_ready' : 'block_pins';
   if (st === 'resting') return 'block_ready';
@@ -25,7 +29,7 @@ export function fruitImg(v, st) {
 export function layers(v) {
   const L = [], st = v.state === 'lost' ? v.lostFrom : v.state, add = (id, style = {}) => L.push({ id, style });
   if (v.kind === 'lc') { add('lc_jar'); if (v.prog > 0) add('lc_growth', { opacity: (0.25 + 0.75 * v.prog).toFixed(2) }); }
-  else if (v.kind === 'bed') { add('bed'); if (FRUIT.includes(st) && !['pinning', 'resting', 'spent'].includes(st)) add(fruitImg(v, st), { transform: 'scale(.7) translateY(-8%)' }); }
+  else if (v.kind === 'bed') { add('bed'); if (['growing', 'peak', 'overripe'].includes(st)) add(fruitImg(v, st)); }
   else if (v.kind === 'plate') { add('plate_empty'); if (v.prog > 0) add('plate_colonized', revealStyle('plate_colonized', v.prog)); }
   else if (v.kind === 'jar') { add('jar_empty'); if (['colonizing', 'colonized'].includes(st) && v.prog > 0) add('jar_colonized', revealStyle('jar_colonized', v.prog)); }
   else if (FRUIT.includes(st)) add(fruitImg(v, st), st === 'growing' ? { transform: `scale(${(0.88 + 0.12 * v.prog).toFixed(3)})` } : {});

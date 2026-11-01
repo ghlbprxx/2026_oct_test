@@ -423,3 +423,63 @@ Cozy storybook illustration for a casual mobile game. Clean vector-like shapes, 
 Cozy storybook illustration for a casual mobile game. Clean vector-like shapes, soft cel shading and gentle gradients, confident dark plum outlines (#2a1b2e). Warm palette: flamingo pink (#e2557a), deep rose (#b8325a), cream-white mycelium (#fbf8f1), honey-amber agar (#ead7a8), wheat straw (#d9b65a), sawdust brown (#8a6040). One centered subject, front view tilted slightly from above, soft contact shadow directly underneath, even studio lighting, readable at small sizes. Only the contents of the jar: soft white wispy mycelium clouds and thin strands suspended in liquid, settled into a fluffy white mat at the bottom. Nothing else. Framing: Match lc_jar exactly: same position and size as the broth inside the jar. Isolated subject on a fully transparent background (PNG alpha channel). Nothing else in frame.
 ```
 
+## lm_young
+
+- **Save as:** `assets/img/lm_young.png` (512×512, transparent)
+- **Used for:** Lion’s mane, growing (first 70%).
+- **Align with:** `block_ready` (assets/img/block_ready.png)
+
+```text
+Cozy storybook illustration for a casual mobile game. Clean vector-like shapes, soft cel shading and gentle gradients, confident dark plum outlines (#2a1b2e). Warm palette: flamingo pink (#e2557a), deep rose (#b8325a), cream-white mycelium (#fbf8f1), honey-amber agar (#ead7a8), wheat straw (#d9b65a), sawdust brown (#8a6040). One centered subject, front view tilted slightly from above, soft contact shadow directly underneath, even studio lighting, readable at small sizes. The exact same block as the reference, with a small young Lion’s mane (Hericium erinaceus): a single rounded head made of hundreds of soft, hanging, icicle-like white spines, no caps, no gills. About the size of a golf ball, short spines. Framing: Identical framing to block_ready (layered exactly on top of it). Isolated subject on a fully transparent background (PNG alpha channel). Nothing else in frame.
+```
+
+## lm_peak
+
+- **Save as:** `assets/img/lm_peak.png` (512×512, transparent)
+- **Used for:** Lion’s mane at peak (and when quality is low).
+- **Align with:** `block_ready` (assets/img/block_ready.png)
+
+```text
+Cozy storybook illustration for a casual mobile game. Clean vector-like shapes, soft cel shading and gentle gradients, confident dark plum outlines (#2a1b2e). Warm palette: flamingo pink (#e2557a), deep rose (#b8325a), cream-white mycelium (#fbf8f1), honey-amber agar (#ead7a8), wheat straw (#d9b65a), sawdust brown (#8a6040). One centered subject, front view tilted slightly from above, soft contact shadow directly underneath, even studio lighting, readable at small sizes. The exact same block as the reference, with a large, perfect Lion’s mane (Hericium erinaceus): a single rounded head made of hundreds of soft, hanging, icicle-like white spines, no caps, no gills. About the size of a fist, spines about 1 cm long, pure white. Harvest-ready. Framing: Identical framing to block_ready (layered exactly on top of it). Isolated subject on a fully transparent background (PNG alpha channel). Nothing else in frame.
+```
+
+## lm_overripe
+
+- **Save as:** `assets/img/lm_overripe.png` (512×512, transparent)
+- **Used for:** Lion’s mane past peak: pick now.
+- **Align with:** `block_ready` (assets/img/block_ready.png)
+
+```text
+Cozy storybook illustration for a casual mobile game. Clean vector-like shapes, soft cel shading and gentle gradients, confident dark plum outlines (#2a1b2e). Warm palette: flamingo pink (#e2557a), deep rose (#b8325a), cream-white mycelium (#fbf8f1), honey-amber agar (#ead7a8), wheat straw (#d9b65a), sawdust brown (#8a6040). One centered subject, front view tilted slightly from above, soft contact shadow directly underneath, even studio lighting, readable at small sizes. The exact same block as the reference, with an over-mature Lion’s mane (Hericium erinaceus): a single rounded head made of hundreds of soft, hanging, icicle-like white spines, no caps, no gills. Spines long and drooping, turning yellow-tan at the tips. Framing: Identical framing to block_ready (layered exactly on top of it). Isolated subject on a fully transparent background (PNG alpha channel). Nothing else in frame.
+```
+
+## wc_young
+
+- **Save as:** `assets/img/wc_young.png` (256×256, transparent)
+- **Used for:** Wine cap bed, flush growing.
+- **Align with:** `bed` (assets/img/bed.png)
+
+```text
+Cozy storybook illustration for a casual mobile game. Clean vector-like shapes, soft cel shading and gentle gradients, confident dark plum outlines (#2a1b2e). Warm palette: flamingo pink (#e2557a), deep rose (#b8325a), cream-white mycelium (#fbf8f1), honey-amber agar (#ead7a8), wheat straw (#d9b65a), sawdust brown (#8a6040). One centered subject, front view tilted slightly from above, soft contact shadow directly underneath, even studio lighting, readable at small sizes. The exact same wood-chip mound as the reference, with three small young Wine cap mushrooms (Stropharia rugosoannulata): burgundy-red smooth round caps on thick white stems, growing out of the wood-chip mound. Caps still rounded like buttons. Framing: Identical framing to bed (layered exactly on top of it). Isolated subject on a fully transparent background (PNG alpha channel). Nothing else in frame.
+```
+
+## wc_peak
+
+- **Save as:** `assets/img/wc_peak.png` (256×256, transparent)
+- **Used for:** Wine cap bed at peak.
+- **Align with:** `bed` (assets/img/bed.png)
+
+```text
+Cozy storybook illustration for a casual mobile game. Clean vector-like shapes, soft cel shading and gentle gradients, confident dark plum outlines (#2a1b2e). Warm palette: flamingo pink (#e2557a), deep rose (#b8325a), cream-white mycelium (#fbf8f1), honey-amber agar (#ead7a8), wheat straw (#d9b65a), sawdust brown (#8a6040). One centered subject, front view tilted slightly from above, soft contact shadow directly underneath, even studio lighting, readable at small sizes. The exact same wood-chip mound as the reference, with a cluster of four mature Wine cap mushrooms (Stropharia rugosoannulata): burgundy-red smooth round caps on thick white stems, growing out of the wood-chip mound. Caps broad and domed, a white ring on each stem. Harvest-ready, veil just about to tear. Framing: Identical framing to bed (layered exactly on top of it). Isolated subject on a fully transparent background (PNG alpha channel). Nothing else in frame.
+```
+
+## wc_overripe
+
+- **Save as:** `assets/img/wc_overripe.png` (256×256, transparent)
+- **Used for:** Wine cap flush past peak.
+- **Align with:** `bed` (assets/img/bed.png)
+
+```text
+Cozy storybook illustration for a casual mobile game. Clean vector-like shapes, soft cel shading and gentle gradients, confident dark plum outlines (#2a1b2e). Warm palette: flamingo pink (#e2557a), deep rose (#b8325a), cream-white mycelium (#fbf8f1), honey-amber agar (#ead7a8), wheat straw (#d9b65a), sawdust brown (#8a6040). One centered subject, front view tilted slightly from above, soft contact shadow directly underneath, even studio lighting, readable at small sizes. The exact same wood-chip mound as the reference, with over-mature Wine cap mushrooms (Stropharia rugosoannulata): burgundy-red smooth round caps on thick white stems, growing out of the wood-chip mound. Caps flattened and faded to tan-brown, edges cracked. Framing: Identical framing to bed (layered exactly on top of it). Isolated subject on a fully transparent background (PNG alpha channel). Nothing else in frame.
+```
+
