@@ -3,6 +3,9 @@
 //   node tools/playtest.mjs                      default: all difficulties, careful/marketOnly/sloppy/random/idle, 9 seeds, 20 weeks
 //   node tools/playtest.mjs --weeks 30 --seeds 15 --strategies careful,sloppy --modes normal
 //   node tools/playtest.mjs --json               machine-readable
+//   node tools/playtest.mjs --start lions-mane    begin at a later species (earlier ones count as mastered)
+//   node tools/playtest.mjs --continue --weeks 70 play pinks → lion's mane → wine cap in one run
+//   node tools/playtest.mjs --expert              Expert runs (adds the liquid-culture stage)
 import { defaultConfig } from '../js/config-schema.js';
 import { setConfig } from '../js/sim/cfg.js';
 import { setRng, rngFrom } from '../js/sim/rng.js';
@@ -15,7 +18,8 @@ const med = xs => { const s = xs.filter(x => x != null).sort((p, q) => p - q); r
 
 export function summarize(mode, strategy) {
   const runs = [];
-  for (let k = 0; k < seeds; k++) { setConfig(defaultConfig()); setRng(rngFrom(1000 + k)); runs.push(autoplay({ strategy, mode, weeks })); }
+  const extra = { start: opt('--start', null), continueSpecies: a.includes('--continue'), runType: a.includes('--expert') ? 'expert' : 'free' };
+  for (let k = 0; k < seeds; k++) { setConfig(defaultConfig()); setRng(rngFrom(1000 + k)); runs.push(autoplay({ strategy, mode, weeks, ...extra })); }
   return {
     mode, strategy, runs: runs.length,
     stagesMastered: med(runs.map(r => r.stages)), allStagesPct: Math.round(100 * runs.filter(r => r.speciesDone).length / runs.length),
@@ -23,6 +27,7 @@ export function summarize(mode, strategy) {
     startCash: runs[0].startCash, minCash: med(runs.map(r => r.minCash)), worstMinCash: Math.min(...runs.map(r => r.minCash)), brokePct: Math.round(100 * runs.filter(r => r.broke).length / runs.length),
     revenue: med(runs.map(r => r.revenue.total)), online: med(runs.map(r => r.revenue.online)), market: med(runs.map(r => r.revenue.market)),
     gear: med(runs.map(r => r.gear)), profit: med(runs.map(r => r.profit)), harvestLb: med(runs.map(r => r.harvestLb)),
+    species: runs.map(r => r.speciesMastered.length).join(','),
     freshLb: med(runs.map(r => r.freshLb)), driedLb: med(runs.map(r => r.driedLb)), rotLb: med(runs.map(r => r.rotLb)), lost: med(runs.map(r => r.lostToMold)),
   };
 }
@@ -34,6 +39,6 @@ else {
   console.log('mode      strategy    stages  all%  agar grain sub fruit mkt   start  minCash broke%  revenue (online/market)   gear  profit  harvest');
   for (const r of rows) {
     const w = STAGE_IDS.map(id => String(r.weekMastered[id] ?? '–').padStart(id === 'agar' ? 4 : 5)).join('');
-    console.log(`${r.mode.padEnd(9)} ${r.strategy.padEnd(11)} ${String(r.stagesMastered).padStart(4)}/5 ${String(r.allStagesPct).padStart(4)} ${w}  ${String(r.startCash).padStart(6)} ${String(Math.round(r.minCash)).padStart(8)} ${String(r.brokePct).padStart(6)}  ${String(r.revenue).padStart(7)} (${r.online}/${r.market})`.padEnd(118) + `${String(r.gear).padStart(6)} ${String(r.profit).padStart(7)} ${String(r.harvestLb).padStart(6)} lb  (fresh ${r.freshLb} · dried ${r.driedLb} · rot ${r.rotLb}) mold ${r.lost}`);
+    console.log(`${r.mode.padEnd(9)} ${r.strategy.padEnd(11)} ${String(r.stagesMastered).padStart(4)}/5 ${String(r.allStagesPct).padStart(4)} ${w}  ${String(r.startCash).padStart(6)} ${String(Math.round(r.minCash)).padStart(8)} ${String(r.brokePct).padStart(6)}  ${String(r.revenue).padStart(7)} (${r.online}/${r.market})`.padEnd(118) + `${String(r.gear).padStart(6)} ${String(r.profit).padStart(7)} ${String(r.harvestLb).padStart(6)} lb  (fresh ${r.freshLb} · dried ${r.driedLb} · rot ${r.rotLb}) mold ${r.lost}` + (a.includes('--continue') ? ` · species mastered per run: ${r.species}` : ''));
   }
 }

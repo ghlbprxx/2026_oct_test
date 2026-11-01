@@ -59,7 +59,7 @@ Difficulty: pick Relaxed ($2,500; mold can be cut out of jars and bags, produce 
 | Closet shelf | 3 | Steady ~72°F, dark, still, cleanest | Incubating plates, jars and bags |
 | Grow tent | 3 | You set it: heat mat, fan, mist | Fruiting blocks (bought from week 4) |
 | Garage | 2 | Follows the weather, swings ±7°F, cold snaps hit hard | The pressure cooker; cheap storage |
-| Back yard | 2 | Outdoors | Wine cap beds (a later species) |
+| Back yard | 2 | Outdoors, weather, rain | Wine cap beds (opens at the wine cap “outdoor bed” stage) |
 
 Tap a vessel to see its zone's verdict and move it (moves animate between rooms). Exact readings need a hygrometer and a CO₂ monitor; without them you only get "warm / dry air / stale air".
 
@@ -74,6 +74,20 @@ Tap a vessel to see its zone's verdict and move it (moves animate between rooms)
 | Substrate | 2 bags prepped the right way; a bag spawned from a clean jar (then 2 clean bags) | substrate bags | Colonized grow kits |
 | Fruiting | a block moved into the tent; a real day at 70–85°F and 85–95% RH (then 2 good peak harvests) | grow tent, farmers market | — |
 | Harvest & market | sell fresh at a market; dehydrate a surplus (then 6 lb sold fresh) | — | Dried pinks |
+
+**Three species.** Master pink oyster, then press **Start lion’s mane** on the mastery card, then wine cap. Each species starts back at agar; stages you already mastered on an earlier species need half the units. Gear, the online-shop products you opened, and your vessels carry over (each vessel and each harvest keeps its own species, price and shelf life).
+
+| Species | What’s different | Fresh price · keeps |
+|---|---|---|
+| Pink oyster (*Pleurotus djamor*) | Tropical: fruits at 70–85°F with the heat mat on. Fast, easy to colonize. | $14/lb · ~2.5 days |
+| Lion’s mane (*Hericium erinaceus*) | Cool: fruits at 60–70°F (heat mat off; it stalls above ~78°F), loves fresh air, hardwood blocks only (it barely fruits on straw), one big flush. Slower: about 32 real days from bag to harvest. | $20/lb · ~6 days |
+| Wine cap (*Stropharia rugosoannulata*) | Outdoors. Agar and grain indoors, then **sawdust spawn** bags, then an **outdoor bed** in the yard: free hardwood chips (best), a straw-only bed (faster, used up after 3 flushes) or pine mulch (conifer resin holds it back). Beds colonize over weeks with the weather, need moisture (rain or tap a dry bed to water it), and flush after wet spells. | $12/lb · ~4 days |
+
+The wine cap **outdoor bed** stage is mastered by keeping beds moist while they colonize (units = real days of a moist, colonizing bed).
+
+**Expert mode** (unlocks after your first species win) adds a **liquid culture** stage after agar on every species. Mix a dilute broth (2% light malt), pressure-cook it, and seed it from a clean plate. One colonized LC seeds six grain jars, which colonize 25% faster. A rich 8% honey “sugar bomb” LC feeds bacteria, hides the infection longer, and passes it to every jar it touches. Expert also hides the “Next:” coaching line, and it keeps the story cast.
+
+**Automation (optional).** Once you master a stage on the species you’re growing, you can switch on that stage’s routine for a weekly fee: lab helper for plates ($3), grain routine ($4), bag routine ($5), climate controller ($3), drip irrigation for beds ($2), harvest crew ($5, also dries and lists surplus online). Fees are paid at each weekly review, which shows the tasks done and the fees paid. It pauses when you start a new species, and turns off if you can’t pay. A fully automated pink farm roughly breaks even: automation buys back attention, not profit.
 
 **Online shop:** list a colonized plate, jar or kit from its spot, set the price with − / +, and it sells over time. Higher prices mean fewer sales; reputation (0–100) multiplies demand. Shipping a hidden infection means a refund and a 1★ review; reputation slowly recovers. **Farmers market:** every 2 game days once fruiting opens. Book the booth ($25, paid only when you bring product). Fresh sells only here, up to 20 lb a day; dried sells here too.
 
@@ -91,7 +105,9 @@ The simulation in `js/sim/` is pure JavaScript with no browser needed. `js/sim/a
 node tools/playtest.mjs
 ```
 
-Options: `--weeks 30`, `--seeds 15`, `--modes normal,hardcore`, `--strategies careful,sloppy`, `--json`.
+Options: `--weeks 30`, `--seeds 15`, `--modes normal,hardcore`, `--strategies careful,sloppy`, `--json`, `--start lions-mane` (begin at a later species), `--continue --weeks 70` (the whole pinks → lion’s mane → wine cap journey), `--expert` (with the liquid-culture stage).
+
+Later species and Expert (careful player, Normal): lion’s mane alone is mastered in about 16–21 weeks from a fresh start, wine cap in 15–23. The full journey masters all three species in 4 of 5 runs within 70 weeks, never goes broke, and ends $800–2,400 up. Expert runs master liquid culture by week 4, reach fruiting, and stay solvent. The headless player is weaker at Expert than a person would be (it crowds the closet), so treat those Expert numbers as a floor.
 
 `tests/economy.test.js` turns the important rows into assertions, so `npm test` fails if a tuning change breaks the money. On every difficulty a careful player must master all five stages, never run out of cash, and end in profit, and must beat market-only, sloppy, random and idle play.
 
@@ -154,7 +170,7 @@ Tune these first:
 npm test
 ```
 
-Run it from this folder (Node 18+, no dependencies). It covers playback speeds and compressed time, real-world colonization ranges per recipe, contamination (pasteurized vs sterilized, still-air box, difficulty modes, salvage), the stage ladder, save/migration, the image manifest, the story script rules (≤3 lines per scene, unique voice ids, required story beats), the story director, tutorial steps completing from real actions, and headless economy playtests on every difficulty.
+Run it from this folder (Node 18+, no dependencies). It covers playback speeds and compressed time, real-world colonization ranges per recipe, contamination (pasteurized vs sterilized, still-air box, difficulty modes, salvage), the stage ladder, save/migration, the image manifest, the story script rules (≤3 lines per scene, unique voice ids, required story beats), the story director, tutorial steps completing from real actions, headless economy playtests on every difficulty, the three species (data, cool/warm fruiting, beds, rain, skill transfer, the full journey), Expert liquid culture, and automation (unlock, fees, hands-off break-even).
 
 ## Design notes
 

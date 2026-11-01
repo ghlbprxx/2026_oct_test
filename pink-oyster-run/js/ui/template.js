@@ -143,6 +143,15 @@ export default `
         </template>
       </div>
 
+      <div class="card" id="automation" v-if="g.mastered.length || autoFee">
+        <div class="cardh"><span class="label">Automation · optional</span><span class="mono" style="font-size:12px">{{ money(autoFee) }}/week</span></div>
+        <p class="hint" style="font-size:12.5px;margin-bottom:6px">Hand off a stage you’ve mastered on this species. Fees are paid at each weekly review.</p>
+        <div class="prod" v-for="a in autos" :key="a.id" :class="{locked:!a.ok}" :data-auto="a.id">
+          <div><b>{{ a.name }}</b><small v-if="a.ok">{{ a.effect }} {{ money(a.fee) }}/week<template v-if="a.done"> · {{ a.done }} tasks so far</template></small><small v-else>Master {{ (a.stageName||'').toLowerCase() }} on this species first.</small></div>
+          <button v-if="a.ok" class="btn sm" :class="{ghost:!a.on}" :aria-pressed="a.on" @click="toggleAuto(a.id)">{{ a.on ? 'On' : 'Off' }}</button>
+        </div>
+      </div>
+
       <div class="card" id="webshop">
         <div class="cardh"><span class="label">Online shop</span><span class="mono" style="font-size:12px">Reputation {{ Math.round(g.rep) }}/100</span></div>
         <div class="mini rep"><i :style="{width:g.rep+'%'}"></i></div>
@@ -451,6 +460,7 @@ export default `
           <div class="stat"><span class="label">Good plates / jars / bags</span><b>{{ ui.modal.r.yield.plates }} / {{ ui.modal.r.yield.jars }} / {{ ui.modal.r.yield.bags }}</b></div>
           <div class="stat" v-if="ui.modal.r.yield.harvestKg"><span class="label">Harvested</span><b>{{ fmtLb(ui.modal.r.yield.harvestKg) }}</b></div>
           <div class="stat" v-if="ui.modal.r.yield.rotKg"><span class="label">Rotted</span><b>{{ fmtLb(ui.modal.r.yield.rotKg) }}</b></div>
+          <div class="stat" v-if="ui.modal.r.automation && (ui.modal.r.automation.paid || ui.modal.r.automation.tasks)"><span class="label">Automation</span><b>{{ ui.modal.r.automation.tasks }} tasks · {{ money(ui.modal.r.automation.paid) }}</b></div>
           <div class="stat" v-if="ui.modal.r.yield.sales"><span class="label">Shop sales / refunds</span><b>{{ ui.modal.r.yield.sales }} / {{ ui.modal.r.yield.refunds }}</b></div>
         </div>
         <div class="rc" v-if="Object.keys(ui.modal.r.causes).length">

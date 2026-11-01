@@ -52,7 +52,8 @@ on((type, d) => {
     case 'review': {
       showModal({ type: 'review', r: d }); play(d.mastered ? 'good' : 'tap');
       ISF.track('runEnd', { kind: 'week', week: d.week, stage: d.stage, mastered: d.mastered, net: Math.round(d.money.net), cleanRate: d.cleanRate == null ? null : Math.round(d.cleanRate * 100),
-        revenueByProduct: Object.fromEntries(Object.entries(S.g.stats.byProduct || {}).map(([k, v]) => [k, Math.round(v)])), weeksRepeated: S.g.weeksRepeated, rep: Math.round(S.g.rep) });
+        revenueByProduct: Object.fromEntries(Object.entries(S.g.stats.byProduct || {}).map(([k, v]) => [k, Math.round(v)])), weeksRepeated: S.g.weeksRepeated, rep: Math.round(S.g.rep),
+        species: d.species, automationPaid: d.automation ? d.automation.paid : 0, automationTasks: d.automation ? d.automation.tasks : 0 });
       autosave(); break;
     }
     case 'stage': { const m = stageModal(d.stage); if (m) showModal(m); break; }

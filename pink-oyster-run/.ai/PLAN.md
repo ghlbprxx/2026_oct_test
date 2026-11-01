@@ -65,10 +65,13 @@ New session? Start with `.ai/HANDOFF.md`.
 - [x] verify: tests 65/65, playtest unchanged, Playwright desktop + 390px, Basic + Advanced, free play + expert
 
 ## Phase 6 — species + expert + automation
-- [ ] lion's mane
-- [ ] wine cap (yard bed, weather)
-- [ ] expert mode + LC stage
-- [ ] optional automation + metrics
+- [x] species registry + per-vessel species data; per-species ladders; startSpecies; skill transfer (pink numbers unchanged)
+- [x] lion's mane (cool fruiting, hardwood only, keeps longer, sells higher)
+- [x] wine cap (sawdust spawn → yard bed; rain, watering, chips/straw/pine; moist bed-days mastery)
+- [x] species UI (HUD, build menu, yard beds, notebook, climate preset, Start-next-species, intro cards, story scenes, tint)
+- [x] expert mode + LC stage (stage openings by id; dilute vs rich LC; expert keeps story)
+- [x] optional automation + metrics (6 routines, weekly fees, review line, runEnd fields)
+- [x] verify: tests 84/84, playtest pink table unchanged, journey + expert + automation headless proofs, Playwright desktop + 390px
 
 ## Phase 7 — audio, GSAP polish, art manifest
 - [ ] audio-manifest.json, PROMPTS.md, voice-lines.json, gen-voice.mjs (+ voice.config.json, --dry-run)

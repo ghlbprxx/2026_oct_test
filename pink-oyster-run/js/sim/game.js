@@ -20,6 +20,7 @@ import { inheritedCause } from './contamination.js';
 import { MEDIA, SUPPLIES, LC_MEDIA } from '../content/species/pink-oyster.js';
 import { spg, spv, packOf, nextSpecies, SPECIES_BY } from '../content/species/index.js';
 import { ladderOf } from '../content/stages.js';
+import { stepAutomation, chargeAutomation } from './automation.js';
 
 /** `runType` ('tutorial' | 'story' | 'free' | 'expert') is stored for the UI and saves; the sim never reads it. */
 export function newGame(mode = 'normal', runType = 'free') {
@@ -53,12 +54,15 @@ export function update(g, dd) {
   stepShop(g, dd);
   if (g.day >= g.nextMarket) { g.nextMarket += C.economy.marketEvery; if (unlocked(g, 'market')) market(g, false); } // markets open with fruiting
   stepEvents(g, dd);
+  if (g.auto && Math.floor(g.day * 4) !== g.autoTick) { g.autoTick = Math.floor(g.day * 4); stepAutomation(g); } // automation works 4× per game day
   if (g.cash < 1 && !g.lots.length && !g.dried && g.slots.every(v => !v || v.state === 'lost' || v.state === 'spent' || v.contam.vis > 0)) endSeason(g, 'broke');
 }
 
 /** End of a week: build the report card, apply the verdict (master or repeat), start the next week's snapshot. */
 function weekEnd(g) {
+  const paid = chargeAutomation(g);
   const r = buildReview(g);
+  r.automation = { paid, tasks: (g.stats.autoActions || 0) - ((g.weekStart && g.weekStart.stats.autoActions) || 0) };
   const after = applyVerdict(g, r);
   g.reviews.push({ week: r.week, stage: r.stage, mastered: r.mastered, net: Math.round(r.money.net) });
   g.weekStart = weekSnapshot(g);

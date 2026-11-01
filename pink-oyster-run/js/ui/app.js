@@ -32,6 +32,8 @@ import { MEDIA, SUPPLIES, LC_MEDIA } from '../content/species/pink-oyster.js';
 import { spg, packOf, nextSpecies, recipeOf, SPECIES_BY } from '../content/species/index.js';
 import { WEEK_INTRO } from '../content/weeks.js';
 import { CAST } from '../content/story.js';
+import { AUTOMATION, AUTOMATION_ORDER } from '../content/automation.js';
+import * as auto from '../sim/automation.js';
 import { TUTORIAL } from '../content/tutorial.js';
 import { isStory, scene } from '../director.js';
 import { startTutorial, finishTutorial, nextStep, tutStep } from './coach.js';
@@ -132,6 +134,12 @@ export const App = {
     toastSpot() { const c = ui.coach; if (!c || c.top) return ''; return c.ring && c.ring.y < innerHeight * 0.3 ? 'mid' : 'up'; },
     showTip() { return CONFIG.look.tips && S.g.runType !== 'expert'; },
     sp() { return spg(S.g); },
+    autos() {
+      const g = S.g, L = ladder(g);
+      return AUTOMATION_ORDER.filter(id => AUTOMATION[id].stages.some(s => L.some(x => x.id === s)))
+        .map(id => ({ id, ...AUTOMATION[id], ok: auto.autoAvailable(g, id), on: auto.autoOn(g, id), stageName: (L.find(x => AUTOMATION[id].stages.includes(x.id)) || {}).name, done: (g.stats.autoBy || {})[id] || 0 }));
+    },
+    autoFee() { return auto.weeklyFee(S.g); },
     nextSp() { const n = nextSpecies(S.g.species); return n ? packOf(n) : null; },
     ladder() { return ladder(S.g); },
     isYard() { return !!this.sheetZone && this.sheetZone.id === 'yard'; },
@@ -236,6 +244,7 @@ export const App = {
     autoClimate() { const g = S.g, c = spg(g).climate || packOf('pink-oyster').climate; g.heater = g.gear.heatmat ? c.heater : 0; g.fae = c.fae; g.mist = g.gear.humidifier ? c.mist : c.handMist; play('good'); },
     buildBed(i, t) { done(sim.buildBed(S.g, i, t)); },
     prepLC(i, k) { done(sim.prepLC(S.g, i, k)); },
+    toggleAuto(id) { auto.setAuto(S.g, id, !auto.autoOn(S.g, id)); play('tap'); },
     waterBed(i) { done(sim.water(S.g, i)); },
     startNextSpecies,
     spName(id) { return packOf(id).name; },

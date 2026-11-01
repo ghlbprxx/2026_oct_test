@@ -1,17 +1,17 @@
 # Handoff: Pink Oyster Run (for the next session)
 
-Written 2026-11-01, updated after Phase 5. Read this first, then `DESIGN.md`, `PLAN.md`, the last entry of `PROGRESS.md`, and `DECISIONS.md` (all in this folder). Update `PLAN.md` and `PROGRESS.md` after every task (the brief requires it; sessions can die at any time).
+Written 2026-11-01, updated after Phase 6. Read this first, then `DESIGN.md`, `PLAN.md`, the last entry of `PROGRESS.md`, and `DECISIONS.md` (all in this folder). Update `PLAN.md` and `PROGRESS.md` after every task (the brief requires it; sessions can die at any time).
 
 ## 1. Where things stand
 
 | | |
 |---|---|
 | Repo | `ghlbprxx/2026_oct_test`. Default branch: `claude/gifted-tesla-f2wgdx` |
-| Work branch | `claude/bold-hopper-kscom3` (Phase 5; fast-forwarded from `claude/optimistic-mayer-07fju9`, which holds Phases 0–4.5). **No PR exists; don't open one unless the user asks.** |
-| Last commit | Phase 5: story, tutorial, mode select (see `git log`) |
-| Tests | `cd pink-oyster-run && npm test` → **65/65 pass** (Node 22, no dependencies) |
-| Done | Phases 0–5 of the brief, plus 4.5 (user requests: admin help, headless economy proof, Basic/Advanced play) |
-| Next | **Phase 6**: lion's mane, wine cap in the yard, expert mode with liquid culture, optional automation. Details in §6. |
+| Work branch | `claude/bold-hopper-kscom3` (Phases 5–6; fast-forwarded from `claude/optimistic-mayer-07fju9`, which holds Phases 0–4.5). **No PR exists; don't open one unless the user asks.** |
+| Last commit | Phase 6: species, Expert liquid culture, automation (see `git log`) |
+| Tests | `cd pink-oyster-run && npm test` → **84/84 pass** (Node 22, no dependencies) |
+| Done | Phases 0–6 of the brief, plus 4.5 (user requests: admin help, headless economy proof, Basic/Advanced play) |
+| Next | **Phase 7**: audio manifest + voice lines, Suno prompts, gen-voice.mjs, GSAP polish, species art. Details in §6. |
 
 Repo layout: the root holds only `README.md` and two projects: `walk-this-way/` (a different game, other sessions work on it; leave it alone) and `pink-oyster-run/` (this game).
 
@@ -120,27 +120,33 @@ Known risks:
 - Difficulty mostly changes cash and the dip toward zero, not careful-play outcomes.
 - About 11–22% of careful runs haven't finished the species by week 24.
 
-## 6. Next: Phase 6 (from PLAN.md)
+## 6. Next: Phase 7 (from PLAN.md)
 
-Phase 5 is done (story, tutorial, mode select; see the last PROGRESS entry and DECISIONS). Phase 6:
+Phase 6 is done: three species, Expert liquid culture, optional automation (last PROGRESS entry, DESIGN › Species / Expert / Automation, DECISIONS). Phase 7:
 
-1. Lion's mane: `js/content/species/lions-mane.js` (real-day biology; prices are low-confidence, see DESIGN › Researched numbers), species selection after pinks, reuse the stage ladder. "Learned lessons shorten later species" (`unitsNeeded` comment in `sim/mastery.js`).
-2. Wine cap in the yard (spots 13–14, outdoor weather, wood-chip bed). The story already teases the arborist's free hardwood chips in `species_done`; give wine cap its own stage scenes in `content/story.js`.
-3. Expert mode + liquid culture stage. Expert currently = free play without the Next: line (`showTip` in `ui/app.js`); it unlocks on the first species win.
-4. Optional automation after mastery + metrics.
+1. `assets/audio/audio-manifest.json` (music, sfx, voice) + `PROMPTS.md` (Suno prompts) + `voice-lines.json`. Build voice lines from `allLines()` in `content/story.js` (cast scenes + guru opener/reactions), `MENTOR` in `content/stages.js` (review lines), and one `guru_claim_<myth id>` per myth (text = `MYTHS[k].s`). A test should assert every id used in code is in voice-lines.json.
+2. `assets/tools/gen-voice.mjs` + `voice.config.json`: same pattern as `gen-images.mjs` (user fills the command template; never guess a CLI's flags; `--dry-run`, `--only`, `--force`).
+3. `audio.js`: load the manifest; fall back to the current synth SFX for anything missing; Music/SFX/Voice volumes in settings (the `look.sfxVolume` knob exists). The dialogue bar has `data-line` ids ready for voice playback.
+4. GSAP polish pass; species art: `images.json` entries for lion's mane and wine cap clusters/blocks (today they reuse pink art with a CSS filter: `.slot.sp-*` in styles.css) + SVG placeholders in `art.js`.
 
-After that: Phase 7 (audio manifest, Suno `PROMPTS.md`, `voice-lines.json` built from `allLines()` in `content/story.js` + `MENTOR` in `content/stages.js` + `guru_claim_<myth id>`, `gen-voice.mjs` with a configurable command and `--dry-run`, GSAP polish, species art), Phase 8 (full self-verification).
+Then Phase 8 (full self-verification: no console errors, full loop on all species + Expert, admin, zero audio/image files, tests, desktop + mobile touch).
 
-### Phase 5 notes worth knowing
-- The tutorial's highlight targets are CSS selectors (`[data-item]`, `[data-slot]`, `.movegrid [data-zone]`, `.speeds`, `#mastery`). Renaming those breaks the tutorial silently; the Playwright flow in PROGRESS is how it was checked.
-- Toast position follows the coach (`toastSpot` in `ui/app.js`) so toasts never cover the card or ring.
-- Admin action "Reset tutorial" makes Tutorial the default mode again.
+### Phase 6 notes worth knowing
+- **Species lookups:** `content/species/index.js` (`spv(v)`, `spg(g)`, `recipeOf(v)`, `packOf(id)`). Vessels carry `v.sp`, harvest lots `l.sp`. No species = pink, so old saves and the pink playtest stay identical. **Keep the pink table byte-identical** when touching the sim (`node tools/playtest.mjs --strategies careful`): it's the cheapest regression check there is.
+- **Ladders:** `ladderOf(species, expert)`; use `ladder(g)` / `currentStage(g)` / `unlocked(g, what)` / `atStage(g, what)` (sim/stages.js), never `STAGES[g.stage]` (STAGES is the pink ladder only, still used for online-shop product ids).
+- **Species switch:** `startSpecies(g)` archives `g.mastered`/`g.counts` into `masteredBy`/`countsBy`, resets the ladder, emits `speciesStart` then `stage`. `everMastered(g, i)` keeps shop products open across species.
+- **Beds** are vessel kind `bed` in yard spots 13–14 (`stepBed` in growth.js); spawn bags for wine cap don't fruit (`bagFruits: false`) and inoculate beds. Rain rolls only when a bed exists (keeps RNG streams of other runs unchanged).
+- **LC** is vessel kind `lc`; jar sources include LC; `fromLC` jars colonize at `RULES.lcJarSpeed`.
+- **Automation** runs in `update()` 4×/game day only when `g.auto` exists; fees at `weekEnd` (before the review, whose `r.automation` shows paid/tasks).
+- **Headless player:** `autoplay({ start, continueSpecies, runType })`. It needed several species-specific rules (see the `P.id === 'wine-cap'` and `unlocked(g, 'lc')` branches in `careful`). Two mastery-unit designs were changed after it exposed deadlocks (DECISIONS); run it after any ladder change.
+- Admin actions added: "Start next species", "Reset tutorial".
 
 ## 7. Open questions to raise with the user
 
 - fal.ai: the user hasn't provided their CLI syntax. `assets/tools/image.config.json` has `command: null` by design.
 - Should the admin help show the arithmetic midpoint instead of Default (the user wrote "avg")?
 - Knob count (44 vs the brief's 20–30): trim, or keep the Essentials filter as the answer?
+- Phase 6 choices to confirm: wine cap uses the fast end of real bed timing; Expert keeps the story cast; automation is tuned to break even, not profit; lion's mane prices are low-confidence.
 - Phase 5 interpretation choices to confirm: the tutorial ends by starting the clock in week 0 (no extra pre-week); Expert has no new content until Phase 6.
 - The pressure cooker research contradicted the brief: the 16-qt also holds 7 quart jars. Implemented as "16 qt can't fit bags; 23 qt fits 2 bags".
 - Price data for pinks and lion's mane is low-confidence (see `DESIGN.md` › Researched numbers).

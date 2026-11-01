@@ -13,6 +13,7 @@ Fantasy: "I'm becoming a real home grower." Pillars: **Mastery**, **Discovery**,
 
 ## Progression & mastery
 [target] Stage ladder per species (pink/LM: agar → grain → substrate → fruiting → harvest/market; wine cap: agar → grain → sawdust spawn → outdoor bed → harvest). Mastery = mentor checklist, then N good units. Fail = repeat week. Earlier stages keep running. Optional automation after mastery. Learned lessons persist and shorten later species. LC stage unlocks in Expert mode after first win.
+[now] Phase 6: three species (pink → lion's mane → wine cap) via content/species/index.js; per-species ladders (LADDERS, ladderOf(species, expert)); "opens" looked up by stage id (OPENS_BY/opensIndex); startSpecies resets the ladder, archives mastered/counts (masteredBy/countsBy), halves units for stages mastered before (RULES.transferUnits). Expert inserts LC after agar. Optional automation per mastered stage (current species), weekly fees.
 [now] Stage ladder (content/stages.js): agar → grain → substrate → fruiting → harvest & market. Weekly review every 5 game days: report card, mold causes + lessons, ≤3 tips, mentor line (id'd), verdict. Mastery = checklist then N units (counted after the list). Repeat week otherwise. Products unlock in the online shop per mastered stage. Species mastered → free play. Autosave/Continue.
 
 ## Simulation realism
@@ -22,6 +23,13 @@ Fantasy: "I'm becoming a real home grower." Pillars: **Mastery**, **Discovery**,
 ## Economy
 [now] Cash by difficulty ($2,500/$1,500/$800); costs: plates $1.50, jars $3, bags $3–7, SAB $15, heater $1/step/game day; income: market every 2 game days once the grow room opens (fresh $14/lb, dried $8/fresh-lb), quiz tips. Careful-bot season (12 wk): +$125..+$350. Cash is far more than consumables need until Phase 3's equipment shop.
 [now] Equipment shop (12 items, capability-changing, approx. US prices, shop.priceScale). Season ranked by operating profit (gear excluded). [target] Online shop listings w/ player-set price, demand, reputation; farmers market (fresh only, booth fee); dehydrator → dried sells online; ≥2 competing sinks per currency (gear vs inventory vs booth vs automation).
+
+## Species [now, Phase 6]
+Pink (70–85°F, heat mat, $14/lb, 2.5 d). Lion's mane (60–70°F, maxTemp 78 stalls + lesson too_warm, fresh air, hardwood only, flushMult [1,.35,.1], ×20/14 price, ×2.5 shelf). Wine cap (outdoor beds; colShift 12°F; bed colDays 70 chips / 45 straw (max 3 flushes) / pine ×0.35 + lesson; water decays 0.12/real day, rain 30%/game day refills; flushes need water ≥ 0.5; ×12/14 price, ×1.6 shelf). Wine cap bed stage units = moist colonizing bed-days (inoculation-count units deadlocked: beds last years and the yard has 2 spots).
+## Expert + liquid culture [now, Phase 6]
+LC jar (dilute 0.006/real day hazard vs rich 0.05, reveal lag ×2.5), cooker-sterilized, seeded from a plate, 10 real days, 6 uses; LC jars colonize ×0.75 time. LC stage: checklist 2 dilute LCs + 1 clean colonized LC; units = grain jars seeded from dilute LC (3).
+## Automation [now, Phase 6]
+content/automation.js + sim/automation.js: 6 routines, unlocked by stages mastered on the current species, $2–5/week each, run 4×/game day using the player's actions; metrics: g.stats.autoActions/autoBy/automation, review line, runEnd automationPaid/automationTasks. Fully automated pink farm ≈ break-even over 15 hands-off weeks (tested).
 
 ## Environment / zones
 [now] Side-view house: kitchen 2 (70°F, dry, dirt 1.3), closet 3 (72°F steady, CO₂ 2500, dirt 0.8), tent 3 (needs tent; heat mat +6°F/step, fan, mist capped 88% without humidifier), garage 2 (outdoor season −4°F ±7 swing, cold snaps), yard 2 (locked until wine cap). zoneFit explains wrong-zone placement; move action with GSAP fly. Readings need hygrometer / CO₂ monitor, else qualitative.
