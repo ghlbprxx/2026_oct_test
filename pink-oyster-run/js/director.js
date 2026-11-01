@@ -19,10 +19,11 @@ export function scene(g, key) {
 
 /** Map a sim event to a scene key (or null). */
 export function sceneKeyFor(type, d = {}) {
-  if (type === 'stage') { const st = STAGES[d.stage]; return st ? 'stage_' + st.id : null; }
+  if (type === 'stage') { const id = d.id || (STAGES[d.stage] && STAGES[d.stage].id); return id ? 'stage_' + id : null; }
+  if (type === 'speciesStart') return 'species_' + d.species;
   if (type === 'sfx' && d.name === 'mold') return 'first_mold';
   if (type === 'forecast') return 'cold_snap';
-  if (type === 'species') return 'species_done';
+  if (type === 'species') return !d.species || d.species === 'pink-oyster' ? 'species_done' : 'species_done_' + d.species;
   return null;
 }
 

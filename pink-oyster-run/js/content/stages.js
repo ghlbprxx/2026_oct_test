@@ -82,7 +82,7 @@ export const PRODUCTS = {
   plate: { name: 'Agar culture plate', stage: 0, base: 10, unit: 'plate', blurb: 'Clean, colonized pink oyster culture on MEA.' },
   jar:   { name: 'Grain spawn, 1 qt', stage: 1, base: 18, unit: 'jar', blurb: 'Fully colonized rye spawn, ready to mix into substrate.' },
   kit:   { name: 'Colonized grow kit', stage: 2, base: 25, unit: 'kit', blurb: 'A fully colonized block: cut an X, mist, and fruit at home.' },
-  dried: { name: 'Dried pink oysters', stage: 4, base: 8, unit: 'fresh-lb', blurb: 'Dehydrated harvest, priced per pound of fresh weight.' },
+  dried: { name: 'Dried mushrooms', stage: 4, base: 8, unit: 'fresh-lb', blurb: 'Dehydrated harvest, priced per pound of fresh weight.' },
 };
 
 /** Mentor (retired-mycologist neighbor) lines for weekly reviews. ≤3 lines per scene; ids map to audio/voice-lines.json later. */

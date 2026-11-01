@@ -395,3 +395,12 @@ Cozy storybook character portrait for a casual mobile game, same art style as th
 Cozy storybook character portrait for a casual mobile game, same art style as the object images: clean vector-like shapes, soft cel shading, dark plum outlines (#2a1b2e), warm palette with flamingo-pink (#e2557a) accents, expressive but friendly face, readable at small sizes. Head-and-shoulders portrait of an enthusiastic internet mushroom-forum guru in their late 20s: mustard beanie, big confident grin, eyebrows mid-lecture, holding up a smartphone, a green hoodie. Comedic, friendly, slightly overconfident. Framing: Bust portrait, face centered in the upper half, shoulders cut by the bottom edge, facing slightly left. Isolated subject on a fully transparent background (PNG alpha channel). Nothing else in frame.
 ```
 
+## bed
+
+- **Save as:** `assets/img/bed.png` (256×256, transparent)
+- **Used for:** A wine cap bed of wood chips in the back yard (yard spots). Wine cap clusters are drawn on top when it fruits.
+
+```text
+Cozy storybook illustration for a casual mobile game. Clean vector-like shapes, soft cel shading and gentle gradients, confident dark plum outlines (#2a1b2e). Warm palette: flamingo pink (#e2557a), deep rose (#b8325a), cream-white mycelium (#fbf8f1), honey-amber agar (#ead7a8), wheat straw (#d9b65a), sawdust brown (#8a6040). One centered subject, front view tilted slightly from above, soft contact shadow directly underneath, even studio lighting, readable at small sizes. A low rounded mound of fresh hardwood wood chips mixed with a little straw, a few white threads of mycelium showing at the edge, viewed slightly from the side. Framing: Mound centered along the bottom third, filling about 85% of the width, empty space above for mushrooms drawn on top. Isolated subject on a fully transparent background (PNG alpha channel). Nothing else in frame.
+```
+

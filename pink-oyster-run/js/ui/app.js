@@ -12,9 +12,9 @@ import { ZONES, ZONE_BY_ID } from '../content/zones.js';
 import { EQUIPMENT, EQUIPMENT_ORDER } from '../content/equipment.js';
 import { isBlock, hazard, mediumSpeed } from '../sim/contamination.js';
 import { SPEEDS, dayOfWeek, toGame, faster, slower } from '../sim/clock.js';
-import { unlocked, startCash, canSalvage, currentStage, opensAt } from '../sim/stages.js';
+import { unlocked, startCash, canSalvage, currentStage, opensAt, ladder } from '../sim/stages.js';
 import { checklist, unitsNeeded, forceMaster } from '../sim/mastery.js';
-import { STAGES, PRODUCTS } from '../content/stages.js';
+import { STAGES, PRODUCTS, ladderOf } from '../content/stages.js';
 import { loadRun, saveRun, clearRun } from '../save.js';
 import { setAdminVisible } from '../admin-help.js';
 import { phaseDays } from '../sim/growth.js';
@@ -28,7 +28,8 @@ import { reduceMotion } from '../fx.js';
 import { GUIDE, NUMS, PREP } from '../content/guide.js';
 import { MYTHS } from '../content/myths.js';
 import { LESSONS, LESSON_IDS } from '../content/lessons.js';
-import { RECIPES, BUYABLE, MEDIA, SPECIES, SUPPLIES } from '../content/species/pink-oyster.js';
+import { MEDIA, SUPPLIES } from '../content/species/pink-oyster.js';
+import { spg, packOf, nextSpecies, recipeOf, SPECIES_BY } from '../content/species/index.js';
 import { WEEK_INTRO } from '../content/weeks.js';
 import { CAST } from '../content/story.js';
 import { TUTORIAL } from '../content/tutorial.js';
@@ -63,16 +64,18 @@ export function showScene(s) { if (s && s.lines.length) showModal({ type: 'scene
 export const ESSENTIAL_GEAR = ['sab', 'cooker23', 'rack', 'hygrometer', 'tent', 'heatmat', 'humidifier', 'dehydrator'];
 export function savedSummary() {
   const g = loadRun(); if (!g || g.over) return null;
-  return { week: g.week, stage: STAGES[Math.min(g.stage, STAGES.length - 1)].name, mode: g.mode, cash: g.cash, runType: g.runType || 'free' };
+  const L = ladderOf(g.species);
+  return { week: g.week, stage: L[Math.min(g.stage, L.length - 1)].name, species: packOf(g.species).name, mode: g.mode, cash: g.cash, runType: g.runType || 'free' };
 }
 export function autosave() { if (S.g && ui.screen === 'play' && !S.g.over) { saveRun(S.g); ui.saved = savedSummary(); } }
 /** Intro card for a stage: what it teaches and what it opens. */
 export function stageModal(s, first = false) {
-  const cards = [];
+  const cards = [], g = S.g, L = ladder(g);
   if (first) cards.push(WEEK_INTRO.start);
-  opensAt(s).forEach(w => { if (WEEK_INTRO[w]) cards.push(WEEK_INTRO[w]); });
-  if (!first && !cards.length) cards.push({ title: `New stage: ${STAGES[s].name}`, lines: ['A new stage, same rule: the mentor’s list first, then results.'] });
-  return cards.length ? { type: 'week', week: S.g ? S.g.week : 0, stage: STAGES[s].name, cards } : null;
+  if (s === 0 && g && g.species && g.species !== 'pink-oyster' && WEEK_INTRO[g.species]) cards.push(WEEK_INTRO[g.species]);
+  opensAt(s, g).forEach(w => { if (WEEK_INTRO[w]) cards.push(WEEK_INTRO[w]); });
+  if (!first && !cards.length) cards.push({ title: `New stage: ${L[s].name}`, lines: ['A new stage, same rule: the mentor’s list first, then results.'] });
+  return cards.length ? { type: 'week', week: g ? g.week : 0, stage: L[s].name, cards } : null;
 }
 export const SPOT_KEYS = '1234567890-=';
 export function openShop() { ui.shop = true; play('tap'); }
@@ -86,6 +89,7 @@ export function tapSlot(i) {
   if (!v && !spotOpen(g, i)) { if ((zoneOf(i) === 'tent' && unlocked(g, 'room')) || (zoneOf(i) === 'closet')) openShop(); return; }
   if (!v) return openSheet(i);
   if (v.state === 'lost') return sim.toss(g, i);
+  if (v.kind === 'bed' && v.water < 0.3 && !['spent', 'peak', 'overripe'].includes(v.state) && !(v.contam.vis > 0)) return sim.water(g, i);
   if (v.contam.vis > 0) return openSheet(i);
   if (v.state === 'peak' || v.state === 'overripe') return sim.harvest(g, i);
   if (v.state === 'ready') { const src = sim.sources(g, v); return src.length === 1 && !(src[0].v.contam.vis > 0) ? sim.inoculate(g, i, src[0].i) : openSheet(i); }
@@ -96,11 +100,13 @@ export function masterNow() { if (S.g) forceMaster(S.g); }
 export function setHeater(h) { S.g.heater = h; play('tap'); }
 export function toggleMute() { ui.muted = !ui.muted; setMuted(ui.muted); persist(); unlock(); }
 export function dryAll() { return eco.dryAll(S.g); }
+/** Move on to the next species (after mastering the current one). */
+export function startNextSpecies() { if (S.g && sim.startSpecies(S.g)) { play('good'); window.scrollTo({ top: 0, behavior: reduceMotion() ? 'auto' : 'smooth' }); } }
 
 export const App = {
   template,
   data() {
-    return { ui, S, CONFIG, manifest, RULES, GUIDE, NUMS, PREP, MYTHS, LESSONS, LESSON_IDS, RECIPES, BUYABLE, MEDIA, NB_TABS, SPEEDS, SPECIES, SUPPLIES, ZONES, EQUIPMENT, EQUIPMENT_ORDER, STAGES, PRODUCTS, CAST, TUTORIAL };
+    return { ui, S, CONFIG, manifest, RULES, GUIDE, NUMS, PREP, MYTHS, LESSONS, LESSON_IDS, MEDIA, NB_TABS, SPEEDS, SUPPLIES, ZONES, EQUIPMENT, EQUIPMENT_ORDER, STAGES, PRODUCTS, CAST, TUTORIAL };
   },
   computed: {
     g() { return S.g; },
@@ -125,10 +131,14 @@ export const App = {
     /** Keep toasts off the tutorial card and its highlight ring. */
     toastSpot() { const c = ui.coach; if (!c || c.top) return ''; return c.ring && c.ring.y < innerHeight * 0.3 ? 'mid' : 'up'; },
     showTip() { return CONFIG.look.tips && S.g.runType !== 'expert'; },
+    sp() { return spg(S.g); },
+    nextSp() { const n = nextSpecies(S.g.species); return n ? packOf(n) : null; },
+    ladder() { return ladder(S.g); },
+    isYard() { return !!this.sheetZone && this.sheetZone.id === 'yard'; },
     advanced() { return ui.playMode === 'advanced'; },
     showAll() { return this.advanced || ui.moreOpts; },
     mediaShown() { return this.showAll ? MEDIA : { mea: MEDIA.mea }; },
-    bagsShown() { return this.showAll ? BUYABLE : { straw: BUYABLE.straw, masters: BUYABLE.masters }; },
+    bagsShown() { const P = this.sp; return this.showAll ? P.buyable : Object.fromEntries(P.basic.map(k => [k, P.buyable[k]])); },
     gearShown() { return this.advanced || ui.moreGear ? EQUIPMENT_ORDER : EQUIPMENT_ORDER.filter(id => ESSENTIAL_GEAR.includes(id) || S.g.gear[id]); },
     weekPct() { return (S.g.day % RULES.daysPerWeek) / RULES.daysPerWeek * 100; },
     stage() { return currentStage(S.g); },
@@ -145,10 +155,11 @@ export const App = {
     roomOpen() { return unlocked(S.g, 'room'); },
     shelfLife() { return +shelfLifeDays(S.g).toFixed(1); },
     timeline() {
-      const B = SPECIES.bio, r = d => toGame(d * CONFIG.growth.growthScale).toFixed(1);
-      return [['Agar plate (MEA)', B.plateReal, r(B.plateDays)], ['Grain jar', B.jarReal, r(B.jarDays)], ['Straw bag', RECIPES.straw.colReal, r(RECIPES.straw.colDays)],
-        ['Masters Mix bag', RECIPES.masters.colReal, r(RECIPES.masters.colDays)], ['Pinning', B.pinReal, r(B.pinDays)], ['Pins → harvest', B.growReal, r(B.growDays)], ['Rest between flushes', B.restReal, r(B.restDays)],
-        ['Fresh shelf life', '1–3 days', toGame(CONFIG.economy.shelfLife).toFixed(1)]];
+      const P = this.sp, B = P.bio, r = d => toGame(d * CONFIG.growth.growthScale).toFixed(1);
+      const subs = Object.values(P.recipes).filter(x => x.colDays && x.be !== undefined).slice(0, 3).map(x => [x.name + (x.bed ? ' (bed)' : ' bag'), x.colReal, r(x.colDays)]);
+      return [['Agar plate (MEA)', B.plateReal, r(B.plateDays)], ['Grain jar', B.jarReal, r(B.jarDays)], ...subs,
+        ['Pinning', B.pinReal, r(B.pinDays)], ['Pins → harvest', B.growReal, r(B.growDays)], ['Rest between flushes', B.restReal, r(B.restDays)],
+        ['Fresh shelf life', `~${(CONFIG.economy.shelfLife * P.shelfMult).toFixed(1)} days`, toGame(CONFIG.economy.shelfLife * P.shelfMult).toFixed(1)]];
     },
     tentEnv() { return zoneEnv(S.g, 'tent'); },
     env() { return this.tentEnv; },
@@ -156,12 +167,12 @@ export const App = {
     cooking() { return S.g.cookers.some(k => k.batch.length); },
     workspaceName() { return workspace(S.g); },
     canBags() { return canSterilizeBags(S.g); },
-    tS() { return tStat(this.tentEnv.temp); }, cS() { return cStat(this.tentEnv.co2); }, hS() { return hStat(this.tentEnv.rh); },
+    tS() { return tStat(this.tentEnv.temp, this.sp.fruiting); }, cS() { return cStat(this.tentEnv.co2); }, hS() { return hStat(this.tentEnv.rh); },
     sheetZone() { return ui.sheet ? ZONE_BY_ID[zoneOf(ui.sheet.slot)] : null; },
     sheetFit() { return this.sv ? zoneFit(S.g, zoneOf(ui.sheet.slot), this.sv) : { level: 'good', note: '' }; },
     sheetZoneNote() { const z = this.sheetZone; if (!z || this.sv) return ''; const r = zoneReadout(S.g, z.id); return `${z.name}: ${r.temp}, ${r.rh}, ${r.clean}. ${z.purpose}`; },
     moveTargets() {
-      const v = this.sv; if (!v) return [];
+      const v = this.sv; if (!v || v.kind === 'bed') return [];
       return SPOTS.map((sp, i) => ({ i, sp })).filter(t => t.i !== ui.sheet.slot && !S.g.slots[t.i] && spotOpen(S.g, t.i))
         .filter((t, k, a) => a.findIndex(x => x.sp.zone === t.sp.zone) === k) // first free spot per zone
         .map(t => ({ i: t.i, zone: ZONE_BY_ID[t.sp.zone].name, fit: zoneFit(S.g, t.sp.zone, v) }));
@@ -171,15 +182,17 @@ export const App = {
     tip() { return tipFor(S.g); },
     sv() { return ui.sheet ? S.g.slots[ui.sheet.slot] : null; },
     sheetTitle() { const v = this.sv; return v ? vName(v) : 'Empty spot · ' + (this.sheetZone ? this.sheetZone.name : ''); },
-    sheetImg() { const v = this.sv; if (!v) return 'plate_empty'; return layers(v).filter(l => l.id !== 'mold_overlay').pop().id; },
-    sheetGuide() { const v = this.sv; if (!v) return null; const id = v.kind === 'plate' ? 'agar' : v.kind === 'jar' ? 'grain' : isBlock(v) ? 'fruit' : 'sub'; return GUIDE.find(x => x.id === id); },
+    sheetImg() { const v = this.sv; if (!v) return this.isYard ? 'bed' : 'plate_empty'; return layers(v).filter(l => l.id !== 'mold_overlay').pop().id; },
+    sheetGuide() { const v = this.sv; if (!v || v.kind === 'bed') return null; const id = v.kind === 'plate' ? 'agar' : v.kind === 'jar' ? 'grain' : isBlock(v) ? 'fruit' : 'sub'; return GUIDE.find(x => x.id === id); },
     sheetFacts() {
       const v = this.sv, out = [['Status', status(S.g, v)]];
       if (v.kind === 'plate') out.push(['Medium', MEDIA[v.medium].name]);
-      if (v.kind !== 'plate') out.push(['Prep', v.prep === 'ster' ? 'Sterilized' : 'Pasteurized']);
-      if (v.kind === 'bag') out.push(['Substrate', RECIPES[v.recipe].name]);
+      if (v.kind !== 'plate' && v.kind !== 'bed') out.push(['Prep', v.prep === 'ster' ? 'Sterilized' : 'Pasteurized']);
+      if (v.kind === 'bag' || v.kind === 'bed') out.push([v.kind === 'bed' ? 'Bed' : 'Substrate', recipeOf(v).name]);
+      if (v.sp && v.sp !== 'pink-oyster') out.push(['Species', packOf(v.sp).name]);
+      if (v.kind === 'bed') out.push(['Moisture', v.water >= 0.5 ? 'Moist' : v.water >= 0.25 ? 'Drying' : 'Dry!']);
       if (v.state === 'colonizing') out.push(['Colonized', Math.round(v.prog * 100) + '%']);
-      if (isBlock(v)) out.push(['Flush', String(v.flush)]);
+      if (isBlock(v) || (v.kind === 'bed' && v.flush)) out.push(['Flush', String(v.flush)]);
       const dur = phaseDays(v);
       if (dur && ['colonizing', 'pinning', 'growing'].includes(v.state)) { const left = Math.max(0, (1 - v.prog) * dur); out.push(['Time left', `~${left.toFixed(1)} real d (${toGame(left).toFixed(1)} game d)`]); }
       if (v.salvage < 1) out.push(['Salvaged', Math.round(v.salvage * 100) + '% yield']);
@@ -189,7 +202,10 @@ export const App = {
     sheetNote() {
       const v = this.sv; if (!v) return '';
       if (v.state === 'colonized') return v.kind === 'plate' ? 'Tap a ready grain jar to spawn from this plate.' : 'Tap a ready substrate bag to spawn from this jar.';
-      if (v.state === 'pinning' && zoneEnv(S.g, zoneOf(ui.sheet.slot)).temp < SPECIES.fruiting.minTemp) return 'Pinks won’t pin below ~64°F. Warm it up.';
+      if (v.kind === 'bed') return v.state === 'ready' ? 'Inoculate it with a colonized spawn bag. Then keep it moist.' : v.state === 'pinning' && v.water < 0.5 ? 'Colonized. Wine caps flush after a good soak: rain, or the hose.' : '';
+      const F = packOf(v.sp).fruiting, t = zoneEnv(S.g, zoneOf(ui.sheet.slot)).temp;
+      if (v.state === 'pinning' && t < F.minTemp) return `${packOf(v.sp).name} won’t pin below ~${F.minTemp}°F. Warm it up.`;
+      if (v.state === 'pinning' && F.maxTemp && t > F.maxTemp) return `${packOf(v.sp).name} won’t pin above ~${F.maxTemp}°F. Cool it down: heat mat off.`;
       if (v.state === 'queued') return 'Waiting for the pressure cooker to finish its current batch.';
       return '';
     },
@@ -204,7 +220,7 @@ export const App = {
     src, money, fmtLb, start, setSpeed, openShop, layers,
     priceOf(id) { return gearPrice(id); },
     resumeRun() { resume(); },
-    nextStageName(s) { return STAGES[s] ? STAGES[s].name : ''; },
+    nextStageName(s) { const L = ladder(S.g); return L[s] ? L[s].name : ''; },
     listIt(i) { done(shop.listVessel(S.g, i)); },
     listDried() { shop.listDried(S.g); },
     bumpPrice(id, d) { shop.setPrice(S.g, id, shop.priceOf(S.g, id) + d); },
@@ -215,7 +231,11 @@ export const App = {
     tutNext() { nextStep(); },
     tutSkip() { finishTutorial(true); },
     cast(who) { return CAST[who]; },
-    autoClimate() { const g = S.g; if (g.gear.heatmat) g.heater = 1; g.fae = 5; g.mist = g.gear.humidifier ? 98 : 88; play('good'); },
+    autoClimate() { const g = S.g, c = spg(g).climate || packOf('pink-oyster').climate; g.heater = g.gear.heatmat ? c.heater : 0; g.fae = c.fae; g.mist = g.gear.humidifier ? c.mist : c.handMist; play('good'); },
+    buildBed(i, t) { done(sim.buildBed(S.g, i, t)); },
+    waterBed(i) { done(sim.water(S.g, i)); },
+    startNextSpecies,
+    spName(id) { return packOf(id).name; },
     keepGrowing() { nextModal(); }, spotsIn, badge, barColor, vName, isBlock, canShake, tapSlot, setHeater, toggleMute,
     status(v) { return status(S.g, v); },
     barPct(v) { return barPct(S.g, v); },
@@ -249,7 +269,7 @@ export const App = {
     gameDays(real) { return toGame(real).toFixed(1); },
     closeSheet() { ui.sheet = null; },
     slotAria(v, i) { const z = ZONE_BY_ID[zoneOf(i)]; return `${z.name}, spot ${SPOTS[i].k + 1}: ` + (v ? `#${v.id} ${vName(v)}, ${status(S.g, v)}` : spotOpen(S.g, i) ? 'empty' : 'locked'); },
-    plateDaysFor(k) { return +(SPECIES.bio.plateDays / mediumSpeed(k) * CONFIG.growth.growthScale).toFixed(1); },
+    plateDaysFor(k) { return +(this.sp.bio.plateDays / mediumSpeed(k) * CONFIG.growth.growthScale).toFixed(1); },
     lotCls(l) { const left = shelfLifeDays(S.g) - l.age; return left < 0.75 ? 'dying' : left < 1.5 ? 'old' : ''; },
     guideName(id) { const x = GUIDE.find(s => s.id === id); return x ? x.name : id; },
     dbg(v) { const e = zoneEnv(S.g, zoneOf(S.g.slots.indexOf(v))); return `h=${hazard(S.g, v, e).toFixed(3)} on=${v.contam.onset == null ? '-' : v.contam.onset.toFixed(1)}\n${v.contam.why || ''} st=${v.state} t=${v.t.toFixed(2)}`; },
@@ -259,6 +279,7 @@ export const App = {
       if (t.dry) return dryAll();
       if (t.heat) { if (S.g.heater < 2) setHeater(S.g.heater + 1); return; }
       if (t.shop) return openShop();
+      if (t.mastery) { const el = document.getElementById('mastery'); el && el.scrollIntoView({ behavior: reduceMotion() ? 'auto' : 'smooth', block: 'center' }); return; }
       if (t.room) { const el = document.getElementById('room'); el && el.scrollIntoView({ behavior: reduceMotion() ? 'auto' : 'smooth', block: 'center' }); }
     },
     togglePause() { ui.paused = !ui.paused; if (!ui.paused) ui.autoPaused = false; },

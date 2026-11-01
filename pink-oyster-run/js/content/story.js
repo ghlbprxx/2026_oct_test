@@ -49,8 +49,33 @@ export const SCENES = {
   ] },
   species_done: { once: true, lines: [
     L('mentor_species_done_1', 'mentor', 'Plate to market table. I may have to stop calling you “the kid next door.”'),
+    L('mentor_species_done_2', 'mentor', 'Next, something fussier. Lion’s mane. Cool, clean, and it punishes a warm tent.'),
+  ] },
+  'species_lions-mane': { once: true, lines: [
+    L('mentor_lions_intro_1', 'mentor', 'Lion’s mane wants 60 to 70 degrees and air like a mountain morning. Heat mat OFF.'),
+    L('guru_lions_intro_1', 'guru', 'it cures brain fog bro, I eat it raw every day 🧠'),
+    L('mentor_lions_intro_2', 'mentor', 'Cook it. And grow it on hardwood, not straw. It barely fruits on straw.'),
+  ] },
+  'species_done_lions-mane': { once: true, lines: [
     L('mentor_wood_chips_1', 'mentor', 'An arborist just dumped a free truckload of hardwood chips on my driveway. Wine caps love those.'),
     L('guru_wood_chips_1', 'guru', 'pine chips work too, chips are chips 🌲'),
+    L('mentor_wood_chips_2', 'mentor', 'Conifer resin stalls them. Hardwood. Grab a wheelbarrow.'),
+  ] },
+  'species_wine-cap': { once: true, lines: [
+    L('mentor_winecap_intro_1', 'mentor', 'Wine caps live outside. You make the spawn indoors, then the weather does the rest.'),
+    L('mentor_winecap_intro_2', 'mentor', 'A good bed fruits for years. Keep it moist and be patient.'),
+  ] },
+  stage_spawn: { once: true, lines: [
+    L('mentor_stage_spawn_1', 'mentor', 'Grain into hardwood sawdust. More, cheaper spawn for a big outdoor bed.'),
+  ] },
+  stage_bed: { once: true, lines: [
+    L('mentor_stage_bed_1', 'mentor', 'Build the bed, seed it with spawn, and water it when it dries. Then wait.'),
+    L('guru_stage_bed_1', 'guru', 'just put the bag in the ground, nature handles it lol'),
+    L('mentor_stage_bed_2', 'mentor', 'Nature handles dry beds by giving them to other fungi.'),
+  ] },
+  'species_done_wine-cap': { once: true, lines: [
+    L('mentor_all_done_1', 'mentor', 'Three species. Indoors, outdoors, warm, cool. You’re a grower now.'),
+    L('mentor_all_done_2', 'mentor', 'I am… proud. Tell anyone and I’ll deny it.'),
   ] },
 };
 

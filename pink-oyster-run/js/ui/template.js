@@ -67,7 +67,7 @@ export default `
       <div class="hs cash" ref="cash"><span class="label">Cash</span><b>{{ money(g.cash) }}</b></div>
       <div class="hs"><span class="label">House</span><b>{{ houseTemp }}°F<span v-if="g.snap" class="chip bad" style="margin-left:4px">cold snap</span></b></div>
       <div class="hs" v-if="roomOpen"><span class="label">Market</span><b>{{ marketIn<=0.05 ? 'today' : 'in '+marketIn.toFixed(1)+'d' }}</b></div>
-      <div class="hs stagechip"><span class="label">Stage {{ Math.min(g.stage+1, STAGES.length) }}/{{ STAGES.length }}</span><b>{{ stage.name }}<span v-if="g.speciesDone" class="chip good" style="margin-left:4px">mastered</span></b></div>
+      <div class="hs stagechip"><span class="label">{{ sp.name }} · stage {{ Math.min(g.stage+1, ladder.length) }}/{{ ladder.length }}</span><b>{{ stage.name }}<span v-if="g.speciesDone" class="chip good" style="margin-left:4px">mastered</span></b></div>
       <div class="hudbtns">
         <div class="speeds" role="group" aria-label="Playback speed">
           <button class="ib" @click="togglePause" :aria-pressed="ui.paused" :aria-label="ui.paused?'Resume':'Pause'" title="Pause (Space)">{{ ui.paused ? '▶' : '⏸' }}</button>
@@ -97,7 +97,7 @@ export default `
           <img v-if="z.id==='kitchen' && (g.gear.sab || g.gear.flowhood)" class="zgear" :src="src(g.gear.flowhood?'gear_flowhood':'gear_sab')" alt="">
         </div>
         <div class="spots">
-          <button v-for="i in spotsIn(z.id)" :key="i+'-'+(g.slots[i]?g.slots[i].id:0)" class="slot" :class="[slotCls(g.slots[i]), {locked:!spotIsOpen(i)}]" :data-slot="i"
+          <button v-for="i in spotsIn(z.id)" :key="i+'-'+(g.slots[i]?g.slots[i].id:0)" class="slot" :class="[slotCls(g.slots[i]), g.slots[i] ? 'sp-'+(g.slots[i].sp||'pink-oyster') : '', {locked:!spotIsOpen(i)}]" :data-slot="i"
                   @click="tapSlot(i)" @mouseenter="ui.hover=i" @mouseleave="ui.hover=null" @focus="ui.hover=i" @blur="ui.hover=null" :aria-label="slotAria(g.slots[i],i)">
             <template v-if="g.slots[i]">
               <span class="art"><img v-for="(l,k) in layers(g.slots[i])" :key="k" :src="src(l.id)" :style="l.style" alt=""></span>
@@ -137,7 +137,10 @@ export default `
           <p class="mono" style="font-size:12px;margin-top:3px">{{ listDone ? (Math.floor(g.units*10)/10)+' / '+need : 'counts once the checklist is done' }}</p>
           <p class="hint" style="font-size:12.5px;margin-top:6px">Verdict at the weekly review (end of day 5).</p>
         </template>
-        <p v-else>Pink oysters mastered: plate to market table. Keep growing in free play; the next species arrives in a later update.</p>
+        <template v-else>
+          <p>{{ sp.name }} mastered.<template v-if="nextSp"> Next up: <b>{{ nextSp.name }}</b> (<i>{{ nextSp.latin }}</i>): {{ nextSp.climateText }}. Stages you already mastered need half the units.</template><template v-else> All three species mastered. Keep growing in free play.</template></p>
+          <div class="actions" style="margin-top:8px" v-if="nextSp"><button class="btn sm" data-act="next-species" @click="startNextSpecies">Start {{ nextSp.name.toLowerCase() }}</button><span class="hint" style="align-self:center">or keep growing {{ sp.short }} first</span></div>
+        </template>
       </div>
 
       <div class="card" id="webshop">
@@ -152,7 +155,7 @@ export default `
           </div>
         </div>
         <p class="hint" style="font-size:12.5px;margin-top:6px">List colonized plates, jars or kits from their spot (tap → List). Hidden mold ships too: refunds cost reputation.</p>
-        <div class="actions" style="margin-top:6px" v-if="products.find(x=>x.id==='dried').open"><button class="btn sm" :disabled="g.dried*2.2046<1" @click="listDried">List dried pinks online</button></div>
+        <div class="actions" style="margin-top:6px" v-if="products.find(x=>x.id==='dried').open"><button class="btn sm" :disabled="g.dried*2.2046<1" @click="listDried">List dried mushrooms online</button></div>
       </div>
 
       <div class="card" id="room">
@@ -162,14 +165,14 @@ export default `
           <div class="actions" style="margin-top:8px" v-if="roomOpen"><button class="btn sm" @click="openShop">Open the shop</button></div>
         </template>
         <template v-else>
-          <div class="actions" style="margin:4px 0 6px"><button class="btn sm" @click="autoClimate">Set for pinks</button><span class="hint" style="align-self:center">heat mat Low, fan 5, mist {{ g.gear.humidifier ? 98 : 88 }}</span></div>
+          <div class="actions" style="margin:4px 0 6px"><button class="btn sm" @click="autoClimate">Set for {{ sp.climate ? sp.short : 'pinks' }}</button><span class="hint" style="align-self:center">{{ (sp.climate||{label:'heat mat Low, fan 5'}).label }}, mist {{ g.gear.humidifier ? (sp.climate||{mist:98}).mist : 88 }}</span></div>
           <details class="note" :open="advanced" style="margin-top:4px"><summary>Fine-tune heat, air and mist</summary>
           <div class="ctl" v-if="g.gear.heatmat">
             <div class="row"><label>Heat mat</label><span class="mono" style="font-size:12px">{{ money(g.heater*CONFIG.economy.heaterCost,2) }}/game day</span></div>
             <div class="seg" role="group" aria-label="Heat mat">
               <button v-for="h in [0,1,2]" :key="h" :aria-pressed="g.heater===h" @click="setHeater(h)">{{ ['Off','Low','High'][h] }}</button>
             </div>
-            <span class="hint">House {{ houseTemp }}°F + {{ RULES.heaterStep }}°F per step. Pinks want 70–85°F.</span>
+            <span class="hint">House {{ houseTemp }}°F + {{ RULES.heaterStep }}°F per step. {{ sp.climate ? sp.name+' wants '+sp.fruiting.bestLo+'–'+sp.fruiting.bestHi+'°F.' : 'Pinks want 70–85°F.' }}</span>
           </div>
           <p v-else class="hint" style="font-size:13px">No heat mat: the tent sits at house temperature ({{ houseTemp }}°F).</p>
           <div class="ctl">
@@ -288,7 +291,14 @@ export default `
       </div>
 
       <!-- empty shelf: build menu -->
-      <template v-if="!sv">
+      <template v-if="!sv && isYard">
+        <div class="secth"><b>Build a wine cap bed</b><span class="mono muted">a 4×8 ft bed, about a wheelbarrow of material</span></div>
+        <p class="muted" style="font-size:13.5px;margin-bottom:8px">Outdoors: it colonizes with the weather over weeks, needs to stay moist (rain or the hose), then flushes after wet spells for years.</p>
+        <div class="choice">
+          <button v-for="(b,k) in sp.beds" :key="k" class="opt" :data-bed="k" @click="buildBed(ui.sheet.slot,k)"><span><b>{{ b.name }}</b><small>{{ b.blurb }} ~{{ fmtLb(b.be*CONFIG.growth.yieldScale) }} per flush · colonizes in {{ b.colReal }}{{ b.maxFlush ? ' · '+b.maxFlush+' flushes' : '' }}</small></span><span class="cost">{{ b.cost ? money(b.cost) : 'free' }}</span></button>
+        </div>
+      </template>
+      <template v-else-if="!sv">
         <div class="secth"><b>Pour an agar plate</b><span class="mono muted">{{ money(SUPPLIES.plate) }} · from your clean fridge slant</span></div>
         <div class="ws" :class="workspaceName!=='open'?'ok':'warn'">
           <template v-if="workspaceName==='hood'">✓ Working at your flow hood: almost no spores reach plates and jars.</template>
@@ -302,10 +312,10 @@ export default `
         <div class="secth"><b>Prep a grain jar</b><span class="mono muted">{{ money(SUPPLIES.jar) }} · rye, field capacity, 1% gypsum</span></div>
         <p v-if="!isOpen('jar')" class="locked">🔒 Grain jars open when you master agar. Get clean plates going first.</p>
         <div class="choice" v-else>
-          <button class="opt" :disabled="!g.cookers.length" @click="prepJar(ui.sheet.slot,'ster')"><span><b>Pressure-cook (sterilize)</b><small>{{ g.cookers.length ? '' : 'Needs a pressure cooker (shop). ' }}90–120 min at 15 psi, ~{{ CONFIG.equipment.cookerDays }} real day incl. cooling ({{ cookerLine }}). Real growers: colonized in {{ SPECIES.bio.jarReal }}.</small></span><span class="cost">cooker</span></button>
+          <button class="opt" :disabled="!g.cookers.length" @click="prepJar(ui.sheet.slot,'ster')"><span><b>Pressure-cook (sterilize)</b><small>{{ g.cookers.length ? '' : 'Needs a pressure cooker (shop). ' }}90–120 min at 15 psi, ~{{ CONFIG.equipment.cookerDays }} real day incl. cooling ({{ cookerLine }}). Real growers: colonized in {{ sp.bio.jarReal }}.</small></span><span class="cost">cooker</span></button>
           <button class="opt" v-if="showAll" @click="prepJar(ui.sheet.slot,'past')"><span><b>Hot-water bath (pasteurize)</b><small>Quick: ready in half a real day, no cooker needed.</small></span><span class="cost">½ real d</span></button>
         </div>
-        <div class="secth"><b>Prep a substrate bag</b><span class="mono muted">1 kg (2.2 lb) dry substrate</span></div>
+        <div class="secth"><b>{{ sp.bagFruits ? 'Prep a substrate bag' : 'Prep a sawdust spawn bag' }}</b><span class="mono muted">{{ sp.bagFruits ? '1 kg (2.2 lb) dry substrate' : 'colonizes, then inoculates a yard bed' }}</span></div>
         <p v-if="!isOpen('bag')" class="locked">🔒 Substrate bags open when you master grain spawn.</p>
         <div class="subt" v-else>
           <div v-for="(r,k) in bagsShown" :key="k" class="subrow">
@@ -327,6 +337,7 @@ export default `
           <div v-for="f in sheetFacts" :key="f[0]"><span>{{ f[0] }}</span><b>{{ f[1] }}</b></div>
         </div>
         <p v-if="sheetNote" style="margin:6px 0">{{ sheetNote }}</p>
+        <button v-if="sv.kind==='bed' && !['spent','lost'].includes(sv.state)" class="opt" data-act="water" @click="waterBed(ui.sheet.slot)"><span><b>Water the bed</b><small>{{ sv.water >= 0.5 ? 'It’s still moist. Rain does this for free.' : 'Dry beds stall and let competitor fungi in.' }}</small></span><span class="cost">💧</span></button>
         <button v-if="sheetProduct" class="opt" :disabled="!sheetProduct.open" @click="listIt(ui.sheet.slot)"><span><b>List in the online shop · {{ money(sheetProduct.price) }}</b><small>{{ sheetProduct.open ? sheetProduct.name+'. Sells over time; hidden mold means a refund.' : 'Opens when you master '+sheetProduct.stageName.toLowerCase()+'.' }}</small></span><span class="cost">🛍</span></button>
         <div class="zonefit" :class="sheetFit.level" v-if="sheetFit.note">{{ sheetZone.short }}: {{ sheetFit.note }}</div>
         <details class="note" v-if="moveTargets.length && !['cooking','queued'].includes(sv.state)" :open="sheetFit.level!=='good' || isBlock(sv)">
@@ -338,13 +349,13 @@ export default `
 
         <!-- inoculation sources -->
         <template v-if="sv.state==='ready'">
-          <div class="secth"><b>Inoculate from {{ sv.kind==='jar' ? 'a colonized plate' : 'a colonized grain jar' }}</b></div>
+          <div class="secth"><b>Inoculate from {{ sv.kind==='jar' ? 'a colonized plate' : sv.kind==='bed' ? 'a colonized spawn bag' : 'a colonized grain jar' }}</b></div>
           <div class="choice" v-if="sources(sv).length">
             <button v-for="s in sources(sv)" :key="s.v.id" class="opt" :class="{warn:s.v.contam.vis>0}" @click="inoculate(ui.sheet.slot,s.i)">
               <span><b>#{{ s.v.id }} {{ vName(s.v) }}</b><small>{{ s.v.uses }} use{{ s.v.uses>1?'s':'' }} left{{ s.v.contam.vis>0 ? ' · ⚠ mold visible on it' : ' · looks clean' }}</small></span><span class="cost">use</span>
             </button>
           </div>
-          <p v-else class="muted">Nothing to spawn from yet. {{ sv.kind==='jar' ? 'Pour a plate and let it colonize.' : 'Colonize a grain jar first.' }}</p>
+          <p v-else class="muted">Nothing to spawn from yet. {{ sv.kind==='jar' ? 'Pour a plate and let it colonize.' : sv.kind==='bed' ? 'Colonize a sawdust spawn bag first (indoors).' : 'Colonize a grain jar first.' }}</p>
         </template>
 
         <div class="choice">
@@ -446,7 +457,7 @@ export default `
           <p class="mono" style="font-size:12.5px;margin-top:4px">Units: {{ Math.floor(ui.modal.r.units*10)/10 }} / {{ ui.modal.r.need }}</p>
         </div>
         <div class="rc" v-if="ui.modal.r.tips.length"><span class="label">Tips for next week</span><ul class="weeklines" style="margin-top:6px"><li v-for="t in ui.modal.r.tips" :key="t">{{ t }}</li></ul></div>
-        <div class="actions rc" style="margin-top:14px"><button class="btn" @click="closeModal">{{ ui.modal.r.mastered ? (ui.modal.r.last ? 'Keep growing' : 'On to '+nextStageName(STAGES.findIndex(x=>x.id===ui.modal.r.stage)+1).toLowerCase()) : 'Start week '+(ui.modal.r.week+1) }}</button><button class="btn ghost" @click="openNb('lessons')">Notebook</button></div>
+        <div class="actions rc" style="margin-top:14px"><button class="btn" @click="closeModal">{{ ui.modal.r.mastered ? (ui.modal.r.last ? 'Keep growing' : 'On to '+nextStageName(ladder.findIndex(x=>x.id===ui.modal.r.stage)+1).toLowerCase()) : 'Start week '+(ui.modal.r.week+1) }}</button><button class="btn ghost" @click="openNb('lessons')">Notebook</button></div>
       </template>
       <template v-else-if="ui.modal.type==='week'">
         <span class="label">Week {{ ui.modal.week }} begins</span>
@@ -505,7 +516,7 @@ export default `
   <div v-if="ui.notebook" class="scrim" @click.self="ui.notebook=false">
     <div class="sheet wide" role="dialog" aria-modal="true" aria-label="Grower's notebook">
       <div class="sheethead" style="grid-template-columns:minmax(0,1fr) auto">
-        <div><span class="label">Grower's notebook</span><h3>Pink oyster, <i>Pleurotus djamor</i></h3></div>
+        <div><span class="label">Grower's notebook</span><h3>{{ g ? sp.name : 'Pink oyster' }}, <i>{{ g ? sp.latin : 'Pleurotus djamor' }}</i></h3></div>
         <button class="ib" @click="ui.notebook=false" aria-label="Close">✕</button>
       </div>
       <nav class="nbtabs">

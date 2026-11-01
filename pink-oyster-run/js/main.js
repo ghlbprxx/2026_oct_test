@@ -22,6 +22,7 @@ import { zoneOf } from './sim/zones.js';
 import { LESSONS } from './content/lessons.js';
 import { scene, sceneKeyFor, isStory, guruQuiz } from './director.js';
 import { tickCoach } from './ui/coach.js';
+import { packOf } from './content/species/index.js';
 
 setConfig(CONFIG);
 attachAdminHelp();
@@ -56,10 +57,11 @@ on((type, d) => {
     }
     case 'stage': { const m = stageModal(d.stage); if (m) showModal(m); break; }
     case 'species': {
-      toast('Pink oysters mastered: plate to market table!', 'good');
+      toast(`${packOf(d.species).name} mastered!`, 'good');
       if (!ui.expert) { ui.expert = true; persist(); toast('Expert mode unlocked for your next run.', 'good'); }
-      showScene(scene(S.g, 'species_done')); break;
+      showScene(scene(S.g, sceneKeyFor('species', d))); autosave(); break;
     }
+    case 'speciesStart': autosave(); break;
     case 'listed': play('build'); break;
     case 'lesson': {
       const first = !ui.lessons[d.id];
@@ -117,6 +119,7 @@ window.addEventListener('keydown', e => {
 /* ---------- admin hooks ---------- */
 ISF.onRestart(() => { if (ui.screen !== 'title') start(); });
 ISF.action('Skip to week end', () => { if (S.g && ui.screen === 'play') { const end = (S.g.week + 1) * 5 - 0.001; while (S.g.day < end && !S.g.over) sim.update(S.g, Math.min(0.05, end - S.g.day)); } });
+ISF.action('Start next species', () => { if (S.g && sim.startSpecies(S.g, undefined, true)) toast('Admin: moved on to ' + packOf(S.g.species).name + '.'); });
 ISF.action('Master current stage', () => { masterNow(); toast('Admin: current stage marked ready. It masters at the weekly review (use Skip to week end).'); });
 ISF.action('Unlock expert', () => { ui.expert = true; persistProfile(); toast('Admin: expert mode unlocked (liquid culture arrives in Phase 6).'); });
 ISF.action('Reset tutorial', () => { ui.tutorialDone = false; ui.runType = 'tutorial'; persistProfile(); toast('Admin: the tutorial is the default mode again.'); });

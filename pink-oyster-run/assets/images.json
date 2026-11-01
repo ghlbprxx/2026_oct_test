@@ -462,6 +462,16 @@
       "prompt": "Head-and-shoulders portrait of an enthusiastic internet mushroom-forum guru in their late 20s: mustard beanie, big confident grin, eyebrows mid-lecture, holding up a smartphone, a green hoodie. Comedic, friendly, slightly overconfident.",
       "framing": "Bust portrait, face centered in the upper half, shoulders cut by the bottom edge, facing slightly left.",
       "style": "portrait"
+    },
+    {
+      "id": "bed",
+      "file": "assets/img/bed.png",
+      "width": 256,
+      "height": 256,
+      "background": "transparent",
+      "usedFor": "A wine cap bed of wood chips in the back yard (yard spots). Wine cap clusters are drawn on top when it fruits.",
+      "prompt": "A low rounded mound of fresh hardwood wood chips mixed with a little straw, a few white threads of mycelium showing at the edge, viewed slightly from the side.",
+      "framing": "Mound centered along the bottom third, filling about 85% of the width, empty space above for mushrooms drawn on top."
     }
   ],
   "styles": {

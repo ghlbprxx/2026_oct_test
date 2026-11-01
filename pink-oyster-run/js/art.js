@@ -229,6 +229,9 @@ export const ART = (() => {
     zone_kitchen: () => zone('kitchen'), zone_closet: () => zone('closet'), zone_tent: () => zone('tent'), zone_garage: () => zone('garage'), zone_yard: () => zone('yard'),
     gear_sab: () => gear('sab'), gear_flowhood: () => gear('flowhood'), gear_cooker16: () => gear('cooker16'), gear_cooker23: () => gear('cooker23'), gear_scale: () => gear('scale'), gear_sealer: () => gear('sealer'),
     gear_tent: () => gear('tent'), gear_heatmat: () => gear('heatmat'), gear_humidifier: () => gear('humidifier'), gear_hygrometer: () => gear('hygrometer'), gear_co2: () => gear('co2'), gear_dehydrator: () => gear('dehydrator'), gear_rack: () => gear('rack'),
+    bed: () => wrap(256, 256, '', `<path d="M14 214 Q30 128 128 118 Q226 128 242 214 Z" fill="#a8774a" stroke="${OL}" stroke-width="5"/>` +
+      [...Array(26)].map((_, k) => `<rect x="${30 + (k * 53) % 190}" y="${140 + (k * 29) % 66}" width="${14 + k % 3 * 5}" height="6" rx="2" fill="${['#c8955f', '#8a5a33', '#d9b07a'][k % 3]}" transform="rotate(${(k * 47) % 80 - 40} ${36 + (k * 53) % 190} ${143 + (k * 29) % 66})"/>`).join('') +
+      `<path d="M14 214 H242" stroke="${OL}" stroke-width="5"/>`),
     portrait_mentor: () => portrait('mentor'), portrait_guru: () => portrait('guru'),
   };
   const cache = {};
