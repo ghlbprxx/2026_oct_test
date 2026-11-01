@@ -1,0 +1,10 @@
+{
+  "name": "pink-oyster-run",
+  "private": true,
+  "type": "module",
+  "description": "Home mushroom-growing game. No build step; package.json exists for ES-module tests and a static server.",
+  "scripts": {
+    "test": "node --test tests/",
+    "serve": "npx serve ."
+  }
+}
