@@ -1,6 +1,7 @@
-// Pressure cooker: batches of queued vessels, fixed capacity, one cycle at a time.
+// Pressure cooker: batches of queued vessels, fixed capacity, one cycle (real days, incl. cooling) at a time.
 import { C } from './cfg.js';
 import { emit } from './events.js';
+import { toBio } from './clock.js';
 
 export const findV = (g, id) => g.slots.find(v => v && v.id === id);
 export function stepCooker(g, dd) {
@@ -11,7 +12,7 @@ export function stepCooker(g, dd) {
     emit('sfx', { name: 'hiss' });
   }
   if (ck.batch.length) {
-    ck.t += dd;
+    ck.t += toBio(dd);
     if (ck.t >= E.cookerDays) {
       let n = 0; ck.batch.forEach(id => { const v = findV(g, id); if (v && v.state === 'cooking') { v.state = 'ready'; n++; } });
       ck.batch = []; ck.t = 0;

@@ -25,3 +25,16 @@
 - Files: .ai/DESIGN.md, .ai/PLAN.md, .ai/PROGRESS.md
 - Verified: n/a (research only).
 - Next step: Phase 2 task 1 — js/sim/clock.js playback speeds (0, 0.5, 1, 2, 4, 8×) + time.bioDaysPerGameDay (2.5) + secondsPerDay 180 (30–600); growth durations in CONFIG become real bio days; HUD playback bar with keys `[` `]`; update tests/clock.test.js.
+
+## 2026-11-01 02:55 UTC — Phase 2 sim + UI tasks done (browser check pending)
+- Changed: clock.js playback speeds (0.5–8× + pause), toBio/toGame, weeks; secondsPerDay 180 (30–600), bioDaysPerGameDay 2.5. Species biology moved to content/species/pink-oyster.js in real days (plate 7, jar 12, straw 12, saw 16, masters 18, pin 4, grow 4, rest 10, cooker 1, peak 1.5) with per-real-day hazards. Prices $/lb (fresh $14, dried $8/fresh-lb), consumables (plate $1.5, jar $3, SAB $15, bags $3–7), cooker 7 jars. Difficulty picker (Relaxed/Normal/Hardcore: $2,500/$1,500/$800; grace weeks; Relaxed salvage + longer shelf life). Slow start: empty shelves, plates only weeks 0–1, jars wk2, bags wk3, grow room wk4 (closet 72°F before); week-intro cards. Still-air box ($15) = week-1 cleanliness variable; open-air inoculation risk; new lessons open_air, sab. Real-world vs game durations in sheets + notebook timeline. Admin knobs regrouped (time, growth, contam, economy, equipment, room, progression, difficulty, look, dev); actions Skip to week end, +$500. Season default 12 weeks; heater $1/step/game day after the bot check showed 8 weeks + $2 heater lost money.
+- Files: js/config-schema.js, js/sim/{clock,stages,environment,contamination,growth,equipment,economy,game,rules}.js, js/content/{species/pink-oyster,lessons,weeks}.js, js/ui/{template,app,views,state}.js, js/main.js, css/styles.css, tests/*.test.js, .ai/*
+- Verified: npm test 27/27 (speeds, bio time, recipe colonization ranges, SAB effect, difficulty modes, salvage, week locks, bot: idle ≤ 0, careful > sloppy). Diagnostic bot (careful, 12 weeks): profit +$125..+$352, first harvest ~game day 26.
+- Next step: Playwright check of setup → week card → play with playback speeds → locked jar/bag sections → build SAB → week 4 room; mobile 390px; then commit Phase 2.
+
+## 2026-11-01 03:20 UTC — Phase 2 complete
+- Changed (since last entry): modal queue (week card + quiz/coffee in one tick no longer overwrite each other); markets start when the grow room opens (no "nothing to sell" spam in weeks 0–3); money() keeps cents under $100; week-aware empty-shelf tip; README + DESIGN updated.
+- Files: js/ui/{state,app,views}.js, js/main.js, js/sim/{economy,game}.js, README.md, .ai/*
+- Verified: npm test 27/27; Playwright: setup → Normal → week-0 card → SAB build → MEA plate → 8× (0.0697 game days in 1.5 s, matches 1.5×8/180) → pause holds → weeks 2/3/4 cards queue in order → room unlocks; notebook timeline; Relaxed on mobile 390px, no horizontal scroll; no console errors.
+- Unverified: feel of 3-minute days (likely slow at 1×; that's what 8× is for), real CDN load.
+- Next step: Phase 3 task 1 — design the side-view house cutaway (js/ui/house.js + css): kitchen counter, closet shelf, grow tent, garage, back yard; each zone 2–3 spots with own temp/RH/cleanliness in js/sim/zones.js (pure) replacing g.slots with zone spots; keep keyboard 1–9 mapping across spots.

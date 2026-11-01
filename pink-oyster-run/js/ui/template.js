@@ -7,25 +7,40 @@ export default `
     <div class="hero card">
       <img class="heroimg" :src="src('title_hero')" alt="Pink oyster mushrooms fruiting in a small home grow room">
       <div>
-        <span class="label">A tiny mushroom farm · one season</span>
+        <span class="label">Learn to grow gourmet mushrooms at home</span>
         <h1 style="margin-top:6px">Pink Oyster <em>Run</em></h1>
-        <p class="lede">Grow <i>Pleurotus djamor</i> from a petri dish to a market table before winter sets in. Rich recipes grow huge clusters, and they grow mold just as fast.</p>
+        <p class="lede">Start with a petri dish and an empty spare room. Each week a new part of the craft opens up, from agar to grain to substrate to fruiting, until your pink oysters reach the market table.</p>
         <div class="actions">
-          <button class="btn big" @click="start()">Start the season</button>
+          <button class="btn big" @click="ui.screen='setup'">New game</button>
           <button class="btn ghost" @click="openNb('guide')">Grower's notebook</button>
         </div>
         <div class="facts">
           <div><span class="label">Best profit</span><b>{{ ui.best==null ? '—' : money(ui.best) }}</b></div>
           <div><span class="label">Lessons found</span><b>{{ lessonCount }}/{{ LESSON_IDS.length }}</b></div>
-          <div><span class="label">Season</span><b>{{ CONFIG.time.seasonDays }} days</b></div>
+          <div><span class="label">Season</span><b>{{ CONFIG.time.seasonWeeks }} weeks</b></div>
         </div>
       </div>
     </div>
     <div class="howto">
-      <div><b>1 · Plate → jar → bag</b>Pour agar, spawn sterile grain, then mix grain into bulk substrate. One plate feeds 3 jars; one jar feeds 2 bags.</div>
+      <div><b>1 · One stage at a time</b>Weeks 0–1 are just agar plates. Grain jars, substrate bags and the grow room open one per week after that.</div>
       <div><b>2 · Gamble on richness</b>Richer substrate means bigger flushes and more mold. The pressure cooker is your bottleneck.</div>
       <div><b>3 · Run the fruiting room</b>Heat, fresh air and mist decide whether blocks pin, and how good the clusters look.</div>
-      <div><b>4 · Pick at peak, sell fast</b>Market every {{ CONFIG.economy.marketEvery }} days. Fresh pinks last about {{ CONFIG.economy.shelfLife }} days. Dry the rest.</div>
+      <div><b>4 · Real numbers</b>Time is compressed (1 game day ≈ {{ CONFIG.time.bioDaysPerGameDay }} real growing days), but everything shows real-world durations, prices in $/lb, and real techniques.</div>
+    </div>
+  </section>
+
+  <!-- ============ SETUP ============ -->
+  <section v-else-if="ui.screen==='setup'" class="title">
+    <div class="card">
+      <span class="label">New game</span>
+      <h2 style="font-size:clamp(28px,4vw,40px);margin:6px 0 4px">How forgiving should mold be?</h2>
+      <p class="muted">You can change the numbers behind each mode in the admin panel (⚙).</p>
+      <div class="modes">
+        <button v-for="m in MODES_UI" :key="m.id" class="mode" :class="{rec:m.id==='normal'}" @click="start(m.id)">
+          <b>{{ m.name }}</b><span class="mono">{{ money(m.cash) }} to start</span><small>{{ m.blurb }}</small>
+        </button>
+      </div>
+      <div class="actions" style="margin-top:12px"><button class="btn ghost sm" @click="ui.screen='title'">Back</button></div>
     </div>
   </section>
 
@@ -33,13 +48,16 @@ export default `
   <section v-else-if="ui.screen==='play' && g">
     <header class="hud">
       <span class="logo">Pink Oyster <em>Run</em></span>
-      <div class="hs day"><span class="label">Day</span><b>{{ Math.floor(g.day)+1 }}<span class="muted" style="font-size:13px"> / {{ CONFIG.time.seasonDays }}</span></b><div class="mini"><i :style="{width:Math.min(100,g.day/CONFIG.time.seasonDays*100)+'%'}"></i></div></div>
+      <div class="hs day"><span class="label">Week {{ g.week }} · day {{ dayOfWeek }}</span><b>{{ clockText }}<span class="muted" style="font-size:12px"> / {{ CONFIG.time.seasonWeeks }} wk</span></b><div class="mini"><i :style="{width:Math.min(100,g.day/season*100)+'%'}"></i></div></div>
       <div class="hs"><span class="label">Cash</span><b>{{ money(g.cash) }}</b></div>
-      <div class="hs"><span class="label">Room</span><b>{{ env.temp }}°F <span class="chip" :class="tS[0]">{{ tS[1] }}</span></b></div>
-      <div class="hs"><span class="label">Market</span><b>{{ marketIn<=0.05 ? 'today' : 'in '+marketIn.toFixed(1)+'d' }}</b></div>
+      <div class="hs"><span class="label">{{ roomOpen ? 'Room' : 'Closet' }}</span><b>{{ env.temp }}°F <span class="chip" :class="tS[0]" v-if="roomOpen">{{ tS[1] }}</span></b></div>
+      <div class="hs" v-if="roomOpen"><span class="label">Market</span><b>{{ marketIn<=0.05 ? 'today' : 'in '+marketIn.toFixed(1)+'d' }}</b></div>
       <div class="hudbtns">
-        <button class="ib heat" @click="setHeater((g.heater+1)%3)" :aria-label="'Heater: '+['off','low','high'][g.heater]+'. Tap to change.'" title="Heater (H)">🔥<small>{{ ['Off','Low','High'][g.heater] }}</small></button>
-        <button class="ib" @click="togglePause" :aria-label="ui.paused?'Resume':'Pause'" title="Pause (Space)">{{ ui.paused ? '▶' : '⏸' }}</button>
+        <div class="speeds" role="group" aria-label="Playback speed">
+          <button class="ib" @click="togglePause" :aria-pressed="ui.paused" :aria-label="ui.paused?'Resume':'Pause'" title="Pause (Space)">{{ ui.paused ? '▶' : '⏸' }}</button>
+          <button v-for="sp in SPEEDS" :key="sp" class="sp" :aria-pressed="!ui.paused && ui.speed===sp" @click="setSpeed(sp)" :title="'Speed '+sp+'× ( [ and ] )'">{{ sp }}×</button>
+        </div>
+        <button v-if="roomOpen" class="ib heat" @click="setHeater((g.heater+1)%3)" :aria-label="'Heater: '+['off','low','high'][g.heater]+'. Tap to change.'" title="Heater (H)">🔥<small>{{ ['Off','Low','High'][g.heater] }}</small></button>
         <button class="ib" @click="openNb()" aria-label="Grower's notebook" title="Notebook (N)">📓</button>
         <button class="ib" @click="toggleMute" :aria-label="ui.muted?'Unmute':'Mute'" title="Mute (M)">{{ ui.muted ? '🔇' : '🔊' }}</button>
       </div>
@@ -64,7 +82,11 @@ export default `
       </main>
 
       <aside class="side">
-        <div class="card" id="room">
+        <div class="card" v-if="!roomOpen">
+          <div class="cardh"><span class="label">Grow room</span><span class="chip">Week {{ unlockWeek('room') }}</span></div>
+          <p style="font-size:14.5px">Locked until week {{ unlockWeek('room') }}. Until then everything incubates in the closet at a steady {{ env.temp }}°F, so you can focus on clean technique.</p>
+        </div>
+        <div class="card" id="room" v-else>
           <div class="cardh"><span class="label">Grow room</span><span class="mono" style="font-size:12px">Room quality {{ Math.round(env.score*100) }}%</span></div>
           <div class="readout">
             <div><b>{{ env.temp }}°F</b><span>{{ tS[1] }}</span></div>
@@ -72,11 +94,11 @@ export default `
             <div><b>{{ env.rh }}%</b><span>RH · {{ hS[1] }}</span></div>
           </div>
           <div class="ctl">
-            <div class="row"><label>Heater</label><span class="mono" style="font-size:12px">{{ money(g.heater*CONFIG.economy.heaterCost,2) }}/day</span></div>
+            <div class="row"><label>Heater</label><span class="mono" style="font-size:12px">{{ money(g.heater*CONFIG.economy.heaterCost,2) }}/game day</span></div>
             <div class="seg" role="group" aria-label="Heater">
               <button v-for="h in [0,1,2]" :key="h" :aria-pressed="g.heater===h" @click="setHeater(h)">{{ ['Off','Low','High'][h] }}</button>
             </div>
-            <span class="hint">Season {{ baseTemp }}°F{{ g.snap ? ' (cold snap!)' : '' }}{{ g.forecast ? ' · cold snap tomorrow' : '' }}. Heater adds {{ CONFIG.room.heaterStep }}°F per step.</span>
+            <span class="hint">Season {{ baseTemp }}°F{{ g.snap ? ' (cold snap!)' : '' }}{{ g.forecast ? ' · cold snap tomorrow' : '' }}. Heater adds {{ RULES.heaterStep }}°F per step.</span>
           </div>
           <div class="ctl">
             <div class="row"><label for="fae">Fresh air</label><span class="chip" :class="cS[0]">{{ cS[1] }}</span></div>
@@ -99,26 +121,26 @@ export default `
           </div>
         </div>
 
-        <div class="card">
+        <div class="card" v-if="roomOpen">
           <div class="gear">
             <img :src="src('crate_fresh')" alt="">
             <div>
-              <div class="cardh" style="margin:0"><b>Fresh crate</b><span class="mono">{{ freshKg.toFixed(2) }} kg</span></div>
-              <span class="muted" style="font-size:13px">{{ money(CONFIG.economy.priceFresh) }}/kg at market · lasts ~{{ CONFIG.economy.shelfLife }} days</span>
+              <div class="cardh" style="margin:0"><b>Fresh crate</b><span class="mono">{{ fmtLb(freshKg) }}</span></div>
+              <span class="muted" style="font-size:13px">{{ money(CONFIG.economy.priceFresh) }}/lb at market · lasts ~{{ shelfLife }} real days</span>
             </div>
           </div>
           <div class="lots" v-if="g.lots.length">
             <div v-for="l in g.lots" :key="l.id" class="lot" :class="lotCls(l)">
-              <span class="mono">{{ l.kg.toFixed(2) }} kg</span>
-              <span class="mini"><i :style="{width:Math.max(0,100-l.age/CONFIG.economy.shelfLife*100)+'%'}"></i></span>
-              <span class="mono muted">{{ Math.max(0,CONFIG.economy.shelfLife-l.age).toFixed(1) }}d</span>
+              <span class="mono">{{ fmtLb(l.kg) }}</span>
+              <span class="mini"><i :style="{width:Math.max(0,100-l.age/shelfLife*100)+'%'}"></i></span>
+              <span class="mono muted" :title="'Real days of freshness left'">{{ Math.max(0,shelfLife-l.age).toFixed(1) }}d</span>
             </div>
           </div>
           <div class="gear" style="margin-top:10px">
             <img :src="src('crate_dried')" alt="">
             <div>
-              <div class="cardh" style="margin:0"><b>Dried</b><span class="mono">{{ g.dried.toFixed(2) }} kg</span></div>
-              <span class="muted" style="font-size:13px">{{ money(CONFIG.economy.priceDried) }}/kg · keeps all season</span>
+              <div class="cardh" style="margin:0"><b>Dried</b><span class="mono">{{ fmtLb(g.dried) }}</span></div>
+              <span class="muted" style="font-size:13px">{{ money(CONFIG.economy.priceDried) }} per fresh lb · keeps all season</span>
             </div>
           </div>
           <div class="actions" style="margin-top:10px"><button class="btn sm" :disabled="!g.lots.length" @click="dryAll">Dehydrate all fresh (D)</button></div>
@@ -135,20 +157,20 @@ export default `
   <!-- ============ REPORT ============ -->
   <section v-else-if="ui.screen==='report' && g" class="report">
     <div class="card">
-      <span class="label">Season report · {{ g.endReason==='broke' ? 'ran out of money on day '+(Math.floor(g.day)+1) : CONFIG.time.seasonDays+' days' }}{{ ui.newBest ? ' · new best' : '' }}</span>
+      <span class="label">Season report · {{ g.endReason==='broke' ? 'ran out of money in week '+g.week : CONFIG.time.seasonWeeks+' weeks' }} · {{ g.mode }}{{ ui.newBest ? ' · new best' : '' }}</span>
       <div class="rank">{{ rank[0] }}</div>
       <p>{{ rank[1] }}</p>
       <div class="stats">
         <div class="stat"><span class="label">Profit</span><b>{{ money(profit) }}</b></div>
-        <div class="stat"><span class="label">Harvested</span><b>{{ g.stats.harvestKg.toFixed(2) }} kg</b></div>
-        <div class="stat"><span class="label">Sold fresh</span><b>{{ g.stats.freshKg.toFixed(2) }} kg</b></div>
-        <div class="stat"><span class="label">Sold dried</span><b>{{ g.stats.driedKg.toFixed(2) }} kg</b></div>
-        <div class="stat"><span class="label">Rotted</span><b>{{ g.stats.rotKg.toFixed(2) }} kg</b></div>
+        <div class="stat"><span class="label">Harvested</span><b>{{ fmtLb(g.stats.harvestKg) }}</b></div>
+        <div class="stat"><span class="label">Sold fresh</span><b>{{ fmtLb(g.stats.freshKg) }}</b></div>
+        <div class="stat"><span class="label">Sold dried</span><b>{{ fmtLb(g.stats.driedKg) }}</b></div>
+        <div class="stat"><span class="label">Rotted</span><b>{{ fmtLb(g.stats.rotKg) }}</b></div>
         <div class="stat"><span class="label">Lost to mold</span><b>{{ lostTotal }}</b></div>
         <div class="stat"><span class="label">Clusters dropped</span><b>{{ g.stats.dropped }}</b></div>
         <div class="stat"><span class="label">Heating bill</span><b>{{ money(g.stats.energy) }}</b></div>
       </div>
-      <div class="actions"><button class="btn" @click="start()">Play another season</button><button class="btn ghost" @click="openNb('lessons')">Notebook</button><button class="btn ghost" @click="ui.screen='title'">Title</button></div>
+      <div class="actions"><button class="btn" @click="ui.screen='setup'">Play another season</button><button class="btn ghost" @click="openNb('lessons')">Notebook</button><button class="btn ghost" @click="ui.screen='title'">Title</button></div>
     </div>
     <div class="card" v-if="lostTotal">
       <span class="label">What the mold cost you</span>
@@ -182,19 +204,25 @@ export default `
 
       <!-- empty shelf: build menu -->
       <template v-if="!sv">
-        <div class="secth"><b>Pour an agar plate</b><span class="mono muted">{{ money(CONFIG.economy.plateCost) }} · from your clean fridge slant</span></div>
-        <div class="choice">
-          <button v-for="(m,k) in MEDIA" :key="k" class="opt" @click="pourPlate(ui.sheet.slot,k)"><span><b>{{ m.full }}</b><small>{{ m.blurb }}</small></span><span class="cost">~{{ plateDaysFor(k) }}d</span></button>
+        <div class="secth"><b>Pour an agar plate</b><span class="mono muted">{{ money(SUPPLIES.plate) }} · from your clean fridge slant</span></div>
+        <div class="ws" :class="g.hasSab?'ok':'warn'">
+          <template v-if="g.hasSab">✓ Working in your still-air box: far fewer spores reach plates and jars.</template>
+          <template v-else><span>⚠ You're working on the open counter. Moving air carries mold spores.</span><button class="btn sm" @click="buildSab">Build a still-air box · {{ money(SUPPLIES.sab) }}</button></template>
         </div>
-        <div class="secth"><b>Prep a grain jar</b><span class="mono muted">{{ money(CONFIG.economy.jarCost) }} · rye, field capacity, 1% gypsum</span></div>
         <div class="choice">
-          <button class="opt" @click="prepJar(ui.sheet.slot,'ster')"><span><b>Pressure-cook (sterilize)</b><small>90–120 min at 15 psi. Waits for a cooker slot ({{ cookerLine }}).</small></span><span class="cost">cooker</span></button>
-          <button class="opt" @click="prepJar(ui.sheet.slot,'past')"><span><b>Hot-water bath (pasteurize)</b><small>Quick: ready in half a day, no cooker needed.</small></span><span class="cost">½d</span></button>
+          <button v-for="(m,k) in MEDIA" :key="k" class="opt" @click="pourPlate(ui.sheet.slot,k)"><span><b>{{ m.full }}</b><small>{{ m.blurb }}</small></span><span class="cost" :title="'Real growers: about '+plateDaysFor(k)+' days'">{{ plateDaysFor(k) }} real d<br><small>{{ gameDays(plateDaysFor(k)) }} game d</small></span></button>
         </div>
-        <div class="secth"><b>Prep a substrate bag</b><span class="mono muted">1 kg dry substrate</span></div>
-        <div class="subt">
+        <div class="secth"><b>Prep a grain jar</b><span class="mono muted">{{ money(SUPPLIES.jar) }} · rye, field capacity, 1% gypsum</span></div>
+        <p v-if="!isOpen('jar')" class="locked">🔒 Grain jars open in week {{ unlockWeek('jar') }}. Get clean plates going first.</p>
+        <div class="choice" v-else>
+          <button class="opt" @click="prepJar(ui.sheet.slot,'ster')"><span><b>Pressure-cook (sterilize)</b><small>90–120 min at 15 psi, ~{{ CONFIG.equipment.cookerDays }} real day incl. cooling. Waits for a cooker slot ({{ cookerLine }}). Real growers: colonized in {{ SPECIES.bio.jarReal }}.</small></span><span class="cost">cooker</span></button>
+          <button class="opt" @click="prepJar(ui.sheet.slot,'past')"><span><b>Hot-water bath (pasteurize)</b><small>Quick: ready in half a real day, no cooker needed.</small></span><span class="cost">½ real d</span></button>
+        </div>
+        <div class="secth"><b>Prep a substrate bag</b><span class="mono muted">1 kg (2.2 lb) dry substrate</span></div>
+        <p v-if="!isOpen('bag')" class="locked">🔒 Substrate bags open in week {{ unlockWeek('bag') }}.</p>
+        <div class="subt" v-else>
           <div v-for="(r,k) in BUYABLE" :key="k" class="subrow">
-            <span><b>{{ r.name }}</b> <span class="rich" :aria-label="'Richness '+r.rich+' of 4'">{{ '●'.repeat(r.rich)+'○'.repeat(4-r.rich) }}</span><small>{{ r.blurb }} ~{{ (r.be*CONFIG.growth.yieldScale).toFixed(2) }} kg first flush · {{ money(r.cost) }}</small></span>
+            <span><b>{{ r.name }}</b> <span class="rich" :aria-label="'Richness '+r.rich+' of 4'">{{ '●'.repeat(r.rich)+'○'.repeat(4-r.rich) }}</span><small>{{ r.blurb }} ~{{ fmtLb(r.be*CONFIG.growth.yieldScale) }} first flush · colonizes in {{ r.colReal }} · {{ money(r.cost) }}</small></span>
             <button class="btn sm" @click="prepBag(ui.sheet.slot,k,'ster')" :aria-label="'Sterilize '+r.name">Sterilize</button>
             <button class="btn ghost sm" @click="prepBag(ui.sheet.slot,k,'past')" :aria-label="'Pasteurize '+r.name">Pasteurize</button>
           </div>
@@ -229,6 +257,7 @@ export default `
           <button v-if="sv.state==='growing' && sv.prog>=.6" class="opt" @click="harvest(ui.sheet.slot)"><span><b>Harvest early</b><small>Young clusters weigh about {{ Math.round(RULES.stageMult.young*100) }}% of a peak harvest.</small></span><span class="cost">pick</span></button>
           <button v-if="sv.state==='spent' && sv.flush===2" class="opt" @click="soak(ui.sheet.slot)"><span><b>Soak for a third flush</b><small>Tail flushes are small and old blocks invite mold.</small></span><span class="cost">~{{ Math.round(RULES.flushMult[2]*100) }}%</span></button>
           <button v-if="isBlock(sv) && !(sv.contam.vis>0)" class="opt" @click="retire(ui.sheet.slot)"><span><b>Retire block</b><small>Compost it and free the shelf.</small></span><span class="cost">free</span></button>
+          <button v-if="canSalvage(sv)" class="opt" @click="salvage(ui.sheet.slot)"><span><b>Cut out the moldy patch (Relaxed)</b><small>Keeps going at {{ Math.round(CONFIG.difficulty.salvageQuality*100) }}% of its yield.</small></span><span class="cost">free</span></button>
           <button v-if="!isBlock(sv) || sv.contam.vis>0" class="opt" @click="toss(ui.sheet.slot)"><span><b>{{ sv.contam.vis>0 ? 'Toss it (moldy)' : 'Toss it' }}</b><small>{{ sv.contam.vis>0 ? 'Contaminated vessels don’t recover. Don’t use it downstream.' : 'Throw it out and free the shelf.' }}</small></span><span class="cost">free</span></button>
         </div>
 
@@ -257,6 +286,14 @@ export default `
           <div class="actions" style="margin-top:12px"><button class="btn" @click="closeModal">Back to the farm</button></div>
         </template>
       </template>
+      <template v-else-if="ui.modal.type==='week'">
+        <span class="label">Week {{ ui.modal.week }} begins</span>
+        <template v-for="c in ui.modal.cards" :key="c.title">
+          <h3 style="font-size:24px;margin:8px 0 6px">{{ c.title }}</h3>
+          <ul class="weeklines"><li v-for="l in c.lines" :key="l">{{ l }}</li></ul>
+        </template>
+        <div class="actions" style="margin-top:14px"><button class="btn" @click="closeModal">Got it</button></div>
+      </template>
       <template v-else-if="ui.modal.type==='coffee'">
         <span class="label">Day {{ Math.floor(g.day)+1 }} · a neighbor stops by</span>
         <h3 style="font-size:24px;margin:6px 0 8px">Free coffee grounds?</h3>
@@ -273,7 +310,7 @@ export default `
   <div v-if="ui.screen==='play' && (ui.paused||ui.autoPaused) && !ui.sheet && !ui.modal && !ui.notebook" class="scrim" @click.self="resume">
     <div class="sheet pausebox">
       <h3 style="font-size:28px">Paused</h3>
-      <p class="muted">Day {{ Math.floor(g.day)+1 }} of {{ CONFIG.time.seasonDays }} · {{ money(g.cash) }}</p>
+      <p class="muted">Week {{ g.week }} of {{ CONFIG.time.seasonWeeks }} · {{ money(g.cash) }}</p>
       <div class="actions" style="justify-content:center"><button class="btn big" @click="resume">Resume</button><button class="btn ghost" @click="openNb()">Notebook</button><button class="btn ghost" @click="quit">End season now</button></div>
     </div>
   </div>
@@ -312,6 +349,12 @@ export default `
       </template>
 
       <template v-else-if="ui.nbTab==='cheat'">
+        <span class="label">Timeline: real growers vs this game</span>
+        <div class="tblwrap" style="margin:6px 0 14px"><table>
+          <thead><tr><th>Step</th><th>Real world</th><th>In game (now)</th></tr></thead>
+          <tbody><tr v-for="r in timeline" :key="r[0]"><td><b>{{ r[0] }}</b></td><td>{{ r[1] }}</td><td class="mono">{{ r[2] }} game days</td></tr></tbody>
+        </table></div>
+        <p class="muted" style="font-size:13.5px;margin:-6px 0 14px">1 game day = {{ CONFIG.time.bioDaysPerGameDay }} real growing days. At 1× a game day takes {{ Math.round(CONFIG.time.secondsPerDay/60*10)/10 }} real minutes.</p>
         <span class="label">Numbers to remember</span>
         <div class="nums" style="margin:6px 0 14px"><div v-for="n in NUMS" :key="n[0]+n[1]" class="num"><b>{{ n[0] }}</b><span>{{ n[1] }}</span></div></div>
         <span class="label">Pasteurize or sterilize?</span>

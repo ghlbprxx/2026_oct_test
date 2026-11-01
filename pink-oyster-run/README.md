@@ -1,9 +1,9 @@
 # Pink Oyster Run
 
-You run a tiny pink oyster (*Pleurotus djamor*) farm for one season, from petri dish to market table. It's a rebuild of the original quiz-and-simulator page (`original.html`) as a real-time game. All the cultivation content is still there, but you now learn it by doing it, and by watching what goes wrong when you don't.
+You're learning to grow gourmet mushrooms at home, starting with pink oysters (*Pleurotus djamor*). The game opens one part of the craft per week, from agar plates to grain spawn to substrate to the grow room, and every loss is explained with a lesson card. It began as a quiz-and-simulator page (`original.html`) and is being rebuilt in phases; see `.ai/PLAN.md` for where it stands.
 
 - **Stack:** ES modules, Vue 3.4.21 (pinned ESM build from jsDelivr), no build step. Placeholder art is generated inline as SVG, so it runs with zero image files.
-- **Session:** about 5 to 8 minutes per season. Works on desktop and phones.
+- **Pacing:** 1 game day takes 3 real minutes at 1× (playback 0.5× to 8×, pause any time). A week is 5 game days. Biology is compressed: 1 game day ≈ 2.5 real growing days, and the game always shows real-world durations next to game time.
 
 ## Run it
 
@@ -32,17 +32,18 @@ Or use `python3 -m http.server 8000` and open `http://localhost:8000`. You need 
 
 ## How it plays
 
-| Stage | What you do | What it teaches |
+**New game:** pick Relaxed ($2,500; mold can be cut out of jars and bags, produce keeps longer), Normal ($1,500; gentle mold odds in weeks 0–1) or Hardcore ($800; full losses, grace only in week 0).
+
+| Week | What opens | What it teaches |
 |---|---|---|
-| Plate | Pour MEA, super agar or CMA from a clean slant | Agar's job is **detection**. Super agar is twice as fast but hides mold; CMA is slow but shows mold right away. |
-| Grain jar | Pressure-cook (waits for the cooker) or pasteurize (quick) | Grain is too rich to pasteurize. |
-| Bag | Coir, straw, sawdust + bran or Masters Mix, sterilized or pasteurized | **The twist:** richer mixes give bigger flushes, more mold, and need the cooker, which is the bottleneck. Plain straw does *worse* sterilized. |
-| Fruiting | Heater, fresh air and mist apply to the whole room | Below ~64°F pinks won't pin. Stale air gives leggy clusters; dry air cracks caps; too humid invites bacteria. |
-| Harvest | Pick at peak, dehydrate, sell on market days | Fresh pinks last ~2 days. Plan for 1–2 flushes. |
+| 0–1 | Agar plates, in a steady 72°F closet | Cleanliness. Plates poured on the open counter catch spores; a $15 DIY still-air box cuts that sharply. MEA vs super agar (fast, hides mold) vs CMA (slow, shows mold). |
+| 2 | Grain jars + pressure cooker (7 quart jars per load) | Grain must be pressure-cooked. Shake at about a third. Spawning from a moldy (or secretly moldy) plate carries it downstream. |
+| 3 | Substrate bags (coir, straw, sawdust + bran, Masters Mix) | Richer mixes yield more, mold more and colonize slower (straw 10–14 days, supplemented 14–21). Rich mixes must be sterilized; plain straw does worse sterilized. |
+| 4+ | The grow room (heater, fresh air, mist) and market days | Pinks won't pin below ~64°F. Stale air gives leggy clusters, dry air cracks caps. Fresh pinks last 1–3 days: sell or dehydrate. |
 
-Spawn from moldy (or secretly moldy) cultures and the contamination follows downstream. One plate feeds 3 jars, and one jar feeds 2 bags. Every loss is pinned to a cause and a lesson, which shows in the toast, the log and the season report, and is collected in the Notebook.
+The season ends after 12 weeks with a closing market and a report. Prices are in $/lb (fresh $14/lb; see `.ai/DESIGN.md` for how confident the researched numbers are).
 
-**Controls:** tap or click a shelf. Keys: `1`–`9` shelves · `Space` pause · `H` heater · `D` dehydrate · `N` notebook · `M` mute · `` ` `` admin panel.
+**Controls:** tap or click a shelf. Keys: `1`–`9` shelves · `Space` pause · `[` `]` slower/faster · `H` heater · `D` dehydrate · `N` notebook · `M` mute · `` ` `` admin panel.
 
 ## Replacing the art with AI-generated images
 
@@ -74,9 +75,9 @@ Press `` ` `` or tap ⚙. The values are live, grouped by system, and persist in
 
 Tune these first:
 
-- `time.secondsPerDay` sets the pace.
-- `contam.bagScale` controls how hard the richness gamble bites.
-- `economy.shelfLife` and `economy.marketEvery` control how much pressure the rot clock puts on you.
+- `time.secondsPerDay` (and `time.bioDaysPerGameDay`) set the pace.
+- `progression.unlockPace` sets how slow the slow start is.
+- `contam.hazardScale` and `contam.sabFactor` set how hard mold bites and how much the still-air box helps.
 
 ## Tests
 
@@ -84,12 +85,8 @@ Tune these first:
 npm test
 ```
 
-Run it from this folder (Node 18+, no dependencies). It covers the clock, environment, contamination, growth, save/migration, the image manifest, and a headless bot check (idle play earns nothing; careful play beats sloppy play).
+Run it from this folder (Node 18+, no dependencies). It covers playback speeds and compressed time, real-world colonization ranges per recipe, contamination (pasteurized vs sterilized, still-air box, difficulty modes, salvage), the week-by-week unlocks, save/migration, the image manifest, and a headless bot check (idle play earns nothing; careful play beats sloppy play).
 
-## Design notes (ISF pass 1)
+## Design notes
 
-- **Direction (chosen at gate 1):** run a tiny mushroom farm · pillars Challenge + Serious fun · casual 5–8 min, mobile-friendly · twist: richness is a gamble.
-- **Core loop:** pour → spawn → bag → fruit → pick → sell, then reinvest in richer bags.
-- **Bot check (12 seasons each, scripted):** careful sterile rich play has a median of +$65 and a max of +$148 · lean straw is a steadier +$62 median · sloppy play (pasteurized rich mixes, super agar) has a median of −$14 · idle earns $0. Rich play has the higher ceiling, sloppy play loses money, and doing nothing doesn't pay.
-- **Not verified:** whether it *feels* fun. That needs a human playtest.
-- **Cut from the original:** the situations quiz and the step-by-step simulator, which this game replaces. The field guide, cheat sheet and myths moved into the in-game Notebook; the myths also come up as market-day customer questions.
+Current design, plan, progress log and decisions live in `.ai/` (DESIGN.md, PLAN.md, PROGRESS.md, DECISIONS.md).

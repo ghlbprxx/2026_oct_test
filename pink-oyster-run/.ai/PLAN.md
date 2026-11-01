@@ -19,12 +19,14 @@
 - [x] Verify: Playwright smoke + bot parity with pre-refactor numbers
 
 ## Phase 2 — time, realism, difficulty, slow start
-- [ ] clock: playback 0/0.5/1/2/4/8×, bioDaysPerGameDay, secondsPerDay range 30–600
+- [x] clock: playback 0/0.5/1/2/4/8×, bioDaysPerGameDay, secondsPerDay range 30–600
 - [x] research numbers (see DESIGN.md › Researched numbers)
-- [ ] apply researched numbers to CONFIG (prices, colonization per recipe, jars, rest, shelf life)
-- [ ] difficulty picker (Relaxed/Normal/Hardcore) in CONFIG
-- [ ] remove stocked bench; Week 0/1 slow start (one zone, one vessel type, cleanliness only)
-- [ ] real-world durations in UI + notebook
+- [x] apply researched numbers to CONFIG (prices, colonization per recipe, jars, rest, shelf life)
+- [x] difficulty picker (Relaxed/Normal/Hardcore) in CONFIG
+- [x] remove stocked bench; Week 0/1 slow start (one zone, one vessel type, cleanliness only)
+- [x] real-world durations in UI + notebook
+
+- [x] browser verification (setup, playback, week cards, locks, SAB, mobile)
 
 ## Phase 3 — zones + equipment shop
 - [ ] side-view cutaway (kitchen, closet, tent, garage, yard), spots, per-zone env

@@ -7,8 +7,9 @@ import * as sim from './sim/game.js';
 import { gameDaysFor } from './sim/clock.js';
 import { envNow, baseTemp } from './sim/environment.js';
 import { canShake } from './sim/growth.js';
-import { ui, S, persist } from './ui/state.js';
-import { App, start, tapSlot, setHeater, toggleMute, dryAll } from './ui/app.js';
+import { ui, S, persist, showModal, nextModal } from './ui/state.js';
+import { App, start, tapSlot, setHeater, toggleMute, dryAll, weekModal, speedUp, speedDown } from './ui/app.js';
+import { unlocked } from './sim/stages.js';
 import { loadManifest, manifest } from './images.js';
 import { play, unlock, setMuted } from './audio.js';
 import { toast, float, burst, wobble } from './fx.js';
@@ -27,8 +28,9 @@ on((type, d) => {
     case 'burst': burst(d.slot); break;
     case 'wobble': wobble(d.slot); break;
     case 'track': ISF.track(d.type, d.data); break;
-    case 'quiz': ui.modal = { type: 'quiz', m: d.m, ans: null }; break;
-    case 'coffee': ui.modal = { type: 'coffee' }; break;
+    case 'quiz': showModal({ type: 'quiz', m: d.m, ans: null }); break;
+    case 'coffee': showModal({ type: 'coffee' }); break;
+    case 'week': { const m = weekModal(d.week); if (m) showModal(m); else toast(`Week ${d.week} begins.`); break; }
     case 'lesson': {
       const first = !ui.lessons[d.id];
       if (first) { ui.lessons[d.id] = true; persist(); }
@@ -39,7 +41,7 @@ on((type, d) => {
     case 'end': {
       ui.newBest = ui.best == null || d.profit > ui.best;
       if (ui.newBest) { ui.best = d.profit; persist(); }
-      ui.sheet = null; ui.modal = null; ui.paused = false; ui.screen = 'report'; window.scrollTo({ top: 0 });
+      ui.sheet = null; ui.modal = null; ui.modalQueue = []; ui.paused = false; ui.screen = 'report'; window.scrollTo({ top: 0 });
       break;
     }
   }
@@ -49,11 +51,11 @@ createApp(App).mount('#app');
 window.__porBooted = true;
 
 /* ---------- loop ---------- */
-const menuPause = () => ui.notebook || !!ui.modal || (ui.sheet && CONFIG.time.pauseInMenus);
+const menuPause = () => ui.notebook || !!ui.modal || !!ui.sheet;
 let last = performance.now();
 function frame(now) {
   const raw = (now - last) / 1000; last = now;
-  if (ui.screen === 'play' && S.g) sim.update(S.g, gameDaysFor(raw, ui.paused || ui.autoPaused || menuPause()));
+  if (ui.screen === 'play' && S.g) sim.update(S.g, gameDaysFor(raw, ui.paused || ui.autoPaused || menuPause(), ui.speed));
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
@@ -66,21 +68,21 @@ window.addEventListener('pointerdown', () => unlock(), { capture: true });
 window.addEventListener('keydown', e => {
   if (e.metaKey || e.ctrlKey || e.altKey) return;
   const tag = (document.activeElement && document.activeElement.tagName) || '';
-  if (e.key === 'Escape') { if (ui.sheet) ui.sheet = null; else if (ui.notebook) ui.notebook = false; else if (ui.modal && ui.modal.type === 'quiz' && ui.modal.ans !== null) ui.modal = null; return; }
+  if (e.key === 'Escape') { if (ui.sheet) ui.sheet = null; else if (ui.notebook) ui.notebook = false; else if (ui.modal && ((ui.modal.type === 'quiz' && ui.modal.ans !== null) || ui.modal.type === 'week')) nextModal(); return; }
   if (ui.screen !== 'play' || ['INPUT', 'TEXTAREA', 'SELECT'].includes(tag)) return;
   if (e.key === ' ') { e.preventDefault(); if (ui.autoPaused) { ui.autoPaused = false; ui.paused = false; } else ui.paused = !ui.paused; return; }
   if (ui.modal || ui.sheet || ui.notebook) return;
   const n = '123456789'.indexOf(e.key);
   if (n >= 0 && n < S.g.slots.length) { e.preventDefault(); tapSlot(n); return; }
   const k = e.key.toLowerCase();
-  if (k === 'd') dryAll(); else if (k === 'h') setHeater((S.g.heater + 1) % 3); else if (k === 'n') ui.notebook = true; else if (k === 'm') toggleMute();
+  if (e.key === ']') speedUp(); else if (e.key === '[') speedDown(); else if (k === 'd') dryAll(); else if (k === 'h' && unlocked(S.g, 'room')) setHeater((S.g.heater + 1) % 3); else if (k === 'n') ui.notebook = true; else if (k === 'm') toggleMute();
 });
 
 /* ---------- admin hooks ---------- */
 ISF.onRestart(() => { if (ui.screen !== 'title') start(); });
-ISF.action('Skip 5 days', () => { if (S.g && ui.screen === 'play') for (let k = 0; k < 100; k++) sim.update(S.g, 0.05); });
+ISF.action('Skip to week end', () => { if (S.g && ui.screen === 'play') { const end = (S.g.week + 1) * 5 - 0.001; while (S.g.day < end && !S.g.over) sim.update(S.g, Math.min(0.05, end - S.g.day)); } });
 ISF.action('Mold on a shelf', () => { const v = S.g && S.g.slots.find(x => x && x.state !== 'lost' && x.contam.onset == null); if (v) { v.contam.onset = S.g.day - 99; v.contam.why = 'luck'; } });
-ISF.action('+ $50', () => { if (S.g) S.g.cash += 50; });
+ISF.action('+$500', () => { if (S.g) S.g.cash += 500; });
 ISF.action('Image check', () => { const miss = manifest.images.filter(m => manifest.status[m.id] !== 'loaded').map(m => m.file); console.table(manifest.images.map(m => ({ id: m.id, file: m.file, status: manifest.status[m.id] }))); toast(`${manifest.images.length - miss.length}/${manifest.images.length} custom images found. Details in the Notebook > Art tab.`); });
 
 // Debug/test handle (devtools, Playwright bots). Not used by the game itself.

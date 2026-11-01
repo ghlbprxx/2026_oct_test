@@ -9,3 +9,9 @@
 - 2026-11-01 Embedded manifest copy + tools/sync-manifest.mjs removed — brief: fetch assets/images.json; on failure use SVG placeholders. ES modules already require a server, so the file:// reason for the copy is gone.
 - 2026-11-01 Testing in this sandbox routes the jsDelivr Vue URL to the identical npm tarball file — the sandbox blocks CDNs; shipped code still uses the CDN.
 - 2026-11-01 package.json test script is `node --test "tests/*.test.js"`, not `node --test tests/` — Node 22 treats positional args as files/globs and fails on a bare directory; the quoted glob is expanded by Node itself (works on Windows too) and skips tests/helpers.js.
+- 2026-11-01 Species biology (durations in real days, per-day hazards, yields, consumable prices) lives in `js/content/species/*.js`; the admin panel exposes ~30 cross-cutting knobs (scales, economy, difficulty) — resolves the brief's "all numbers as knobs" vs "20–30 knobs"; data files stay hand-editable.
+- 2026-11-01 Time model: biology (growth, contamination, shelf life, cooker cycle) runs in bio days = game days × time.bioDaysPerGameDay; calendar things (weeks, market days, cold snaps, season) run in game days.
+- 2026-11-01 Display units are lb and $/lb (US audience, matches researched prices); internal yields stay kg.
+- 2026-11-01 Phase 2 slow start gates systems by week (plates → jars → bags → grow room, every progression.unlockPace weeks). Interim: Phase 4 replaces it with mastery.
+- 2026-11-01 Still-air box is a one-time $15 DIY build offered in the build menu (cleanliness = the week-1 variable); Phase 3 folds it into the equipment shop.
+- 2026-11-01 Relaxed "soft contamination" = mold on jars/bags can be cut out (keeps difficulty.salvageQuality of yield/uses) instead of tossing.

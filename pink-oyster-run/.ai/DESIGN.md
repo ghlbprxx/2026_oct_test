@@ -13,18 +13,18 @@ Fantasy: "I'm becoming a real home grower." Pillars: **Mastery**, **Discovery**,
 
 ## Progression & mastery
 [target] Stage ladder per species (pink/LM: agar → grain → substrate → fruiting → harvest/market; wine cap: agar → grain → sawdust spawn → outdoor bed → harvest). Mastery = mentor checklist, then N good units. Fail = repeat week. Earlier stages keep running. Optional automation after mastery. Learned lessons persist and shorten later species. LC stage unlocks in Expert mode after first win.
-[now] None: single season, rank by profit; lessons persist across runs.
+[now] Interim week ladder (plates wk0–1, jars wk2, bags wk3, grow room wk4) with week-intro cards; 12-week season ranked by profit; lessons persist.
 
 ## Simulation realism
-[now] Numbers are game-balanced, several unrealistic (price $12/kg, flush rest 4 d, cooker is free/fixed).
+[now] Real-day biology in content/species/pink-oyster.js (plate 7, jar 12, straw 12, saw+bran 16, Masters 18, pin 4, grow 4, rest 10, peak 1.5, cooker 1 incl. cooling); 1 game day = 2.5 real days; $/lb prices; SAB cuts open-air plate/inoculation risk to 30%.
 [target] Real-world durations shown in UI; 1 game day ≈ 2.5 bio days; colonization varies by recipe; cookers are bought with real jar capacity; sterile technique (SAB/flow hood) matters; verified prices.
 
 ## Economy
-[now] Cash; costs: plates, jars, bags, heater; income: market every 3 days (fresh/dried), quiz tips.
+[now] Cash by difficulty ($2,500/$1,500/$800); costs: plates $1.50, jars $3, bags $3–7, SAB $15, heater $1/step/game day; income: market every 2 game days once the grow room opens (fresh $14/lb, dried $8/fresh-lb), quiz tips. Careful-bot season (12 wk): +$125..+$350. Cash is far more than consumables need until Phase 3's equipment shop.
 [target] Equipment shop; online shop listings w/ player-set price, demand, reputation; farmers market (fresh only, booth fee); dehydrator → dried sells online; ≥2 competing sinks per currency (gear vs inventory vs booth vs automation).
 
 ## Environment / zones
-[now] Single room: heater (3 steps), fresh air, mist; 9 unlabeled shelves.
+[now] 9 unlabeled shelves; closet at 72°F until week 4, then the grow room (heater 3 steps, fresh air, mist).
 [target] Side-view house cutaway: kitchen counter, closet shelf, grow tent, garage, back yard; each zone 2–3 spots with own temp/RH/cleanliness; wrong-zone placement has visible, explained consequence.
 
 ## Story & mentors
@@ -33,11 +33,11 @@ Fantasy: "I'm becoming a real home grower." Pillars: **Mastery**, **Discovery**,
 
 ## Tutorial
 [target] Week 0, skippable, paused steps highlighting real UI: zones, pour a plate in the SAB, read the room, playback controls, notebook.
-[now] "Next:" coaching line + stocked tutorial bench (to be removed).
+[now] "Next:" coaching line + week-intro cards; empty shelves at start.
 
 ## UI / UX & feel
 [now] Vue 3 single page; shelf grid; side panel; action sheet; notebook (guide, lessons, cheat sheet, art); toasts/floats; admin panel.
-[target] Playback controls (pause, 0.5–8×), zone cutaway with GSAP, weekly review cards, settings panel.
+[now] Playback bar (pause, 0.5–8×, `[` `]`). [target] Zone cutaway with GSAP, weekly review cards, settings panel.
 
 ## Audio
 [now] WebAudio synth SFX, mute.
@@ -45,7 +45,7 @@ Fantasy: "I'm becoming a real home grower." Pillars: **Mastery**, **Discovery**,
 
 ## Difficulty
 [target] Relaxed / Normal / Hardcore picker (cash $2,500/$1,500/$800; contamination soft/normal/hard). All in CONFIG.
-[now] Single difficulty, grace period of 4 days.
+[now] Relaxed / Normal / Hardcore picker implemented as specified.
 
 ## Ethics guardrails
 No FOMO timers, no streak penalties, no paid randomness, no deadlines on shop listings. Weekly reviews are natural stopping points. Losses always explained with a lesson + fix.

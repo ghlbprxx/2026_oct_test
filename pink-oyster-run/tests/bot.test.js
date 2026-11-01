@@ -6,11 +6,13 @@ import * as sim from '../js/sim/game.js';
 import { baseTemp } from '../js/sim/environment.js';
 import { canShake } from '../js/sim/growth.js';
 import { dryAll } from '../js/sim/economy.js';
+export { median };
 
 function bot(style) {
   return g => {
     if (style === 'idle') return;
     g.heater = baseTemp(g) + 8 >= 72 ? 1 : 2; g.fae = 5; g.mist = 98;
+    if (style !== 'sloppy' && !g.hasSab) sim.buildSab(g);
     g.slots.forEach((v, i) => {
       if (!v) return;
       if (v.state === 'lost' || (v.contam.vis > 0 && v.kind !== 'plate')) return sim.toss(g, i);
@@ -25,7 +27,7 @@ function bot(style) {
     const pending = k => g.slots.filter(v => v && v.kind === k && ['queued', 'cooking', 'bath', 'ready'].includes(v.state)).length;
     const spawn = g.slots.filter(v => v && v.kind === 'jar' && ['colonizing', 'colonized'].includes(v.state)).reduce((a, v) => a + (v.state === 'colonized' ? v.uses : 2), 0);
     if (e < 0) return;
-    if (!g.slots.some(v => v && v.kind === 'plate') && g.cash >= 1) sim.pourPlate(g, e, style === 'sloppy' ? 'super' : 'mea');
+    if (g.slots.filter(v => v && v.kind === 'plate').length < 2 && g.cash >= 2) sim.pourPlate(g, e, style === 'sloppy' ? 'super' : 'mea');
     else if (pending('bag') < spawn && g.cash >= 8) sim.prepBag(g, e, 'masters', prep);
     else if (pending('jar') + spawn < 2 && g.cash >= 2) sim.prepJar(g, e, prep);
   };
@@ -35,8 +37,8 @@ async function median(style, n = 9) {
   for (let k = 0; k < n; k++) {
     const C = setup(100 + k);
     const g = sim.newGame();
-    await run(g, C.time.seasonDays + 1, bot(style));
-    out.push(g.cash - C.economy.startCash);
+    await run(g, C.time.seasonWeeks * 5 + 1, bot(style), 0.1);
+    out.push(g.cash - g.startCash);
   }
   return out.sort((a, b) => a - b)[Math.floor(n / 2)];
 }
