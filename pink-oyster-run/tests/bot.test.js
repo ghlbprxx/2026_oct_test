@@ -6,7 +6,9 @@ import { setup, run } from './helpers.js';
 import * as sim from '../js/sim/game.js';
 import { canShake } from '../js/sim/growth.js';
 import { dryAll } from '../js/sim/economy.js';
-import { buy, canBuy } from '../js/sim/shop.js';
+import { buy, canBuy } from '../js/sim/equipment.js';
+import { forceMaster } from '../js/sim/mastery.js';
+import { rand } from '../js/sim/rng.js';
 import { spotsIn, spotOpen } from '../js/sim/zones.js';
 import { isBlock } from '../js/sim/contamination.js';
 
@@ -37,10 +39,20 @@ export function bot(style) {
     else if (pending('jar') + spawn < 2) sim.prepJar(g, free, prep === 'ster' && !g.cookers.length ? 'past' : prep);
   };
 }
-export async function season(style, seed) {
-  const C = setup(seed);
+/** Random actions: tap random spots with random choices. */
+function randomBot(g) {
+  if (rand() > 0.15) return;
+  const i = Math.floor(rand() * g.slots.length), v = g.slots[i], r = rand();
+  if (!v) { if (r < 0.4) sim.pourPlate(g, i, ['mea', 'super', 'cma'][Math.floor(rand() * 3)]); else if (r < 0.7) sim.prepJar(g, i, rand() < 0.5 ? 'ster' : 'past'); else sim.prepBag(g, i, ['coir', 'straw', 'saw', 'masters'][Math.floor(rand() * 4)], rand() < 0.5 ? 'ster' : 'past'); return; }
+  if (r < 0.2) sim.toss(g, i); else if (r < 0.5 && v.state === 'ready') { const s = sim.sources(g, v); if (s.length) sim.inoculate(g, i, s[0].i); }
+  else if (r < 0.7) sim.move(g, i, Math.floor(rand() * g.slots.length)); else if (v.state === 'peak') sim.harvest(g, i);
+}
+export async function season(style, seed, weeks = 12) {
+  setup(seed);
   const g = sim.newGame();
-  await run(g, C.time.seasonWeeks * 5 + 1, bot(style), 0.1);
+  // the ladder gates systems; for a revenue comparison all styles start with the whole pipeline open
+  g.stage = 3; g.mastered = ['agar', 'grain', 'substrate'];
+  await run(g, weeks * 5 + 1, style === 'random' ? randomBot : bot(style), 0.1);
   return { revenue: g.stats.revenue, profit: g.cash - g.startCash, lost: g.stats.lost };
 }
 const median = a => [...a].sort((x, y) => x - y)[Math.floor(a.length / 2)];
@@ -52,4 +64,10 @@ test('idle earns nothing; careful play clearly out-earns sloppy play', async () 
   assert.equal(out.idle.revenue, 0);
   assert.ok(out.idle.profit <= 0);
   assert.ok(out.good.revenue > out.sloppy.revenue * 1.5 + 50, JSON.stringify(out));
+});
+test('random actions earn far less than the sensible scripted strategy', async () => {
+  const r = [], s = [];
+  for (let k = 0; k < 5; k++) { r.push((await season('random', 300 + k)).revenue); s.push((await season('good', 300 + k)).revenue); }
+  console.log('# random vs good revenue', median(r), median(s));
+  assert.ok(median(s) > median(r) * 2 + 50);
 });

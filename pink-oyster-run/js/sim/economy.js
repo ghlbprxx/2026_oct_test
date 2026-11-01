@@ -6,7 +6,8 @@ import { log, learn } from './journal.js';
 import { MYTHS } from '../content/myths.js';
 import { RULES } from './rules.js';
 import { toBio } from './clock.js';
-import { rotMult } from './stages.js';
+import { rotMult, unlocked } from './stages.js';
+import { count } from './mastery.js';
 
 /** Display helpers: yields are kg internally, players see pounds. */
 export const lb = kg => kg * RULES.LB;
@@ -34,20 +35,30 @@ export function stepLots(g, dd) {
 export function dryAll(g) {
   if (!g.gear.dehydrator) { emit('toast', { text: 'You need a dehydrator to dry mushrooms. It’s in the shop.', c: 'bad' }); return false; }
   const kg = g.lots.reduce((a, l) => a + l.kg, 0); if (!kg) return false;
-  g.dried += kg; g.lots = []; emit('sfx', { name: 'good' }); learn(g, 'dry_save');
+  g.dried += kg; g.lots = []; emit('sfx', { name: 'good' }); learn(g, 'dry_save'); count(g, 'driedBatches');
   log(g, `Dehydrated ${fmtLb(kg)}.`, 'good'); emit('toast', { text: `Dried ${fmtLb(kg)}. It keeps all season.` });
   return true;
 }
-export function sellAll(g) {
-  const P = C.economy, fresh = g.lots.reduce((a, l) => a + l.kg, 0), dried = g.dried, rev = lb(fresh) * P.priceFresh + lb(dried) * P.priceDried;
-  g.cash += rev; g.stats.revenue += rev; if (rev > 0) emit('cash', { delta: rev }); g.stats.freshKg += fresh; g.stats.driedKg += dried; g.lots = []; g.dried = 0;
-  return { fresh, dried, rev };
+/** Market day: fresh sells only here (up to what one market absorbs); dried sells here too. Booth fee only when you bring product. */
+export function sellAtMarket(g) {
+  const P = C.economy, fresh = g.lots.reduce((a, l) => a + l.kg, 0), cap = RULES.marketDemandLb / RULES.LB;
+  if (!(fresh > 0 || g.dried > 0)) return { fresh: 0, dried: 0, rev: 0, fee: 0 };
+  if (g.cash < P.boothFee) { emit('toast', { text: `Couldn’t afford the ${money(P.boothFee)} booth fee this market day.`, c: 'bad' }); return { fresh: 0, dried: 0, rev: 0, fee: 0 }; }
+  g.cash -= P.boothFee; g.stats.spent += P.boothFee; emit('cash', { delta: -P.boothFee });
+  let sold = 0; const keep = [];
+  for (const l of [...g.lots].sort((a, b) => b.age - a.age)) { const take = Math.min(l.kg, cap - sold); sold += take; if (l.kg - take > 1e-6) keep.push({ ...l, kg: l.kg - take }); }
+  const dried = g.dried, rev = lb(sold) * P.priceFresh + lb(dried) * P.priceDried;
+  g.lots = keep; g.dried = 0; g.cash += rev; g.stats.revenue += rev; g.stats.freshKg += sold; g.stats.driedKg += dried;
+  if (rev > 0) emit('cash', { delta: rev });
+  if (sold > 0) { count(g, 'marketDays'); count(g, 'marketLb', lb(sold)); }
+  return { fresh: sold, dried, rev, fee: P.boothFee };
 }
 export function market(g, closing) {
-  const s = sellAll(g);
+  if (!g.attend && !closing) { log(g, 'Skipped market day (booth not booked).'); return { rev: 0 }; }
+  const s = sellAtMarket(g);
   if (s.rev > 0) {
     emit('sfx', { name: 'coin' });
-    emit('toast', { text: `${closing ? 'Closing market' : 'Market day'}: sold ${fmtLb(s.fresh)} fresh + ${fmtLb(s.dried)} dried for ${money(s.rev)}.`, c: 'good' });
+    emit('toast', { text: `${closing ? 'Closing market' : 'Market day'}: sold ${fmtLb(s.fresh)} fresh + ${fmtLb(s.dried)} dried for ${money(s.rev)} (booth ${money(s.fee)}).`, c: 'good' });
     log(g, `Market: +${money(s.rev, 2)}.`, 'good');
   } else if (!closing) log(g, 'Market day: nothing to sell.');
   if (!closing && s.rev > 0 && rand() < RULES.quizChance) { // a customer at your stall

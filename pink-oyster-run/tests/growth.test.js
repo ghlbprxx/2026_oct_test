@@ -38,14 +38,15 @@ test('cold stalls pinks: a block never pins below 64°F once in the grow room', 
   assert.equal(g.slots[i].prog, 0);
   assert.ok(g.learned.includes('cold_stall'));
 });
-test('slow start: jars and bags are locked until their week', async () => {
+test('slow start: jars and bags stay locked until their stage', async () => {
   setup();
   const { prepJar, prepBag } = await import('../js/sim/game.js');
-  const g = newGame(); g.gear.cooker16 = true; g.cookers.push({ id: 'cooker16', batch: [], t: 0 });
+  const g = newGame(); g.gear.cooker23 = true; g.cookers.push({ id: 'cooker23', batch: [], t: 0 });
   assert.equal(prepJar(g, 0, 'ster'), false);
   assert.equal(prepBag(g, 0, 'straw', 'past'), false);
-  g.day = 10; // week 2
-  assert.equal(prepJar(g, 0, 'ster'), true);
+  g.day = 30; assert.equal(prepJar(g, 0, 'ster'), false, 'weeks alone open nothing');
+  g.stage = 1; assert.equal(prepJar(g, 0, 'ster'), true);
   assert.equal(prepBag(g, 1, 'straw', 'past'), false);
-  assert.equal(g.slots.filter(Boolean).length, 1, 'new games start with empty shelves');
+  g.stage = 2; assert.equal(prepBag(g, 1, 'straw', 'past'), true);
+  assert.equal(newGame().slots.filter(Boolean).length, 0, 'new games start with empty shelves');
 });

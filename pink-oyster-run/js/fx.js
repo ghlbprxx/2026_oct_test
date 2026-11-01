@@ -72,7 +72,7 @@ export function zoneAlarm(zone) {
 export function cash(delta) {
   const el = document.querySelector('.hs.cash'); if (!el || !CONFIG.dev.juice) return;
   const r = el.getBoundingClientRect(), id = ++seq;
-  ui.floats.push({ id, kind: 't', x: r.left + r.width / 2, y: r.bottom + 16, text: (delta >= 0 ? '+$' : '−$') + Math.abs(delta).toFixed(Math.abs(delta) < 100 ? 2 : 0), c: delta >= 0 ? 'good' : 'bad' });
+  ui.floats.push({ id, kind: 't', x: r.left + r.width / 2, y: r.bottom + 34, text: (delta >= 0 ? '+$' : '−$') + Math.abs(delta).toFixed(Math.abs(delta) < 100 ? 2 : 0), c: delta >= 0 ? 'good' : 'bad' });
   setTimeout(() => drop(ui.floats, id), 1150);
   if (motion()) gsap.fromTo(el.querySelector('b'), { scale: 1.3, color: delta >= 0 ? 'var(--good)' : 'var(--bad)' }, { scale: 1, color: 'var(--ink)', duration: 0.6, ease: 'elastic.out(1,0.4)', clearProps: 'all' });
 }
@@ -80,7 +80,7 @@ export function cash(delta) {
 export function revealCard() {
   if (!motion()) return;
   nextTick(() => {
-    const lines = document.querySelectorAll('.sheet .weeklines li, .sheet h3');
+    const lines = document.querySelectorAll('.sheet .weeklines li, .sheet h3, .sheet .rc');
     if (lines.length) gsap.from(lines, { opacity: 0, y: 14, duration: 0.4, stagger: 0.12, ease: 'power2.out', clearProps: 'all' });
   });
 }

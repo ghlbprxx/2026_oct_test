@@ -9,11 +9,11 @@ Fantasy: "I'm becoming a real home grower." Pillars: **Mastery**, **Discovery**,
 
 ## Core loop
 [now] pour plate → spawn grain → bag → fruit → pick → sell at market every 3 days → reinvest.
-[target] week (5 days) of running the pipeline → Weekly Review (report card, tips, mentor, mastery verdict) → unlock next stage + its shop product.
+[now] week (5 days) of running the pipeline → Weekly Review (report card, tips, mentor, mastery verdict) → unlock next stage + its shop product.
 
 ## Progression & mastery
 [target] Stage ladder per species (pink/LM: agar → grain → substrate → fruiting → harvest/market; wine cap: agar → grain → sawdust spawn → outdoor bed → harvest). Mastery = mentor checklist, then N good units. Fail = repeat week. Earlier stages keep running. Optional automation after mastery. Learned lessons persist and shorten later species. LC stage unlocks in Expert mode after first win.
-[now] Interim week ladder (plates wk0–1, jars wk2, bags wk3, grow room wk4) with week-intro cards; 12-week season ranked by profit; lessons persist.
+[now] Stage ladder (content/stages.js): agar → grain → substrate → fruiting → harvest & market. Weekly review every 5 game days: report card, mold causes + lessons, ≤3 tips, mentor line (id'd), verdict. Mastery = checklist then N units (counted after the list). Repeat week otherwise. Products unlock in the online shop per mastered stage. Species mastered → free play. Autosave/Continue.
 
 ## Simulation realism
 [now] Real-day biology in content/species/pink-oyster.js (plate 7, jar 12, straw 12, saw+bran 16, Masters 18, pin 4, grow 4, rest 10, peak 1.5, cooker 1 incl. cooling); 1 game day = 2.5 real days; $/lb prices; SAB cuts open-air plate/inoculation risk to 30%.

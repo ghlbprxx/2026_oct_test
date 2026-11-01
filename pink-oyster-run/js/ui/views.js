@@ -2,7 +2,7 @@
 import { CONFIG } from '../config.js';
 import { RULES } from '../sim/rules.js';
 import { zoneEnv, zoneOf, zoneFit, spotOpen } from '../sim/zones.js';
-import { canDry, seesClimate, seesCO2, canSterilizeJars } from '../sim/shop.js';
+import { canDry, seesClimate, seesCO2, canSterilizeJars } from '../sim/equipment.js';
 import { ZONE_BY_ID } from '../content/zones.js';
 import { FRUIT, isBlock } from '../sim/contamination.js';
 import { canShake, phaseDays, peakWindow } from '../sim/growth.js';

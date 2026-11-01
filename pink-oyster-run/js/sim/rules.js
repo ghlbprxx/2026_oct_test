@@ -1,6 +1,8 @@
 // Fixed simulation rules (not worth an admin knob). Durations here are real-world (bio) days.
 export const RULES = {
   daysPerWeek: 5,
+  weatherWeeks: 12,                   // outdoor temps drift from seasonStartTemp to seasonEndTemp over this
+  marketDemandLb: 20,                 // most fresh lb one market day absorbs
   plateUses: 3, jarUses: 2,           // one plate -> 3 jars, one jar -> 2 bags
   cmaSpeed: 0.65, cmaReveal: 0.35, superSpeed: 2, superAgarHide: 3,
   shakeFrom: 0.2, shakeTo: 0.65,      // shake window (share colonized)

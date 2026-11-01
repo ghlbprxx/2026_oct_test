@@ -3,7 +3,7 @@ import { C } from './cfg.js';
 import { RULES } from './rules.js';
 import { hazardMult } from './stages.js';
 import { RECIPES, SPECIES } from '../content/species/pink-oyster.js';
-import { workFactor } from './shop.js';
+import { workFactor } from './equipment.js';
 
 export const FRUIT = ['pinning', 'growing', 'peak', 'overripe', 'resting', 'spent'];
 export const isBlock = v => !!v && v.kind === 'bag' && FRUIT.includes(v.state === 'lost' ? v.lostFrom : v.state);

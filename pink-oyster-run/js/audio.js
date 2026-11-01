@@ -30,5 +30,6 @@ export const SFX = {
   hiss: () => noise(0.6, 0.6, 2400),
   shake: () => { for (let i = 0; i < 5; i++) tone(300 + i * 40, 0.04, 'square', 0.25, 0, i * 0.05); },
   pop: () => tone(880, 0.07, 'sine', 0.5, 1.3),
+  sale: () => { tone(1175, 0.06, 'triangle', 0.35); tone(1568, 0.12, 'triangle', 0.35, 0, 0.06); },
 };
 export function play(name) { const f = SFX[name]; if (f) f(); }

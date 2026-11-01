@@ -10,6 +10,7 @@ import { toBio } from './clock.js';
 import { rotMult } from './stages.js';
 import { hazard, causeOf, revealLag, mediumSpeed, FRUIT } from './contamination.js';
 import { LESSONS } from '../content/lessons.js';
+import { count } from './mastery.js';
 import { RECIPES, MEDIA, SPECIES } from '../content/species/pink-oyster.js';
 
 export function mk(g, kind, extra) {
@@ -51,7 +52,7 @@ export function harvestKg(v) {
 
 function onMold(g, v, i) {
   const why = v.contam.why || 'luck', L = LESSONS[why];
-  g.stats.lost[why] = (g.stats.lost[why] || 0) + 1;
+  g.stats.lost[why] = (g.stats.lost[why] || 0) + 1; count(g, 'infected');
   emit('track', { type: 'death', data: { cause: why } });
   emit('sfx', { name: 'mold' }); emit('wobble', { slot: i });
   log(g, `Mold on #${v.id} ${vName(v)}: ${L.title.toLowerCase()}.`, 'bad');
@@ -73,12 +74,13 @@ export function stepVessel(g, v, dd, env, i) {
   const cf = colF(env.temp), dur = phaseDays(v);
   if (v.state === 'colonizing' && env.temp < 60) { v.coldT = (v.coldT || 0) + db; if (v.coldT > RULES.garageLesson) learn(g, 'garage_swing'); }
   switch (v.kind + ':' + v.state) {
-    case 'plate:colonizing': v.prog += db / dur * cf; if (v.prog >= 1) { v.prog = 1; v.state = 'colonized'; v.uses = RULES.plateUses; emit('sfx', { name: 'pop' }); emit('float', { slot: i, text: 'Colonized!', c: 'good' }); log(g, `Plate #${v.id} is fully colonized.`); } break;
+    case 'plate:colonizing': v.prog += db / dur * cf; if (v.prog >= 1) { v.prog = 1; v.state = 'colonized'; v.uses = RULES.plateUses; count(g, 'finished'); count(g, 'cleanPlates'); if (env.zone === 'closet') count(g, 'closetPlates'); emit('sfx', { name: 'pop' }); emit('float', { slot: i, text: 'Colonized!', c: 'good' }); log(g, `Plate #${v.id} is fully colonized.`); } break;
     case 'jar:bath': case 'bag:bath': v.t += db; if (v.t >= dur) { v.state = 'ready'; v.t = 0; } break;
-    case 'jar:colonizing': v.prog += db / dur * cf; if (v.prog >= 1) { v.prog = 1; v.state = 'colonized'; v.uses = Math.max(1, Math.round(RULES.jarUses * v.salvage)); emit('sfx', { name: 'pop' }); log(g, `Jar #${v.id} is fully colonized.`); } break;
-    case 'bag:colonizing': v.prog += db / dur * cf; if (v.prog >= 1) { v.prog = 0; v.state = 'pinning'; v.flush = 1; v.stallT = 0; emit('sfx', { name: 'good' }); emit('float', { slot: i, text: 'Colonized!', c: 'good' }); log(g, `#${v.id} fully colonized. Into fruiting.`); } break;
+    case 'jar:colonizing': v.prog += db / dur * cf; if (v.prog >= 1) { v.prog = 1; v.state = 'colonized'; v.uses = Math.max(1, Math.round(RULES.jarUses * v.salvage)); count(g, 'finished'); count(g, 'cleanJars'); emit('sfx', { name: 'pop' }); log(g, `Jar #${v.id} is fully colonized.`); } break;
+    case 'bag:colonizing': v.prog += db / dur * cf; if (v.prog >= 1) { v.prog = 0; v.state = 'pinning'; v.flush = 1; v.stallT = 0; count(g, 'finished'); count(g, 'cleanBags'); emit('sfx', { name: 'good' }); emit('float', { slot: i, text: 'Colonized!', c: 'good' }); log(g, `#${v.id} fully colonized. Into fruiting.`); } break;
     case 'bag:pinning': {
       const rate = env.temp < SPECIES.fruiting.minTemp ? 0 : env.tF;
+      if (env.zone === 'tent' && env.temp >= 70 && env.temp <= 85 && env.rh >= 85 && env.rh <= 95) count(g, 'goodTent', db);
       if (!rate) { v.stallT += db; if (v.stallT > RULES.stallLesson) learn(g, 'cold_stall'); }
       v.prog += db / dur * rate;
       if (v.prog >= 1) { v.prog = 0; v.state = 'growing'; v.q = { c: 0, h: 0, n: 0 }; emit('sfx', { name: 'pop' }); }

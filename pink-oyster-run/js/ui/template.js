@@ -11,18 +11,19 @@ export default `
         <h1 style="margin-top:6px">Pink Oyster <em>Run</em></h1>
         <p class="lede">Start with a petri dish and an empty spare room. Each week a new part of the craft opens up, from agar to grain to substrate to fruiting, until your pink oysters reach the market table.</p>
         <div class="actions">
-          <button class="btn big" @click="ui.screen='setup'">New game</button>
+          <button class="btn big" v-if="ui.saved" @click="resumeRun">Continue · week {{ ui.saved.week }}, {{ ui.saved.stage }}</button>
+          <button class="btn" :class="ui.saved ? 'ghost' : 'big'" @click="ui.screen='setup'">New game</button>
           <button class="btn ghost" @click="openNb('guide')">Grower's notebook</button>
         </div>
         <div class="facts">
           <div><span class="label">Best operating profit</span><b>{{ ui.best==null ? '—' : money(ui.best) }}</b></div>
           <div><span class="label">Lessons found</span><b>{{ lessonCount }}/{{ LESSON_IDS.length }}</b></div>
-          <div><span class="label">Season</span><b>{{ CONFIG.time.seasonWeeks }} weeks</b></div>
+          <div><span class="label">Stages</span><b>{{ STAGES.length }} per species</b></div>
         </div>
       </div>
     </div>
     <div class="howto">
-      <div><b>1 · One stage at a time</b>Weeks 0–1 are just agar plates. Grain jars, substrate bags and the grow room open one per week after that.</div>
+      <div><b>1 · One stage a week</b>Each week ends with a review. Do the mentor’s checklist, then make enough good product, and the next stage opens: agar → grain → substrate → fruiting → market.</div>
       <div><b>2 · Gamble on richness</b>Richer substrate means bigger flushes and more mold. The pressure cooker is your bottleneck.</div>
       <div><b>3 · Run the fruiting room</b>Heat, fresh air and mist decide whether blocks pin, and how good the clusters look.</div>
       <div><b>4 · Real numbers</b>Time is compressed (1 game day ≈ {{ CONFIG.time.bioDaysPerGameDay }} real growing days), but everything shows real-world durations, prices in $/lb, and real techniques.</div>
@@ -48,10 +49,11 @@ export default `
   <section v-else-if="ui.screen==='play' && g">
     <header class="hud">
       <span class="logo">Pink Oyster <em>Run</em></span>
-      <div class="hs day"><span class="label">Week {{ g.week }} · day {{ dayOfWeek }}</span><b>{{ clockText }}<span class="muted" style="font-size:12px"> / {{ CONFIG.time.seasonWeeks }} wk</span></b><div class="mini"><i :style="{width:Math.min(100,g.day/season*100)+'%'}"></i></div></div>
+      <div class="hs day"><span class="label">Week {{ g.week }} · day {{ dayOfWeek }}</span><b>{{ clockText }}</b><div class="mini" title="Week progress until the weekly review"><i :style="{width:weekPct+'%'}"></i></div></div>
       <div class="hs cash" ref="cash"><span class="label">Cash</span><b>{{ money(g.cash) }}</b></div>
       <div class="hs"><span class="label">House</span><b>{{ houseTemp }}°F<span v-if="g.snap" class="chip bad" style="margin-left:4px">cold snap</span></b></div>
       <div class="hs" v-if="roomOpen"><span class="label">Market</span><b>{{ marketIn<=0.05 ? 'today' : 'in '+marketIn.toFixed(1)+'d' }}</b></div>
+      <div class="hs stagechip"><span class="label">Stage {{ Math.min(g.stage+1, STAGES.length) }}/{{ STAGES.length }}</span><b>{{ stage.name }}<span v-if="g.speciesDone" class="chip good" style="margin-left:4px">mastered</span></b></div>
       <div class="hudbtns">
         <div class="speeds" role="group" aria-label="Playback speed">
           <button class="ib" @click="togglePause" :aria-pressed="ui.paused" :aria-label="ui.paused?'Resume':'Pause'" title="Pause (Space)">{{ ui.paused ? '▶' : '⏸' }}</button>
@@ -110,10 +112,38 @@ export default `
     </div>
 
     <div class="panels">
+      <div class="card mastery" id="mastery">
+        <div class="cardh"><span class="label">Mastering · {{ stage.name }}</span><span class="mono" style="font-size:12px">week {{ g.week }}<template v-if="g.weeksRepeated"> · {{ g.weeksRepeated }} repeated</template></span></div>
+        <template v-if="!g.speciesDone">
+          <p class="muted" style="font-size:13px;margin-bottom:6px">1 · The mentor’s checklist</p>
+          <ul class="checks"><li v-for="it in stageList" :key="it.key" :class="{done:it.done}"><span class="tick" :class="{on:it.done}" aria-hidden="true">{{ it.done ? '✓' : '' }}</span><span>{{ it.text }} <span class="mono muted">{{ it.have >= 1 || it.n > 1 ? (Math.floor(it.have*10)/10)+'/'+it.n : '' }}</span></span></li></ul>
+          <p class="muted" style="font-size:13px;margin:8px 0 4px">2 · Then: {{ need }} {{ stage.unitName }}</p>
+          <div class="mini" :class="{dim:!listDone}"><i :style="{width:Math.min(100,g.units/need*100)+'%'}"></i></div>
+          <p class="mono" style="font-size:12px;margin-top:3px">{{ listDone ? (Math.floor(g.units*10)/10)+' / '+need : 'counts once the checklist is done' }}</p>
+          <p class="hint" style="font-size:12.5px;margin-top:6px">Verdict at the weekly review (end of day 5).</p>
+        </template>
+        <p v-else>Pink oysters mastered: plate to market table. Keep growing in free play; the next species arrives in a later update.</p>
+      </div>
+
+      <div class="card" id="webshop">
+        <div class="cardh"><span class="label">Online shop</span><span class="mono" style="font-size:12px">Reputation {{ Math.round(g.rep) }}/100</span></div>
+        <div class="mini rep"><i :style="{width:g.rep+'%'}"></i></div>
+        <div class="prod" v-for="p in products" :key="p.id" :class="{locked:!p.open}">
+          <div><b>{{ p.name }}</b><small v-if="p.open">{{ p.stock }} in stock · ~{{ p.rate.toFixed(1) }} sales/game day at this price</small><small v-else>Opens when you master {{ p.stageName.toLowerCase() }}.</small></div>
+          <div class="pricer" v-if="p.open">
+            <button class="ib" @click="bumpPrice(p.id,-1)" :aria-label="'Lower price of '+p.name">−</button>
+            <span class="mono" :title="'Base price '+money(p.base)">{{ money(p.price) }}</span>
+            <button class="ib" @click="bumpPrice(p.id,1)" :aria-label="'Raise price of '+p.name">+</button>
+          </div>
+        </div>
+        <p class="hint" style="font-size:12.5px;margin-top:6px">List colonized plates, jars or kits from their spot (tap → List). Hidden mold ships too: refunds cost reputation.</p>
+        <div class="actions" style="margin-top:6px" v-if="products.find(x=>x.id==='dried').open"><button class="btn sm" :disabled="g.dried*2.2046<1" @click="listDried">List dried pinks online</button></div>
+      </div>
+
       <div class="card" id="room">
         <div class="cardh"><span class="label">Grow tent</span><span class="mono" style="font-size:12px" v-if="g.gear.tent">{{ readout('tent').exact ? 'Conditions '+Math.round(tentEnv.score*100)+'%' : 'Buy a hygrometer to read it' }}</span></div>
         <template v-if="!g.gear.tent">
-          <p style="font-size:14.5px">{{ roomOpen ? 'Colonized blocks need a humid tent with fresh air to fruit. It’s in the shop.' : 'Fruiting comes in week '+unlockWeek('room')+'. For now, plates and jars incubate best in the closet.' }}</p>
+          <p style="font-size:14.5px">{{ roomOpen ? 'Colonized blocks need a humid tent with fresh air to fruit. It’s in the shop.' : 'Fruiting opens at the '+STAGES[3].name.toLowerCase()+' stage. For now, plates and jars incubate best in the closet.' }}</p>
           <div class="actions" style="margin-top:8px" v-if="roomOpen"><button class="btn sm" @click="openShop">Open the shop</button></div>
         </template>
         <template v-else>
@@ -174,6 +204,10 @@ export default `
           </div>
         </div>
         <div class="actions" style="margin-top:10px"><button class="btn sm" :disabled="!g.lots.length || !g.gear.dehydrator" @click="dryAll">{{ g.gear.dehydrator ? 'Dehydrate all fresh (D)' : 'Needs a dehydrator' }}</button></div>
+        <div class="ctl" style="margin-top:10px">
+          <div class="row"><label>Farmers market</label><button class="btn sm" :class="{ghost:!g.attend}" @click="toggleMarket" :aria-pressed="g.attend">{{ g.attend ? 'Booth booked' : 'Skipping markets' }}</button></div>
+          <span class="hint">Every {{ CONFIG.economy.marketEvery }} game days. Booth {{ money(CONFIG.economy.boothFee) }}, paid only when you bring product. Fresh sells only here (up to {{ RULES.marketDemandLb }} lb a day).</span>
+        </div>
       </div>
 
       <div class="card">
@@ -187,8 +221,8 @@ export default `
   <section v-else-if="ui.screen==='report' && g" class="report">
     <div class="card">
       <span class="label">Season report · {{ g.endReason==='broke' ? 'ran out of money in week '+g.week : CONFIG.time.seasonWeeks+' weeks' }} · {{ g.mode }}{{ ui.newBest ? ' · new best' : '' }}</span>
-      <div class="rank">{{ rank[0] }}</div>
-      <p>{{ rank[1] }}</p>
+      <div class="rank">{{ g.endReason==='broke' ? 'Out of money' : 'Season over' }}</div>
+      <p>{{ g.endReason==='broke' ? 'Nothing left growing and no cash for supplies. Read the lessons below, then try again (Relaxed starts with more cash).' : '' }} Stages mastered: {{ g.mastered.length }}/{{ STAGES.length }} in {{ g.week }} weeks.</p>
       <div class="stats">
         <div class="stat"><span class="label">Operating profit</span><b>{{ money(profit) }}</b></div>
         <div class="stat"><span class="label">Gear bought (yours)</span><b>{{ money(g.stats.gear || 0) }}</b></div>
@@ -200,7 +234,7 @@ export default `
         <div class="stat"><span class="label">Clusters dropped</span><b>{{ g.stats.dropped }}</b></div>
         <div class="stat"><span class="label">Heating bill</span><b>{{ money(g.stats.energy) }}</b></div>
       </div>
-      <div class="actions"><button class="btn" @click="ui.screen='setup'">Play another season</button><button class="btn ghost" @click="openNb('lessons')">Notebook</button><button class="btn ghost" @click="ui.screen='title'">Title</button></div>
+      <div class="actions"><button class="btn" @click="ui.screen='setup'">New game</button><button class="btn ghost" @click="openNb('lessons')">Notebook</button><button class="btn ghost" @click="ui.screen='title'">Title</button></div>
     </div>
     <div class="card" v-if="lostTotal">
       <span class="label">What the mold cost you</span>
@@ -245,13 +279,13 @@ export default `
           <button v-for="(m,k) in MEDIA" :key="k" class="opt" @click="pourPlate(ui.sheet.slot,k)"><span><b>{{ m.full }}</b><small>{{ m.blurb }}</small></span><span class="cost" :title="'Real growers: about '+plateDaysFor(k)+' days'">{{ plateDaysFor(k) }} real d<br><small>{{ gameDays(plateDaysFor(k)) }} game d</small></span></button>
         </div>
         <div class="secth"><b>Prep a grain jar</b><span class="mono muted">{{ money(SUPPLIES.jar) }} · rye, field capacity, 1% gypsum</span></div>
-        <p v-if="!isOpen('jar')" class="locked">🔒 Grain jars open in week {{ unlockWeek('jar') }}. Get clean plates going first.</p>
+        <p v-if="!isOpen('jar')" class="locked">🔒 Grain jars open when you master agar. Get clean plates going first.</p>
         <div class="choice" v-else>
           <button class="opt" :disabled="!g.cookers.length" @click="prepJar(ui.sheet.slot,'ster')"><span><b>Pressure-cook (sterilize)</b><small>{{ g.cookers.length ? '' : 'Needs a pressure cooker (shop). ' }}90–120 min at 15 psi, ~{{ CONFIG.equipment.cookerDays }} real day incl. cooling ({{ cookerLine }}). Real growers: colonized in {{ SPECIES.bio.jarReal }}.</small></span><span class="cost">cooker</span></button>
           <button class="opt" @click="prepJar(ui.sheet.slot,'past')"><span><b>Hot-water bath (pasteurize)</b><small>Quick: ready in half a real day, no cooker needed.</small></span><span class="cost">½ real d</span></button>
         </div>
         <div class="secth"><b>Prep a substrate bag</b><span class="mono muted">1 kg (2.2 lb) dry substrate</span></div>
-        <p v-if="!isOpen('bag')" class="locked">🔒 Substrate bags open in week {{ unlockWeek('bag') }}.</p>
+        <p v-if="!isOpen('bag')" class="locked">🔒 Substrate bags open when you master grain spawn.</p>
         <div class="subt" v-else>
           <div v-for="(r,k) in BUYABLE" :key="k" class="subrow">
             <span><b>{{ r.name }}</b> <span class="rich" :aria-label="'Richness '+r.rich+' of 4'">{{ '●'.repeat(r.rich)+'○'.repeat(4-r.rich) }}</span><small>{{ r.blurb }} ~{{ fmtLb(r.be*CONFIG.growth.yieldScale) }} first flush · colonizes in {{ r.colReal }} · {{ money(r.cost) }}</small></span>
@@ -271,6 +305,7 @@ export default `
           <div v-for="f in sheetFacts" :key="f[0]"><span>{{ f[0] }}</span><b>{{ f[1] }}</b></div>
         </div>
         <p v-if="sheetNote" style="margin:6px 0">{{ sheetNote }}</p>
+        <button v-if="sheetProduct" class="opt" :disabled="!sheetProduct.open" @click="listIt(ui.sheet.slot)"><span><b>List in the online shop · {{ money(sheetProduct.price) }}</b><small>{{ sheetProduct.open ? sheetProduct.name+'. Sells over time; hidden mold means a refund.' : 'Opens when you master '+sheetProduct.stageName.toLowerCase()+'.' }}</small></span><span class="cost">🛍</span></button>
         <div class="zonefit" :class="sheetFit.level" v-if="sheetFit.note">{{ sheetZone.short }}: {{ sheetFit.note }}</div>
         <details class="note" v-if="moveTargets.length && !['cooking','queued'].includes(sv.state)" :open="sheetFit.level!=='good' || isBlock(sv)">
           <summary>Move to another spot</summary>
@@ -324,6 +359,34 @@ export default `
           </div>
           <div class="actions" style="margin-top:12px"><button class="btn" @click="closeModal">Back to the farm</button></div>
         </template>
+      </template>
+      <template v-else-if="ui.modal.type==='review'">
+        <span class="label">Weekly review · week {{ ui.modal.r.week }} · {{ ui.modal.r.stageName }}</span>
+        <h3 class="verdict-h" :class="ui.modal.r.mastered?'ok':'again'" style="font-size:26px;margin:6px 0 10px">{{ ui.modal.r.mastered ? (ui.modal.r.last ? 'Species mastered!' : 'Stage mastered!') : 'Not yet: repeat the week' }}</h3>
+        <div class="mentor rc">
+          <img :src="src('portrait_mentor')" alt="Your neighbor, a retired mycologist">
+          <p class="bubble" :data-line="ui.modal.r.mentor.id">{{ ui.modal.r.mentor.text }}</p>
+        </div>
+        <div class="stats rc">
+          <div class="stat"><span class="label">Money in</span><b>{{ money(ui.modal.r.money.in) }}</b></div>
+          <div class="stat"><span class="label">Money out</span><b>{{ money(ui.modal.r.money.out) }}</b></div>
+          <div class="stat"><span class="label">Clean rate</span><b>{{ ui.modal.r.cleanRate==null ? '—' : Math.round(ui.modal.r.cleanRate*100)+'%' }}</b></div>
+          <div class="stat"><span class="label">Good plates / jars / bags</span><b>{{ ui.modal.r.yield.plates }} / {{ ui.modal.r.yield.jars }} / {{ ui.modal.r.yield.bags }}</b></div>
+          <div class="stat" v-if="ui.modal.r.yield.harvestKg"><span class="label">Harvested</span><b>{{ fmtLb(ui.modal.r.yield.harvestKg) }}</b></div>
+          <div class="stat" v-if="ui.modal.r.yield.rotKg"><span class="label">Rotted</span><b>{{ fmtLb(ui.modal.r.yield.rotKg) }}</b></div>
+          <div class="stat" v-if="ui.modal.r.yield.sales"><span class="label">Shop sales / refunds</span><b>{{ ui.modal.r.yield.sales }} / {{ ui.modal.r.yield.refunds }}</b></div>
+        </div>
+        <div class="rc" v-if="Object.keys(ui.modal.r.causes).length">
+          <span class="label">Mold this week</span>
+          <div class="grid2" style="margin-top:6px"><div v-for="(n,why) in ui.modal.r.causes" :key="why" class="mistake"><h4>{{ n }} × {{ LESSONS[why].title }}</h4><p class="fix"><b>Fix:</b> {{ LESSONS[why].fix }}</p></div></div>
+        </div>
+        <div class="rc">
+          <span class="label">Checklist · then {{ ui.modal.r.need }} {{ ui.modal.r.unitName }}</span>
+          <ul class="checks" style="margin-top:6px"><li v-for="it in ui.modal.r.checklist" :key="it.key" :class="{done:it.done}"><span class="tick" :class="{on:it.done}">{{ it.done ? '✓' : '' }}</span><span>{{ it.text }}</span></li></ul>
+          <p class="mono" style="font-size:12.5px;margin-top:4px">Units: {{ Math.floor(ui.modal.r.units*10)/10 }} / {{ ui.modal.r.need }}</p>
+        </div>
+        <div class="rc" v-if="ui.modal.r.tips.length"><span class="label">Tips for next week</span><ul class="weeklines" style="margin-top:6px"><li v-for="t in ui.modal.r.tips" :key="t">{{ t }}</li></ul></div>
+        <div class="actions rc" style="margin-top:14px"><button class="btn" @click="closeModal">{{ ui.modal.r.mastered ? (ui.modal.r.last ? 'Keep growing' : 'On to '+nextStageName(STAGES.findIndex(x=>x.id===ui.modal.r.stage)+1).toLowerCase()) : 'Start week '+(ui.modal.r.week+1) }}</button><button class="btn ghost" @click="openNb('lessons')">Notebook</button></div>
       </template>
       <template v-else-if="ui.modal.type==='week'">
         <span class="label">Week {{ ui.modal.week }} begins</span>

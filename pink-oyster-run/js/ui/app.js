@@ -6,12 +6,16 @@ import { RULES } from '../sim/rules.js';
 import * as sim from '../sim/game.js';
 import { tStat, cStat, hStat } from '../sim/environment.js';
 import { SPOTS, zoneOf, spotsIn, zoneOpen, zoneEnv, zoneFit, spotOpen, houseTemp } from '../sim/zones.js';
-import { buy, canBuy, priceOf, workspace, canSterilizeBags } from '../sim/shop.js';
+import { buy, canBuy, priceOf as gearPrice, workspace, canSterilizeBags } from '../sim/equipment.js';
+import * as shop from '../sim/shop.js';
 import { ZONES, ZONE_BY_ID } from '../content/zones.js';
 import { EQUIPMENT, EQUIPMENT_ORDER } from '../content/equipment.js';
 import { isBlock, hazard, mediumSpeed } from '../sim/contamination.js';
-import { SPEEDS, seasonDays, dayOfWeek, toGame, faster, slower } from '../sim/clock.js';
-import { unlocked, unlockWeek, startCash, canSalvage } from '../sim/stages.js';
+import { SPEEDS, dayOfWeek, toGame, faster, slower } from '../sim/clock.js';
+import { unlocked, startCash, canSalvage, currentStage, opensAt } from '../sim/stages.js';
+import { checklist, unitsNeeded, forceMaster } from '../sim/mastery.js';
+import { STAGES, PRODUCTS } from '../content/stages.js';
+import { loadRun, saveRun, clearRun } from '../save.js';
 import { phaseDays } from '../sim/growth.js';
 import { canShake, vName } from '../sim/growth.js';
 import { money, fmtLb, shelfLifeDays } from '../sim/economy.js';
@@ -31,16 +35,28 @@ const NB_TABS = [['guide', 'Field guide'], ['lessons', 'Lessons'], ['cheat', 'Ch
 /* ---------- actions shared by the component and keyboard ---------- */
 export function start(mode = (S.g && S.g.mode) || 'normal') {
   unlock(); S.g = sim.newGame(mode); ui.screen = 'play'; ui.sheet = null; ui.paused = false; ui.autoPaused = false; ui.newBest = false;
-  ui.modalQueue = []; ui.modal = weekModal(S.g.week, true);
+  ui.modalQueue = []; ui.modal = stageModal(0, true);
+  saveRun(S.g); ui.saved = savedSummary();
   ISF.track('runStart', { mode }); window.scrollTo({ top: 0 });
 }
-/** Week-intro card: what opens this week (null when nothing new). */
-export function weekModal(week, first = false) {
+/** Resume the autosaved run. */
+export function resume() {
+  const g = loadRun(); if (!g) return false;
+  unlock(); S.g = g; ui.screen = 'play'; ui.sheet = null; ui.modal = null; ui.modalQueue = []; ui.paused = true; ui.autoPaused = false;
+  window.scrollTo({ top: 0 }); return true;
+}
+export function savedSummary() {
+  const g = loadRun(); if (!g || g.over) return null;
+  return { week: g.week, stage: STAGES[Math.min(g.stage, STAGES.length - 1)].name, mode: g.mode, cash: g.cash };
+}
+export function autosave() { if (S.g && ui.screen === 'play' && !S.g.over) { saveRun(S.g); ui.saved = savedSummary(); } }
+/** Intro card for a stage: what it teaches and what it opens. */
+export function stageModal(s, first = false) {
   const cards = [];
   if (first) cards.push(WEEK_INTRO.start);
-  const news = ['jar', 'bag', 'room'].filter(w => unlockWeek(w) === week || (first && unlockWeek(w) < week));
-  news.forEach(w => cards.push(WEEK_INTRO[w]));
-  return cards.length ? { type: 'week', week, cards } : null;
+  opensAt(s).forEach(w => { if (WEEK_INTRO[w]) cards.push(WEEK_INTRO[w]); });
+  if (!first && !cards.length) cards.push({ title: `New stage: ${STAGES[s].name}`, lines: ['A new stage, same rule: the mentor’s list first, then results.'] });
+  return cards.length ? { type: 'week', week: S.g ? S.g.week : 0, stage: STAGES[s].name, cards } : null;
 }
 export const SPOT_KEYS = '1234567890-=';
 export function openShop() { ui.shop = true; play('tap'); }
@@ -60,6 +76,7 @@ export function tapSlot(i) {
   if (canShake(v)) return sim.shake(g, i);
   play('tap'); openSheet(i);
 }
+export function masterNow() { if (S.g) forceMaster(S.g); }
 export function setHeater(h) { S.g.heater = h; play('tap'); }
 export function toggleMute() { ui.muted = !ui.muted; setMuted(ui.muted); persist(); unlock(); }
 export function dryAll() { return eco.dryAll(S.g); }
@@ -67,7 +84,7 @@ export function dryAll() { return eco.dryAll(S.g); }
 export const App = {
   template,
   data() {
-    return { ui, S, CONFIG, manifest, RULES, GUIDE, NUMS, PREP, MYTHS, LESSONS, LESSON_IDS, RECIPES, BUYABLE, MEDIA, NB_TABS, SPEEDS, SPECIES, SUPPLIES, ZONES, EQUIPMENT, EQUIPMENT_ORDER };
+    return { ui, S, CONFIG, manifest, RULES, GUIDE, NUMS, PREP, MYTHS, LESSONS, LESSON_IDS, RECIPES, BUYABLE, MEDIA, NB_TABS, SPEEDS, SPECIES, SUPPLIES, ZONES, EQUIPMENT, EQUIPMENT_ORDER, STAGES, PRODUCTS };
   },
   computed: {
     g() { return S.g; },
@@ -78,7 +95,16 @@ export const App = {
         { id: 'hardcore', name: 'Hardcore', cash: startCash('hardcore'), blurb: 'Tight money, full losses, and no grace after week 0.' },
       ];
     },
-    season() { return seasonDays(); },
+    weekPct() { return (S.g.day % RULES.daysPerWeek) / RULES.daysPerWeek * 100; },
+    stage() { return currentStage(S.g); },
+    stageList() { return checklist(S.g); },
+    need() { return unitsNeeded(S.g); },
+    listDone() { return this.stageList.every(i => i.done); },
+    products() {
+      return Object.entries(PRODUCTS).map(([id, p]) => ({ id, ...p, open: shop.productOpen(S.g, id), stock: S.g.stock[id].length,
+        price: shop.priceOf(S.g, id), base: shop.basePrice(id), rate: shop.salesRate(S.g, id), stageName: STAGES[p.stage].name }));
+    },
+    sheetProduct() { const v = this.sv; const p = v && shop.productFor(v); return p ? { id: p, open: shop.productOpen(S.g, p), price: shop.priceOf(S.g, p), name: PRODUCTS[p].name, stageName: STAGES[PRODUCTS[p].stage].name } : null; },
     dayOfWeek() { return dayOfWeek(S.g.day); },
     clockText() { const f = S.g.day % 1; const h = Math.floor(6 + f * 16); return (h % 12 || 12) + (h < 12 ? ' am' : ' pm'); },
     roomOpen() { return unlocked(S.g, 'room'); },
@@ -138,16 +164,17 @@ export const App = {
     artFound() { return manifest.images.filter(m => manifest.status[m.id] === 'loaded').length; },
     profit() { return S.g.cash - S.g.startCash + (S.g.stats.gear || 0); },
     lostTotal() { return Object.values(S.g.stats.lost).reduce((a, b) => a + b, 0); },
-    rank() {
-      const r = this.profit / CONFIG.economy.targetProfit;
-      if (r >= 1) return ['Pleurotus Whisperer', 'Clean technique, a warm room and fast sales. This is a market-table operation.'];
-      if (r >= 0.6) return ['Flush Master', 'A solid season with a couple of costly habits. Fix the rows below and you’re top tier.'];
-      if (r >= 0.25) return ['Grain Jar Apprentice', 'You can grow mycelium. Contamination, conditions or timing still cost you.'];
-      return ['Spore Tourist', 'The mushrooms weren’t the problem. Read the lessons below, then try another season.'];
-    },
   },
   methods: {
-    src, money, fmtLb, start, setSpeed, unlockWeek, openShop, priceOf, layers, spotsIn, badge, barColor, vName, isBlock, canShake, tapSlot, setHeater, toggleMute,
+    src, money, fmtLb, start, setSpeed, openShop, layers,
+    priceOf(id) { return gearPrice(id); },
+    resumeRun() { resume(); },
+    nextStageName(s) { return STAGES[s] ? STAGES[s].name : ''; },
+    listIt(i) { done(shop.listVessel(S.g, i)); },
+    listDried() { shop.listDried(S.g); },
+    bumpPrice(id, d) { shop.setPrice(S.g, id, shop.priceOf(S.g, id) + d); },
+    toggleMarket() { S.g.attend = !S.g.attend; play('tap'); },
+    keepGrowing() { nextModal(); }, spotsIn, badge, barColor, vName, isBlock, canShake, tapSlot, setHeater, toggleMute,
     status(v) { return status(S.g, v); },
     barPct(v) { return barPct(S.g, v); },
     slotCls(v) { return slotCls(S.g, v); },
@@ -169,7 +196,7 @@ export const App = {
     zoneOfSpot(i) { return zoneOf(i); },
     zoneById(id) { return ZONE_BY_ID[id]; },
     keyFor(i) { return spotOpen(S.g, i) ? SPOT_KEYS[i] : ''; },
-    lockText(z) { return z.locked || (z.needs === 'tent' ? (unlocked(S.g, 'room') ? 'Buy a grow tent in the shop to open these spots.' : `Fruiting starts in week ${unlockWeek('room')}. The tent is sold then.`) : 'Locked'); },
+    lockText(z) { return z.locked || (z.needs === 'tent' ? (unlocked(S.g, 'room') ? 'Buy a grow tent in the shop to open these spots.' : `Fruiting starts at the ${STAGES[3].name.toLowerCase()} stage. The tent is sold then.`) : 'Locked'); },
     buyState(id) { return canBuy(S.g, id); },
     buyGear(id) { buy(S.g, id); },
     moveTo(from, to) { done(sim.move(S.g, from, to)); },

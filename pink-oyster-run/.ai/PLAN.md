@@ -37,11 +37,16 @@
 - [x] assets/tools/gen-images.mjs + image.config.json (command template, never guessed fal flags; --dry-run, --only, --force) + assets/IMAGE_PROMPTS.md
 - [x] verify (tests, Playwright desktop + mobile, zero image files) + commit
 
-## Phase 4 — ladder, weekly review, mastery, shop, market
-- [ ] stages.js + mastery.js (checklist → N units)
-- [ ] weekly review screen
-- [ ] online shop listings, price vs demand, reputation
-- [ ] farmers market (booth fee, quiz)
+## Phase 4 — ladder, weekly review, mastery, online shop, market (+ user add-on: admin help)
+- [x] content/stages.js: pink stages (agar, grain, substrate, fruiting, harvest) with checklist, product, mentor lines
+- [x] sim/mastery.js: counters, checklist, units after checklist, weekly stats, review builder, verdict (master / repeat)
+- [x] stages gate features (replaces week ladder); species-mastered end; seasonWeeks/unlockPace/targetProfit removed
+- [x] restructure: gear buying → sim/equipment.js; sim/shop.js = online shop (listings, price vs demand, reputation, refunds)
+- [x] farmers market: booth fee, attend toggle, demand cap, quiz kept
+- [x] save.js run save/continue (versioned) + migration test
+- [x] UI: stage HUD chip + mastery card, weekly review modal (GSAP reveal), online shop sheet, list-in-shop action, market card
+- [x] admin: js/admin-help.js (details per knob: what, min, default, max) attached to the verbatim panel; actions Master current stage, Unlock expert; metrics weeksRepeated, revenueByStage
+- [x] tests: mastery, shop, save, bot (idle can't master week 1; random < scripted); verify + commit
 
 ## Phase 5 — story, tutorial, free play
 - [ ] story.js (mentor + forum guru), speech bubbles with ids

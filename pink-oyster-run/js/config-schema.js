@@ -3,7 +3,6 @@ export const CONFIG_SCHEMA = {
   time: {
     secondsPerDay: { value: 180, min: 30, max: 600, step: 10, note: 'Real seconds per game day at 1× playback. Brief: ~3 minutes.' },
     bioDaysPerGameDay: { value: 2.5, min: 1, max: 5, step: 0.25, note: 'Real-world growing days that pass per game day (compressed biology). UI still shows real durations.' },
-    seasonWeeks: { value: 12, min: 2, max: 20, step: 1, restart: true, note: 'Weeks (5 game days each) until the closing market' },
   },
   growth: {
     growthScale: { value: 1, min: 0.25, max: 3, step: 0.05, note: 'Multiplies every species duration (colonization, pinning, fruiting, rest). <1 = faster.' },
@@ -21,12 +20,18 @@ export const CONFIG_SCHEMA = {
     priceFresh: { value: 14, min: 6, max: 30, step: 0.5, note: '$/lb fresh at market. Research: oysters ~$8–12/lb, specialty colors higher (low confidence).' },
     priceDried: { value: 8, min: 2, max: 30, step: 0.5, note: '$ per fresh-lb once dried (~10:1 weight loss). Keep below fresh.' },
     shelfLife: { value: 2.5, min: 1, max: 7, step: 0.25, note: 'Real days fresh pinks last (real: 1–3; they dislike the fridge)' },
-    marketEvery: { value: 2, min: 1, max: 5, step: 1, note: 'Game days between market days' },
+    marketEvery: { value: 2, min: 1, max: 5, step: 1, note: 'Game days between farmers-market days (markets open with the fruiting stage)' },
     heaterCost: { value: 1, min: 0, max: 10, step: 0.25, note: '$ per game day per heater step (small thermostat heater in a closed room)' },
-    targetProfit: { value: 300, min: 50, max: 3000, step: 25, note: 'Season profit that earns the top rank' },
+    boothFee: { value: 25, min: 0, max: 100, step: 1, note: 'Farmers-market booth fee, paid only on market days you bring product' },
   },
   shop: {
     priceScale: { value: 1, min: 0.25, max: 3, step: 0.05, note: 'Multiplies every equipment price (approximate US retail)' },
+    demand: { value: 1, min: 0.1, max: 5, step: 0.1, note: 'Online sales per game day per listed product at its base price and 50 reputation' },
+    elasticity: { value: 2, min: 0, max: 6, step: 0.25, note: 'How sharply sales fall as you price above base (and rise below it)' },
+    stageMult: { value: 1.25, min: 1, max: 2, step: 0.05, note: 'Base price multiplier per later stage (plates → jars → kits)' },
+    startReputation: { value: 50, min: 10, max: 100, step: 5, note: 'Starting shop reputation (0–100); also where it slowly recovers to' },
+    refundHit: { value: 8, min: 0, max: 30, step: 1, note: 'Reputation lost per refund (contaminated item shipped)' },
+    recovery: { value: 0.5, min: 0, max: 5, step: 0.25, note: 'Reputation regained per game day while below the start value' },
   },
   equipment: {
     cookerDays: { value: 1, min: 0.25, max: 3, step: 0.25, note: 'Real days per cooker cycle incl. cooling' },
@@ -38,7 +43,7 @@ export const CONFIG_SCHEMA = {
     coldSnapChance: { value: 0.04, min: 0, max: 0.3, step: 0.01, note: 'Chance per game day of a forecast cold snap (hits the garage hard, the house a little)' },
   },
   progression: {
-    unlockPace: { value: 1, min: 1, max: 3, step: 1, restart: true, note: 'Weeks between new systems (plates → jars → bags → grow room). Slow start.' },
+    unitsScale: { value: 1, min: 0.25, max: 3, step: 0.25, note: 'Multiplies the good units each stage needs after its checklist' },
   },
   difficulty: {
     relaxedCash: { value: 2500, min: 100, max: 10000, step: 100, note: 'Starting cash, Relaxed' },
@@ -59,7 +64,7 @@ export const CONFIG_SCHEMA = {
     god: { value: false, note: 'No damage: no mold, no rot' },
     debug: { value: false, note: 'Shows hidden mold, hazards and timers on each shelf' },
     juice: { value: true, note: 'Off = grey-box test (no sounds, floaters, pulses)' },
-    startLevel: { value: 0, min: 0, max: 8, step: 1, restart: true, note: 'Week to start in (skips the slow start for testing)' },
+    startLevel: { value: 0, min: 0, max: 8, step: 1, restart: true, note: 'Game week to start in (time only; use the Master current stage action to skip stages)' },
   },
 };
 

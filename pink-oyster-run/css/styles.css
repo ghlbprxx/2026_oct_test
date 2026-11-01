@@ -289,3 +289,24 @@ td code{font-family:var(--mono);font-size:12px}
 @media (prefers-reduced-motion:reduce){.mist,.steam{display:none}}
 .fly-ghost{display:block}
 .fly-ghost img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;pointer-events:none}
+/* ===== phase 4: mastery, online shop, review ===== */
+.checks{list-style:none;margin:0;padding:0;display:grid;gap:6px;font-size:14px}
+.checks li{display:grid;grid-template-columns:22px minmax(0,1fr);gap:8px;align-items:start}
+.checks li.done{color:var(--muted)}
+.tick{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--line);display:grid;place-items:center;font-size:11px}
+.tick.on{background:var(--good);border-color:var(--good);color:var(--panel)}
+.mini.dim{opacity:.4}
+.mini.rep i{background:var(--good)}
+.prod{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line);font-size:14px}
+.prod b{font-family:var(--display)} .prod small{display:block;color:var(--muted);font-size:12px}
+.prod.locked{opacity:.6}
+.pricer{display:flex;align-items:center;gap:4px}
+.pricer .ib{width:30px;height:30px;font-size:16px}
+.pricer .mono{min-width:52px;text-align:center}
+.mentor{display:grid;grid-template-columns:72px minmax(0,1fr);gap:12px;align-items:center;margin:4px 0 8px}
+.mentor img{width:72px;height:72px;object-fit:contain;border-radius:50%;background:var(--pink-soft)}
+.bubble{position:relative;background:var(--bg);border:1.5px solid var(--line);border-radius:14px;padding:10px 12px;font-family:var(--display);font-size:16px}
+.bubble::before{content:"";position:absolute;left:-9px;top:50%;width:14px;height:14px;background:var(--bg);border-left:1.5px solid var(--line);border-bottom:1.5px solid var(--line);transform:translateY(-50%) rotate(45deg)}
+.verdict-h.ok{color:var(--good)} .verdict-h.again{color:var(--warn)}
+.stagechip b{font-size:15px}
+.rc{margin-top:10px}

@@ -15,7 +15,8 @@ export function gameDaysFor(rawSeconds, paused = false, speed = 1) {
 export const toBio = gameDays => gameDays * C.time.bioDaysPerGameDay;
 /** Game days needed for `bioDays` of real-world growth. */
 export const toGame = bioDays => bioDays / C.time.bioDaysPerGameDay;
-export const seasonDays = () => C.time.seasonWeeks * RULES.daysPerWeek;
+/** Length of the weather year (outdoor temperatures drift over it, then hold). */
+export const seasonDays = () => RULES.weatherWeeks * RULES.daysPerWeek;
 export const weekOf = day => Math.floor(day / RULES.daysPerWeek);
 export const dayOfWeek = day => Math.floor(day % RULES.daysPerWeek) + 1;
 /** Next/previous playback speed. */

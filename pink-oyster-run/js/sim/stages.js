@@ -1,18 +1,16 @@
-// Interim stage ladder (Phase 2): systems unlock by week for a slow start. Phase 4 replaces this with mastery.
-// Also difficulty rules, which every other module asks through here.
+// Stage ladder + difficulty rules. g.stage is the index (in content/stages.js STAGES) of the stage being learned;
+// everything a stage opens stays open. Mastery itself is decided in mastery.js at each weekly review.
 import { C } from './cfg.js';
 import { weekOf } from './clock.js';
 import { RULES } from './rules.js';
+import { STAGES, OPENS } from '../content/stages.js';
 
 export const MODES = ['relaxed', 'normal', 'hardcore'];
-/** Week each system unlocks: plates from week 0; one new system every progression.unlockPace weeks after week 1. */
-export function unlockWeek(what) {
-  const p = C.progression.unlockPace;
-  return { plate: 0, jar: 1 + p, bag: 1 + 2 * p, room: 1 + 3 * p }[what];
-}
-export const unlocked = (g, what) => weekOf(g.day) >= unlockWeek(what);
-/** What becomes available at the start of `week` (for the week-intro card). */
-export const newIn = week => ['jar', 'bag', 'room'].filter(w => unlockWeek(w) === week);
+export const unlocked = (g, what) => (g.stage ?? 0) >= (OPENS[what] ?? 0);
+export const currentStage = g => STAGES[Math.min(g.stage, STAGES.length - 1)];
+export const stageNameFor = what => STAGES[OPENS[what] ?? 0].name.toLowerCase();
+/** Systems that open when stage index s begins (for the intro card). */
+export const opensAt = s => Object.keys(OPENS).filter(k => OPENS[k] === s && k !== 'market');
 
 export function startCash(mode) { const D = C.difficulty; return mode === 'relaxed' ? D.relaxedCash : mode === 'hardcore' ? D.hardcoreCash : D.normalCash; }
 /** Contamination multiplier from difficulty: grace weeks first (Hardcore: week 0 only), then mode. */

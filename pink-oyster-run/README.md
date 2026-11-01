@@ -49,14 +49,19 @@ Tap a vessel to see its zone's verdict and move it (moves animate between rooms)
 
 **The shop** (approximate US prices): still-air box $15 (DIY tote), flow hood $900 (week 6+), pressure cooker 16 qt $100 (7 jars) or 23 qt $150 (7 jars or 2 grow bags; needed to sterilize bags), scale $25, impulse sealer $60, grow tent $90, heat mat $30, humidifier $45, hygrometer $12, CO₂ monitor $120, dehydrator $60. Each item changes what you can do or your odds; none is a flat "+X%".
 
-| Week | What opens | What it teaches |
-|---|---|---|
-| 0–1 | Agar plates | Cleanliness: open counter vs still-air box. MEA vs super agar (fast, hides mold) vs CMA (slow, shows mold). |
-| 2 | Grain jars (needs a cooker) | Grain must be pressure-cooked. Shake at about a third. A moldy (or secretly moldy) plate carries mold downstream. |
-| 3 | Substrate bags | Richer mixes yield more, mold more, colonize slower. Rich mixes need sterilizing (23 qt); plain straw prefers a hot bath. |
-| 4+ | Grow tent and market days | Pinks won't pin below ~64°F; stale air makes leggy clusters; dry air cracks caps. Fresh pinks last 1–3 days. |
+**Stages, one per week (or more).** Each week ends with a **weekly review**: money in and out, clean rate, good plates/jars/bags, harvest and rot, mold causes with lesson cards, 2–3 tips, a word from the mentor, and a verdict. A stage is mastered in two steps, in order: the mentor's checklist, then a number of good units (counted only after the list is done). Not mastered means you repeat the week, with no penalty beyond time and costs. Everything earlier keeps running as your pipeline.
 
-The season ends after 12 weeks. It's ranked by operating profit (gear is equipment you keep, so it isn't counted against you).
+| Stage | Checklist (then units) | Opens | Sells online once mastered |
+|---|---|---|---|
+| Agar | 3 plates poured in a still-air box; a plate colonized in the closet (then 3 clean plates) | plates | Agar culture plates |
+| Grain spawn | 2 jars pressure-cooked; a jar spawned from a clean plate; a jar shaken (then 2 clean jars) | grain jars | Grain spawn |
+| Substrate | 2 bags prepped the right way; a bag spawned from a clean jar (then 2 clean bags) | substrate bags | Colonized grow kits |
+| Fruiting | a block moved into the tent; a real day at 70–85°F and 85–95% RH (then 2 good peak harvests) | grow tent, farmers market | — |
+| Harvest & market | sell fresh at a market; dehydrate a surplus (then 6 lb sold fresh) | — | Dried pinks |
+
+**Online shop:** list a colonized plate, jar or kit from its spot, set the price with − / +, and it sells over time. Higher prices mean fewer sales; reputation (0–100) multiplies demand. Shipping a hidden infection means a refund and a 1★ review; reputation slowly recovers. **Farmers market:** every 2 game days once fruiting opens. Book the booth ($25, paid only when you bring product). Fresh sells only here, up to 20 lb a day; dried sells here too.
+
+The run autosaves at every weekly review and when you leave the tab; **Continue** on the title screen picks it up.
 
 **Controls:** tap or click a spot. Keys: `1`–`9`, `0`, `-`, `=` spots (left to right, top to bottom on phones) · `Space` pause · `[` `]` slower/faster · `S` shop · `H` heat mat · `D` dehydrate · `N` notebook · `M` mute · `` ` `` admin panel.
 
@@ -94,7 +99,7 @@ node assets/tools/gen-images.mjs --write-md
 
 ## Tuning (admin panel)
 
-Press `` ` `` or tap ⚙. The values are live, grouped by system, and persist in your browser. **Copy report** gives you the config diff plus play metrics (runs, profit, what killed vessels). Set `ADMIN_ENABLED = false` in `index.html` for a release build.
+Press `` ` `` or tap ⚙. Every knob has an ⓘ line under it: click it for what the knob does and what happens at its minimum, default and maximum (or use **Help: open all**). The values are live, grouped by system, and persist in your browser. **Copy report** gives you the config diff plus play metrics (runs, profit, what killed vessels). Set `ADMIN_ENABLED = false` in `index.html` for a release build.
 
 Tune these first:
 

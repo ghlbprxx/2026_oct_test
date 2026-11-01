@@ -2,13 +2,17 @@
 import { createApp } from 'vue';
 import { CONFIG, ISF } from './config.js';
 import { setConfig } from './sim/cfg.js';
+import { attachAdminHelp } from './admin-help.js';
+import * as equip from './sim/equipment.js';
 import { on } from './sim/events.js';
 import * as sim from './sim/game.js';
 import { gameDaysFor } from './sim/clock.js';
 import { allEnvs } from './sim/zones.js';
 import { canShake } from './sim/growth.js';
 import { ui, S, persist, showModal, nextModal } from './ui/state.js';
-import { App, start, tapSlot, setHeater, toggleMute, dryAll, weekModal, speedUp, speedDown, openShop, SPOT_KEYS } from './ui/app.js';
+import { App, start, tapSlot, setHeater, toggleMute, dryAll, stageModal, speedUp, speedDown, openShop, SPOT_KEYS, autosave, savedSummary, masterNow } from './ui/app.js';
+import { clearRun } from './save.js';
+import { persist as persistProfile } from './ui/state.js';
 import { unlocked } from './sim/stages.js';
 import { loadManifest, manifest } from './images.js';
 import { play, unlock, setMuted } from './audio.js';
@@ -18,6 +22,7 @@ import { zoneOf } from './sim/zones.js';
 import { LESSONS } from './content/lessons.js';
 
 setConfig(CONFIG);
+attachAdminHelp();
 setMuted(ui.muted);
 loadManifest();
 
@@ -36,7 +41,15 @@ on((type, d) => {
     case 'track': ISF.track(d.type, d.data); break;
     case 'quiz': showModal({ type: 'quiz', m: d.m, ans: null }); break;
     case 'coffee': showModal({ type: 'coffee' }); break;
-    case 'week': { const m = weekModal(d.week); if (m) showModal(m); else toast(`Week ${d.week} begins.`); break; }
+    case 'review': {
+      showModal({ type: 'review', r: d }); play(d.mastered ? 'good' : 'tap');
+      ISF.track('runEnd', { kind: 'week', week: d.week, stage: d.stage, mastered: d.mastered, net: Math.round(d.money.net), cleanRate: d.cleanRate == null ? null : Math.round(d.cleanRate * 100),
+        revenueByProduct: Object.fromEntries(Object.entries(S.g.stats.byProduct || {}).map(([k, v]) => [k, Math.round(v)])), weeksRepeated: S.g.weeksRepeated, rep: Math.round(S.g.rep) });
+      autosave(); break;
+    }
+    case 'stage': { const m = stageModal(d.stage); if (m) showModal(m); break; }
+    case 'species': toast('Pink oysters mastered: plate to market table!', 'good'); break;
+    case 'listed': play('build'); break;
     case 'lesson': {
       const first = !ui.lessons[d.id];
       if (first) { ui.lessons[d.id] = true; persist(); }
@@ -47,14 +60,16 @@ on((type, d) => {
     case 'end': {
       ui.newBest = ui.best == null || d.profit > ui.best;
       if (ui.newBest) { ui.best = d.profit; persist(); }
+      clearRun(); ui.saved = null;
       ui.sheet = null; ui.modal = null; ui.modalQueue = []; ui.paused = false; ui.screen = 'report'; window.scrollTo({ top: 0 });
       break;
     }
   }
 });
 
+ui.saved = savedSummary();
 createApp(App).mount('#app');
-watch(() => ui.modal, m => { if (m && m.type === 'week') revealCard(); });
+watch(() => ui.modal, m => { if (m && (m.type === 'week' || m.type === 'review')) revealCard(); });
 watch(() => ui.screen, s => { if (s === 'play') enterHouse(); });
 window.__porBooted = true;
 
@@ -70,7 +85,8 @@ requestAnimationFrame(frame);
 
 /* ---------- lifecycle + input ---------- */
 const autoPause = () => { if (ui.screen === 'play') ui.autoPaused = true; };
-document.addEventListener('visibilitychange', () => { if (document.hidden) autoPause(); });
+document.addEventListener('visibilitychange', () => { if (document.hidden) { autoPause(); autosave(); } });
+window.addEventListener('pagehide', autosave);
 window.addEventListener('blur', autoPause);
 window.addEventListener('pointerdown', () => unlock(), { capture: true });
 window.addEventListener('keydown', e => {
@@ -89,9 +105,11 @@ window.addEventListener('keydown', e => {
 /* ---------- admin hooks ---------- */
 ISF.onRestart(() => { if (ui.screen !== 'title') start(); });
 ISF.action('Skip to week end', () => { if (S.g && ui.screen === 'play') { const end = (S.g.week + 1) * 5 - 0.001; while (S.g.day < end && !S.g.over) sim.update(S.g, Math.min(0.05, end - S.g.day)); } });
+ISF.action('Master current stage', () => { masterNow(); toast('Admin: current stage marked ready. It masters at the weekly review (use Skip to week end).'); });
+ISF.action('Unlock expert', () => { ui.expert = true; persistProfile(); toast('Admin: expert mode unlocked (liquid culture arrives in Phase 6).'); });
 ISF.action('Mold on a shelf', () => { const v = S.g && S.g.slots.find(x => x && x.state !== 'lost' && x.contam.onset == null); if (v) { v.contam.onset = S.g.day - 99; v.contam.why = 'luck'; } });
 ISF.action('+$500', () => { if (S.g) S.g.cash += 500; });
 ISF.action('Image check', () => { const miss = manifest.images.filter(m => manifest.status[m.id] !== 'loaded').map(m => m.file); console.table(manifest.images.map(m => ({ id: m.id, file: m.file, status: manifest.status[m.id] }))); toast(`${manifest.images.length - miss.length}/${manifest.images.length} custom images found. Details in the Notebook > Art tab.`); });
 
 // Debug/test handle (devtools, Playwright bots). Not used by the game itself.
-window.POR = { S, ui, CONFIG, ISF, sim, start, allEnvs, canShake, manifest };
+window.POR = { S, ui, CONFIG, ISF, sim: { ...sim, buy: equip.buy }, start, allEnvs, canShake, manifest, masterNow, tapSlot };

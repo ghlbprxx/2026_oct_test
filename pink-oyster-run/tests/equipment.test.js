@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { setup, run } from './helpers.js';
 import { newGame, prepJar, prepBag, pourPlate } from '../js/sim/game.js';
-import { buy, canBuy, priceOf, workspace } from '../js/sim/shop.js';
+import { buy, canBuy, priceOf, workspace } from '../js/sim/equipment.js';
 import { baseHazard } from '../js/sim/contamination.js';
 import { spotsIn } from '../js/sim/zones.js';
 import { mk } from '../js/sim/growth.js';
@@ -13,9 +13,9 @@ test('buying spends cash once and respects week and prerequisites', () => {
   const g = newGame(), cash = g.cash;
   assert.equal(buy(g, 'sab'), true); assert.equal(g.cash, cash - priceOf('sab'));
   assert.equal(buy(g, 'sab'), false, 'already owned');
-  assert.equal(canBuy(g, 'tent').ok, false, 'tent is sold from the fruiting week');
+  assert.equal(canBuy(g, 'tent').ok, false, 'tent is sold from the fruiting stage');
   assert.equal(canBuy(g, 'heatmat').ok, false, 'needs a tent');
-  g.day = 20; assert.equal(buy(g, 'tent'), true); assert.equal(buy(g, 'heatmat'), true);
+  g.stage = 3; assert.equal(buy(g, 'tent'), true); assert.equal(buy(g, 'heatmat'), true);
   g.cash = 5; assert.equal(buy(g, 'dehydrator'), false, 'not enough cash');
 });
 test('workspace: flow hood beats still-air box beats open counter', () => {
@@ -29,7 +29,7 @@ test('workspace: flow hood beats still-air box beats open counter', () => {
 });
 test('cookers: no cooker, no sterile grain; the 16 qt cannot take bags; the 23 qt can', () => {
   setup();
-  const g = newGame(); g.day = 15; const [a, b] = spotsIn('closet');
+  const g = newGame(); g.stage = 2; const [a, b] = spotsIn('closet');
   assert.equal(prepJar(g, a, 'ster'), false);
   buy(g, 'cooker16'); assert.equal(prepJar(g, a, 'ster'), true);
   assert.equal(prepBag(g, b, 'masters', 'ster'), false, '16 qt is too short for bags');
@@ -37,7 +37,7 @@ test('cookers: no cooker, no sterile grain; the 16 qt cannot take bags; the 23 q
 });
 test('the 23 qt loads 7 jars or 2 bags per cycle', async () => {
   const C = setup(1, c => { c.dev.god = true; return c; });
-  const g = newGame(); g.day = 15; g.cash = 1e4; buy(g, 'cooker23');
+  const g = newGame(); g.stage = 2; g.cash = 1e4; buy(g, 'cooker23');
   g.slots = g.slots.map(() => null);
   for (let k = 0; k < 9; k++) g.slots[k] = mk(g, 'jar', { prep: 'ster', state: 'queued' });
   g.queue = g.slots.filter(Boolean).map(v => v.id);
@@ -51,7 +51,7 @@ test('the 23 qt loads 7 jars or 2 bags per cycle', async () => {
 });
 test('a scale and an impulse sealer lower mold odds on what you prep after buying them', () => {
   setup();
-  const env = { temp: 72, rh: 50, dirt: 1 }, g = newGame(); g.day = 15; g.cash = 1e4; buy(g, 'cooker23');
+  const env = { temp: 72, rh: 50, dirt: 1 }, g = newGame(); g.stage = 2; g.cash = 1e4; buy(g, 'cooker23');
   const [a, b] = spotsIn('closet');
   prepBag(g, a, 'masters', 'ster'); buy(g, 'scale'); buy(g, 'sealer'); prepBag(g, b, 'masters', 'ster');
   const plain = { ...g.slots[a], state: 'colonizing' }, geared = { ...g.slots[b], state: 'colonizing' };
