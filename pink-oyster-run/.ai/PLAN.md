@@ -20,7 +20,8 @@
 
 ## Phase 2 — time, realism, difficulty, slow start
 - [ ] clock: playback 0/0.5/1/2/4/8×, bioDaysPerGameDay, secondsPerDay range 30–600
-- [ ] research + fix numbers (prices, colonization per recipe, jars, rest, shelf life)
+- [x] research numbers (see DESIGN.md › Researched numbers)
+- [ ] apply researched numbers to CONFIG (prices, colonization per recipe, jars, rest, shelf life)
 - [ ] difficulty picker (Relaxed/Normal/Hardcore) in CONFIG
 - [ ] remove stocked bench; Week 0/1 slow start (one zone, one vessel type, cleanliness only)
 - [ ] real-world durations in UI + notebook

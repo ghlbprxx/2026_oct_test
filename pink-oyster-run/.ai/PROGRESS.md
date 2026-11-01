@@ -18,3 +18,10 @@
 - Verified: npm test 19/19 (clock, environment, contamination, growth, save + migration, manifest, headless bot: idle ≤ 0, good > sloppy). Playwright: title → play → report, admin panel, mobile 390px, no console errors; missing images.json → placeholders, no crash; file:// → message. Screens match the single-file build.
 - Not verified: real CDN load of jsDelivr Vue ESM (sandbox blocks CDNs; tested with the identical npm file).
 - Next step: Phase 2 task 1 — clock playback speeds (0/0.5/1/2/4/8×), bioDaysPerGameDay, secondsPerDay 30–600; then research real numbers (web search) before changing CONFIG defaults.
+
+## 2026-11-01 02:05 UTC — Phase 2 prep: number research (no code change)
+- Changed: DESIGN.md gained "Researched numbers" (prices, canner capacity, SAB/hood cost and effect, wine cap timing) with confidence levels and proposed knob defaults.
+- Flag for the user: Presto 16-qt holds 7 quart jars per HealthyCanning, not ~4 as the brief says; price data for pinks/lion's mane is low-confidence.
+- Files: .ai/DESIGN.md, .ai/PLAN.md, .ai/PROGRESS.md
+- Verified: n/a (research only).
+- Next step: Phase 2 task 1 — js/sim/clock.js playback speeds (0, 0.5, 1, 2, 4, 8×) + time.bioDaysPerGameDay (2.5) + secondsPerDay 180 (30–600); growth durations in CONFIG become real bio days; HUD playback bar with keys `[` `]`; update tests/clock.test.js.
