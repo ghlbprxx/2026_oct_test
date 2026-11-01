@@ -24,8 +24,9 @@ Or use `python3 -m http.server 8000` and open `http://localhost:8000`. You need 
 | `js/main.js` | Boot, sim-event → UI wiring, game loop, keyboard, admin hooks |
 | `js/config-schema.js`, `js/config.js` | Tuning knobs; the ISF admin panel (template verbatim) |
 | `js/sim/` | Pure simulation (no DOM, no Vue): clock, stages, zones, shop, environment, growth, contamination, economy, equipment (cookers), game |
-| `js/content/` | Data: field guide, myths, lessons, species biology, zones, equipment, week cards |
-| `js/ui/` | Vue template, root component, view helpers |
+| `js/content/` | Data: field guide, myths, lessons, species biology, zones, equipment, week cards, story script (`story.js`), tutorial steps (`tutorial.js`) |
+| `js/director.js` | Pure story director: which scene a sim event triggers in story runs |
+| `js/ui/` | Vue template, root component, view helpers, tutorial coach (`coach.js`) |
 | `js/art.js`, `js/images.js` | SVG placeholders; image-manifest loader |
 | `js/audio.js`, `js/fx.js`, `js/save.js` | Synth SFX; toasts, floats and GSAP motion; versioned profile save |
 | `assets/tools/` | `gen-images.mjs` + `image.config.json`: optional image generation from images.json |
@@ -33,7 +34,15 @@ Or use `python3 -m http.server 8000` and open `http://localhost:8000`. You need 
 
 ## How it plays
 
-**New game:** choose a play style, then a difficulty.
+**New game:** choose a mode, a play style, then a difficulty.
+
+Modes:
+- **Tutorial** (default until you finish it once): story mode plus a walkthrough of week 0. Time stays paused while each step highlights a real part of the screen: the house zones, buying a still-air box, pouring a plate, moving it to the closet, the speed controls, the notebook and the mastery card. Steps that ask you to do something finish when you do it. **Skip tutorial** is always available.
+- **Story:** short scenes (up to 3 speech-bubble lines) with your neighbor Dr. Ines Marlow, a retired mycologist, and u/SporeLord_9000, a forum guru who is confidently wrong about half the time. Scenes play at the start, at each new stage, at the first visible mold, before a cold snap, after the coffee-grounds offer, and when you master the species. On market days the myth quiz becomes a guru post: decide whether he's right, and the mentor reacts (grudgingly, when he is).
+- **Free play:** the same systems with no script; a market customer asks the myth questions.
+- **Expert:** unlocks when you master your first species. For now it's free play without the "Next:" coaching line; the liquid-culture stage arrives with Phase 6.
+
+Every story line has a stable id (`mentor_…`, `guru_…`, `guru_claim_myth_NN`) for the voice manifest planned in Phase 7.
 
 - **Basic** (default, quick play): each choice shows the recommended option first ("Show all options" reveals the rest), a one-tap **Set for pinks** climate button, fixed online prices, the market books itself only when your haul covers the booth fee, essential gear in the shop (the rest under "More gear"), no admin panel, and play starts at 4×.
 - **Advanced:** every option: all agar media and preps, price controls, market booking (Auto / Always / Skip), all gear, fine climate sliders, and the admin panel (⚙), which opens on 15 essential knobs with **Show all knobs** for the rest.
@@ -145,7 +154,7 @@ Tune these first:
 npm test
 ```
 
-Run it from this folder (Node 18+, no dependencies). It covers playback speeds and compressed time, real-world colonization ranges per recipe, contamination (pasteurized vs sterilized, still-air box, difficulty modes, salvage), the week-by-week unlocks, save/migration, the image manifest, and a headless bot check (idle play earns nothing; careful play beats sloppy play).
+Run it from this folder (Node 18+, no dependencies). It covers playback speeds and compressed time, real-world colonization ranges per recipe, contamination (pasteurized vs sterilized, still-air box, difficulty modes, salvage), the stage ladder, save/migration, the image manifest, the story script rules (≤3 lines per scene, unique voice ids, required story beats), the story director, tutorial steps completing from real actions, and headless economy playtests on every difficulty.
 
 ## Design notes
 

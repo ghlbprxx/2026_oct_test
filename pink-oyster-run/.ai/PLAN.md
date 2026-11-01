@@ -59,9 +59,10 @@ New session? Start with `.ai/HANDOFF.md`.
 - [x] verify + commit
 
 ## Phase 5 — story, tutorial, free play
-- [ ] story.js (mentor + forum guru), speech bubbles with ids
-- [ ] tutorial.js Week 0 with highlights
-- [ ] mode select (Story / Free play / Tutorial / Expert)
+- [x] story.js (mentor + forum guru), speech bubbles with ids; director.js; guru takes over the market quiz
+- [x] tutorial.js Week 0 with highlights (ui/coach.js)
+- [x] mode select (Tutorial / Story / Free play / Expert); expert unlocks on first species win
+- [x] verify: tests 65/65, playtest unchanged, Playwright desktop + 390px, Basic + Advanced, free play + expert
 
 ## Phase 6 — species + expert + automation
 - [ ] lion's mane

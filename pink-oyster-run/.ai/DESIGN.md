@@ -29,11 +29,11 @@ Fantasy: "I'm becoming a real home grower." Pillars: **Mastery**, **Discovery**,
 
 ## Story & mentors
 [target] Retired-mycologist neighbor (blunt, dramatic about mold, secretly proud) + forum guru (confidently wrong ~half the time; source of myth quizzes). ≤3 lines per scene, speech bubbles, every line has a voice id.
-[now] None (market customers ask myth questions).
+[now] content/story.js + director.js: mentor Dr. Ines Marlow + guru u/SporeLord_9000; ≤3 lines per scene, dialogue bar one line at a time, every line id'd. Scenes: intro, stage_grain/substrate/fruiting/harvest (fruiting includes the golden-oyster invasive aside), first_mold, cold_snap (sim emits `forecast`), coffee_yes/no, species_done (arborist wood chips teaser for wine cap). Market quiz in story runs = guru post (guru claims the statement; right iff fact, 6/13), mentor reacts. Free play/expert: no scenes, customer quiz.
 
 ## Tutorial
 [target] Week 0, skippable, paused steps highlighting real UI: zones, pour a plate in the SAB, read the room, playback controls, notebook.
-[now] "Next:" coaching line + week-intro cards; empty shelves at start.
+[now] Tutorial mode: content/tutorial.js (7 steps: house, sab, pour, room, speed, notebook, mastery) + ui/coach.js (highlight ring on a real element, card placed on the free side, action steps auto-advance from game state, clock held via ui.tut). Ends by starting the clock in week 0 (there is no separate week before agar). "Next:" line + stage intro cards still show in every mode except Expert (no Next: line).
 
 ## UI / UX & feel
 [now] Vue 3 single page; shelf grid; side panel; action sheet; notebook (guide, lessons, cheat sheet, art); toasts/floats; admin panel.

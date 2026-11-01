@@ -10,7 +10,7 @@ import { gameDaysFor } from './sim/clock.js';
 import { allEnvs } from './sim/zones.js';
 import { canShake } from './sim/growth.js';
 import { ui, S, persist, showModal, nextModal } from './ui/state.js';
-import { App, start, tapSlot, setHeater, toggleMute, dryAll, stageModal, speedUp, speedDown, openShop, SPOT_KEYS, autosave, savedSummary, masterNow } from './ui/app.js';
+import { App, showScene, start, tapSlot, setHeater, toggleMute, dryAll, stageModal, speedUp, speedDown, openShop, SPOT_KEYS, autosave, savedSummary, masterNow } from './ui/app.js';
 import { clearRun } from './save.js';
 import { persist as persistProfile } from './ui/state.js';
 import { unlocked } from './sim/stages.js';
@@ -20,6 +20,8 @@ import { toast, float, burst, wobble, pop, placed, moved, pluck, zoneAlarm, cash
 import { watch } from 'vue';
 import { zoneOf } from './sim/zones.js';
 import { LESSONS } from './content/lessons.js';
+import { scene, sceneKeyFor, isStory, guruQuiz } from './director.js';
+import { tickCoach } from './ui/coach.js';
 
 setConfig(CONFIG);
 attachAdminHelp();
@@ -29,6 +31,10 @@ loadManifest();
 
 /* ---------- sim events -> feedback ---------- */
 on((type, d) => {
+  if (S.g && isStory(S.g)) { // story scenes ride on sim events; the scene shows before that event's own modal
+    const k = sceneKeyFor(type, d);
+    if (k && type !== 'species') showScene(scene(S.g, k));
+  }
   switch (type) {
     case 'toast': toast(d.text, d.c); break;
     case 'sfx': play(d.name); break;
@@ -40,7 +46,7 @@ on((type, d) => {
     case 'cash': cash(d.delta); break;
     case 'bought': bought(d.id); break;
     case 'track': ISF.track(d.type, d.data); break;
-    case 'quiz': showModal({ type: 'quiz', m: d.m, ans: null }); break;
+    case 'quiz': showModal({ type: 'quiz', m: d.m, ans: null, guru: isStory(S.g) ? guruQuiz(d.m) : null }); break;
     case 'coffee': showModal({ type: 'coffee' }); break;
     case 'review': {
       showModal({ type: 'review', r: d }); play(d.mastered ? 'good' : 'tap');
@@ -49,7 +55,11 @@ on((type, d) => {
       autosave(); break;
     }
     case 'stage': { const m = stageModal(d.stage); if (m) showModal(m); break; }
-    case 'species': toast('Pink oysters mastered: plate to market table!', 'good'); break;
+    case 'species': {
+      toast('Pink oysters mastered: plate to market table!', 'good');
+      if (!ui.expert) { ui.expert = true; persist(); toast('Expert mode unlocked for your next run.', 'good'); }
+      showScene(scene(S.g, 'species_done')); break;
+    }
     case 'listed': play('build'); break;
     case 'lesson': {
       const first = !ui.lessons[d.id];
@@ -75,11 +85,12 @@ watch(() => ui.screen, s => { if (s === 'play') enterHouse(); });
 window.__porBooted = true;
 
 /* ---------- loop ---------- */
-const menuPause = () => ui.notebook || !!ui.modal || !!ui.sheet || ui.shop;
+const menuPause = () => ui.notebook || !!ui.modal || !!ui.sheet || ui.shop || !!ui.tut; // the tutorial holds the clock
 let last = performance.now();
 function frame(now) {
   const raw = (now - last) / 1000; last = now;
   if (ui.screen === 'play' && S.g) sim.update(S.g, gameDaysFor(raw, ui.paused || ui.autoPaused || menuPause(), ui.speed));
+  if (ui.tut || ui.coach) tickCoach();
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
@@ -93,7 +104,7 @@ window.addEventListener('pointerdown', () => unlock(), { capture: true });
 window.addEventListener('keydown', e => {
   if (e.metaKey || e.ctrlKey || e.altKey) return;
   const tag = (document.activeElement && document.activeElement.tagName) || '';
-  if (e.key === 'Escape') { if (ui.sheet) ui.sheet = null; else if (ui.shop) ui.shop = false; else if (ui.notebook) ui.notebook = false; else if (ui.modal && ((ui.modal.type === 'quiz' && ui.modal.ans !== null) || ui.modal.type === 'week')) nextModal(); return; }
+  if (e.key === 'Escape') { if (ui.sheet) ui.sheet = null; else if (ui.shop) ui.shop = false; else if (ui.notebook) ui.notebook = false; else if (ui.modal && ((ui.modal.type === 'quiz' && ui.modal.ans !== null) || ui.modal.type === 'week' || ui.modal.type === 'scene')) nextModal(); return; }
   if (ui.screen !== 'play' || ['INPUT', 'TEXTAREA', 'SELECT'].includes(tag)) return;
   if (e.key === ' ') { e.preventDefault(); if (ui.autoPaused) { ui.autoPaused = false; ui.paused = false; } else ui.paused = !ui.paused; return; }
   if (ui.modal || ui.sheet || ui.notebook || ui.shop) return;
@@ -108,9 +119,10 @@ ISF.onRestart(() => { if (ui.screen !== 'title') start(); });
 ISF.action('Skip to week end', () => { if (S.g && ui.screen === 'play') { const end = (S.g.week + 1) * 5 - 0.001; while (S.g.day < end && !S.g.over) sim.update(S.g, Math.min(0.05, end - S.g.day)); } });
 ISF.action('Master current stage', () => { masterNow(); toast('Admin: current stage marked ready. It masters at the weekly review (use Skip to week end).'); });
 ISF.action('Unlock expert', () => { ui.expert = true; persistProfile(); toast('Admin: expert mode unlocked (liquid culture arrives in Phase 6).'); });
+ISF.action('Reset tutorial', () => { ui.tutorialDone = false; ui.runType = 'tutorial'; persistProfile(); toast('Admin: the tutorial is the default mode again.'); });
 ISF.action('Mold on a shelf', () => { const v = S.g && S.g.slots.find(x => x && x.state !== 'lost' && x.contam.onset == null); if (v) { v.contam.onset = S.g.day - 99; v.contam.why = 'luck'; } });
 ISF.action('+$500', () => { if (S.g) S.g.cash += 500; });
 ISF.action('Image check', () => { const miss = manifest.images.filter(m => manifest.status[m.id] !== 'loaded').map(m => m.file); console.table(manifest.images.map(m => ({ id: m.id, file: m.file, status: manifest.status[m.id] }))); toast(`${manifest.images.length - miss.length}/${manifest.images.length} custom images found. Details in the Notebook > Art tab.`); });
 
 // Debug/test handle (devtools, Playwright bots). Not used by the game itself.
-window.POR = { S, ui, CONFIG, ISF, sim: { ...sim, buy: equip.buy }, start, allEnvs, canShake, manifest, masterNow, tapSlot };
+window.POR = { S, ui, CONFIG, ISF, sim: { ...sim, buy: equip.buy }, start, allEnvs, canShake, manifest, masterNow, tapSlot, showScene };

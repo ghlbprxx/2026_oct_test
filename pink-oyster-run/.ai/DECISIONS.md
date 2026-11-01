@@ -24,3 +24,10 @@
 - 2026-11-01 Money fix via a real purchase, not inflated prices: wire shelf rack (+3 closet spots, $60). Without it, 7 incubation spots couldn't feed both the ladder and online sales.
 - 2026-11-01 Market booking is a sim option (marketMode auto/book/skip); 'auto' books only when the haul is worth 3× the booth fee. Basic play uses auto; Advanced can choose.
 - 2026-11-01 Play style (Basic/Advanced) is UI-only and stored in the profile; the sim is identical, so economy proofs hold for both. Basic hides the ISF panel host; Advanced shows it with an essentials filter (admin-help.js), panel template still verbatim.
+- 2026-11-01 Phase 5: run type (tutorial/story/free/expert) is stored on the run as `g.runType`, but the sim never reads it; scenes come from `js/director.js` reacting to sim events in main.js. Economy proofs therefore cover every mode.
+- 2026-11-01 The only sim change for story is one new event, `forecast` (cold snap tomorrow), so the mentor can warn before it hits. It uses no randomness, so seeded runs are unchanged.
+- 2026-11-01 The guru always claims the statement is true; he is right exactly when it's a fact (6 of 13 myths ≈ 46%), which matches the brief's "confidently wrong about half the time" with no extra data. The quiz reward ($3 tip) and timing are unchanged.
+- 2026-11-01 Week-intro cards (content/weeks.js) stay as practical bullet cards after the story scene instead of becoming voiced mentor lines: they're instructions, not dialogue, and they also serve free play.
+- 2026-11-01 "Week 0 tutorial ends by unlocking week 1" is implemented as "the tutorial ends and the clock starts in week 0 (agar)": the ladder already starts at week 0, and adding a pre-week would shift every economy test.
+- 2026-11-01 Expert has no new content until Phase 6 (liquid culture); it currently means free play without the Next: coaching line. Unlocks automatically on the first species win (profile.expert).
+- 2026-11-01 Run save bumped to v3 (runType, story.seen); v2 saves migrate to free play.

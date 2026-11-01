@@ -5,7 +5,7 @@ export const SAVE_KEY = 'por:profile';
 export const SAVE_VERSION = 1;
 const LEGACY = { best: 'por2-best', lessons: 'por2-lessons', muted: 'por2-mute' };
 
-export const blankProfile = () => ({ v: SAVE_VERSION, best: null, lessons: {}, muted: false, expert: false, playMode: 'basic' });
+export const blankProfile = () => ({ v: SAVE_VERSION, best: null, lessons: {}, muted: false, expert: false, playMode: 'basic', tutorialDone: false });
 
 function read(storage, key) { try { const v = storage.getItem(key); return v == null ? undefined : JSON.parse(v); } catch (e) { return undefined; } }
 
@@ -32,15 +32,16 @@ export function saveProfile(profile, storage = globalThis.localStorage) {
 
 /* ---------- the current run (autosaved at each weekly review and when the tab is hidden) ---------- */
 export const RUN_KEY = 'por:run';
-export const RUN_VERSION = 2; // v1 = phase-3 runs (no stage ladder / online shop fields); v2 = phase 4
+export const RUN_VERSION = 3; // v1 = phase-3 runs (no stage ladder / online shop fields); v2 = phase 4; v3 = phase 5 (runType, story)
 const deep = o => JSON.parse(JSON.stringify(o));
 
 /** Bring an older saved run up to the current shape. Returns null for anything unusable. */
 export function migrateRun(data) {
   if (!data || typeof data !== 'object' || !data.g || typeof data.g !== 'object' || !Array.isArray(data.g.slots)) return null;
   const g = { stage: 0, units: 0, mastered: [], counts: {}, speciesDone: false, weeksRepeated: 0, reviews: [],
-    stock: { plate: [], jar: [], kit: [], dried: [] }, prices: {}, rep: 50, marketMode: 'auto', gear: {}, cookers: [], lots: [], log: [], learned: [], asked: [], ...deep(data.g) };
+    stock: { plate: [], jar: [], kit: [], dried: [] }, prices: {}, rep: 50, runType: 'free', story: { seen: [] }, marketMode: 'auto', gear: {}, cookers: [], lots: [], log: [], learned: [], asked: [], ...deep(data.g) };
   for (const k of ['plate', 'jar', 'kit', 'dried']) if (!Array.isArray(g.stock[k])) g.stock[k] = [];
+  if (!g.story || !Array.isArray(g.story.seen)) g.story = { seen: [] };
   if (!g.weekStart) g.weekStart = deep({ stats: g.stats || {}, counts: g.counts, cash: g.cash, day: g.day });
   return g;
 }

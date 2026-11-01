@@ -1,6 +1,6 @@
 // Root Vue component. Player actions call the pure sim (S.g) and then update UI state.
 import template from './template.js';
-import { ui, S, persist, nextModal } from './state.js';
+import { ui, S, persist, nextModal, showModal } from './state.js';
 import { CONFIG, ISF } from '../config.js';
 import { RULES } from '../sim/rules.js';
 import * as sim from '../sim/game.js';
@@ -30,29 +30,40 @@ import { MYTHS } from '../content/myths.js';
 import { LESSONS, LESSON_IDS } from '../content/lessons.js';
 import { RECIPES, BUYABLE, MEDIA, SPECIES, SUPPLIES } from '../content/species/pink-oyster.js';
 import { WEEK_INTRO } from '../content/weeks.js';
+import { CAST } from '../content/story.js';
+import { TUTORIAL } from '../content/tutorial.js';
+import { isStory, scene } from '../director.js';
+import { startTutorial, finishTutorial, nextStep, tutStep } from './coach.js';
 
 const NB_TABS = [['guide', 'Field guide'], ['lessons', 'Lessons'], ['cheat', 'Cheat sheet'], ['art', 'Art']];
 
 /* ---------- actions shared by the component and keyboard ---------- */
 export function start(mode = (S.g && S.g.mode) || 'normal') {
-  unlock(); S.g = sim.newGame(mode); ui.screen = 'play'; ui.sheet = null; ui.paused = false; ui.autoPaused = false; ui.newBest = false;
-  ui.modalQueue = []; ui.modal = stageModal(0, true);
+  const runType = ui.runType === 'expert' && !ui.expert ? 'free' : ui.runType;
+  unlock(); S.g = sim.newGame(mode, runType); ui.screen = 'play'; ui.sheet = null; ui.paused = false; ui.autoPaused = false; ui.newBest = false;
+  ui.modalQueue = []; ui.modal = null; ui.tut = null; ui.coach = null;
+  showScene(scene(S.g, 'intro')); showModal(stageModal(0, true));
+  if (runType === 'tutorial') startTutorial();
   if (ui.playMode !== 'advanced') ui.speed = 4; // quick play
   saveRun(S.g); ui.saved = savedSummary();
-  ISF.track('runStart', { mode, playMode: ui.playMode }); window.scrollTo({ top: 0 });
+  ISF.track('runStart', { mode, playMode: ui.playMode, runType }); window.scrollTo({ top: 0 });
 }
 /** Resume the autosaved run. */
 export function resume() {
   const g = loadRun(); if (!g) return false;
-  unlock(); S.g = g; ui.screen = 'play'; ui.sheet = null; ui.modal = null; ui.modalQueue = []; ui.paused = true; ui.autoPaused = false;
+  unlock(); S.g = g; ui.screen = 'play'; ui.sheet = null; ui.modal = null; ui.modalQueue = []; ui.paused = true; ui.autoPaused = false; ui.tut = null; ui.coach = null;
   window.scrollTo({ top: 0 }); return true;
 }
 /** Basic (quick play) or Advanced (every option + admin panel). UI only: the simulation is identical. */
 export function setPlayMode(m) { ui.playMode = m; persist(); setAdminVisible(m === 'advanced'); play('tap'); }
+/** Story/tutorial/free/expert: picked on the setup screen, stored per run (g.runType). */
+export function setRunType(t) { if (t === 'expert' && !ui.expert) return; ui.runType = t; play('tap'); }
+/** Queue a story scene as a dialogue modal (one line at a time). */
+export function showScene(s) { if (s && s.lines.length) showModal({ type: 'scene', key: s.key, lines: s.lines, i: 0 }); }
 export const ESSENTIAL_GEAR = ['sab', 'cooker23', 'rack', 'hygrometer', 'tent', 'heatmat', 'humidifier', 'dehydrator'];
 export function savedSummary() {
   const g = loadRun(); if (!g || g.over) return null;
-  return { week: g.week, stage: STAGES[Math.min(g.stage, STAGES.length - 1)].name, mode: g.mode, cash: g.cash };
+  return { week: g.week, stage: STAGES[Math.min(g.stage, STAGES.length - 1)].name, mode: g.mode, cash: g.cash, runType: g.runType || 'free' };
 }
 export function autosave() { if (S.g && ui.screen === 'play' && !S.g.over) { saveRun(S.g); ui.saved = savedSummary(); } }
 /** Intro card for a stage: what it teaches and what it opens. */
@@ -89,7 +100,7 @@ export function dryAll() { return eco.dryAll(S.g); }
 export const App = {
   template,
   data() {
-    return { ui, S, CONFIG, manifest, RULES, GUIDE, NUMS, PREP, MYTHS, LESSONS, LESSON_IDS, RECIPES, BUYABLE, MEDIA, NB_TABS, SPEEDS, SPECIES, SUPPLIES, ZONES, EQUIPMENT, EQUIPMENT_ORDER, STAGES, PRODUCTS };
+    return { ui, S, CONFIG, manifest, RULES, GUIDE, NUMS, PREP, MYTHS, LESSONS, LESSON_IDS, RECIPES, BUYABLE, MEDIA, NB_TABS, SPEEDS, SPECIES, SUPPLIES, ZONES, EQUIPMENT, EQUIPMENT_ORDER, STAGES, PRODUCTS, CAST, TUTORIAL };
   },
   computed: {
     g() { return S.g; },
@@ -100,6 +111,20 @@ export const App = {
         { id: 'hardcore', name: 'Hardcore', cash: startCash('hardcore'), blurb: 'Tight money, full losses, and no grace after week 0.' },
       ];
     },
+    RUN_TYPES_UI() {
+      return [
+        { id: 'tutorial', name: 'Tutorial', blurb: 'Story mode, plus a paused walkthrough of week 0. Best for a first run.' },
+        { id: 'story', name: 'Story', blurb: 'Your mentor next door and a confidently wrong forum guru, in short scenes.' },
+        { id: 'free', name: 'Free play', blurb: 'Same systems, no script. Market customers ask the myth questions.' },
+        { id: 'expert', name: 'Expert', locked: !ui.expert, blurb: ui.expert ? 'Free play without the “Next:” coaching line. Liquid culture comes in a later update.' : 'Unlocks when you master your first species.' },
+      ];
+    },
+    story() { return isStory(S.g); },
+    scLine() { const m = ui.modal; return m && m.type === 'scene' ? m.lines[m.i] : null; },
+    tutStep() { return ui.tut ? TUTORIAL[ui.tut.k] : null; },
+    /** Keep toasts off the tutorial card and its highlight ring. */
+    toastSpot() { const c = ui.coach; if (!c || c.top) return ''; return c.ring && c.ring.y < innerHeight * 0.3 ? 'mid' : 'up'; },
+    showTip() { return CONFIG.look.tips && S.g.runType !== 'expert'; },
     advanced() { return ui.playMode === 'advanced'; },
     showAll() { return this.advanced || ui.moreOpts; },
     mediaShown() { return this.showAll ? MEDIA : { mea: MEDIA.mea }; },
@@ -184,7 +209,12 @@ export const App = {
     listDried() { shop.listDried(S.g); },
     bumpPrice(id, d) { shop.setPrice(S.g, id, shop.priceOf(S.g, id) + d); },
     setMarket(m) { S.g.marketMode = m; play('tap'); },
-    setPlayMode,
+    setPlayMode, setRunType,
+    sceneNext() { const m = ui.modal; if (m.i < m.lines.length - 1) { m.i++; play('tap'); } else nextModal(); },
+    sceneSkip() { nextModal(); },
+    tutNext() { nextStep(); },
+    tutSkip() { finishTutorial(true); },
+    cast(who) { return CAST[who]; },
     autoClimate() { const g = S.g; if (g.gear.heatmat) g.heater = 1; g.fae = 5; g.mist = g.gear.humidifier ? 98 : 88; play('good'); },
     keepGrowing() { nextModal(); }, spotsIn, badge, barColor, vName, isBlock, canShake, tapSlot, setHeater, toggleMute,
     status(v) { return status(S.g, v); },
@@ -237,6 +267,6 @@ export const App = {
     openNb(tab) { if (tab) ui.nbTab = tab; ui.notebook = true; },
     closeModal() { nextModal(); },
     answer(v) { const m = ui.modal; m.ans = v; sim.answerQuiz(S.g, m.m, v); },
-    coffee(yes) { nextModal(); sim.acceptCoffee(S.g, yes); },
+    coffee(yes) { nextModal(); sim.acceptCoffee(S.g, yes); showScene(scene(S.g, yes ? 'coffee_yes' : 'coffee_no')); },
   },
 };

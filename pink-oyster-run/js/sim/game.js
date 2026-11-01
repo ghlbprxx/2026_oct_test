@@ -19,11 +19,13 @@ import { fmtLb } from './economy.js';
 import { inheritedCause } from './contamination.js';
 import { RECIPES, MEDIA, SUPPLIES } from '../content/species/pink-oyster.js';
 
-export function newGame(mode = 'normal') {
+/** `runType` ('tutorial' | 'story' | 'free' | 'expert') is stored for the UI and saves; the sim never reads it. */
+export function newGame(mode = 'normal', runType = 'free') {
   const day = C.dev.startLevel * RULES.daysPerWeek;
   const g = { mode, day, week: weekOf(day), cash: startCash(mode), slots: Array(SPOTS.length).fill(null), queue: [], cookers: [], gear: {},
     heater: 0, fae: 2, mist: 80, lots: [], lotSeq: 0, dried: 0, nextMarket: day + C.economy.marketEvery, marketMode: 'auto', snap: null, forecast: null,
     coffeeAt: null, coffeeDone: false, log: [], learned: [], asked: [], seq: 0, over: false, endReason: '',
+    runType, story: { seen: [] },
     stage: 0, units: 0, mastered: [], counts: {}, speciesDone: false, weeksRepeated: 0, reviews: [],
     stock: { plate: [], jar: [], kit: [], dried: [] }, prices: {}, rep: C.shop.startReputation,
     stats: { harvestKg: 0, freshKg: 0, driedKg: 0, rotKg: 0, dropped: 0, lost: {}, revenue: 0, spent: 0, energy: 0, rescued: 0 } };
@@ -64,7 +66,7 @@ function weekEnd(g) {
 
 function stepEvents(g, dd) {
   if (!g.snap && !g.forecast && unlocked(g, 'room') && rand() < 1 - Math.exp(-C.room.coldSnapChance * dd)) {
-    g.forecast = { start: g.day + 1 };
+    g.forecast = { start: g.day + 1 }; emit('forecast', { start: g.forecast.start });
     emit('toast', { text: `Forecast: cold snap tomorrow, −${RULES.coldSnapDrop}°F for ${RULES.coldSnapDays} days.`, c: 'bad' }); log(g, 'Forecast: cold snap tomorrow.', 'bad');
   }
   if (g.forecast && g.day >= g.forecast.start) { g.forecast = null; g.snap = { end: g.day + RULES.coldSnapDays }; emit('toast', { text: 'Cold snap! The room just lost ' + RULES.coldSnapDrop + '°F.', c: 'bad' }); }

@@ -71,3 +71,11 @@
 - Changed: .ai/HANDOFF.md (state, how to run/test, sandbox gotchas, architecture map, conventions, economy invariants, Phase 5 plan, open questions); PLAN.md points to it.
 - Verified: npm test 58/58 at handoff time.
 - Next step: Phase 5 task 1 — js/content/story.js (mentor + forum guru scenes with ids).
+
+## 2026-11-01 03:04 UTC (system clock; earlier entries' times run ahead of it) — Phase 5 complete (story, tutorial, mode select)
+- Changed: js/content/story.js (cast, 10 scenes, guru opener/reaction lines, all id'd), js/director.js (pure: run types, once-only scenes, event → scene, guru quiz framing), js/content/tutorial.js (7 steps, done(g) for action steps), js/ui/coach.js (highlight ring, card placement, auto-advance, finish/skip); myths get ids; sim: newGame(mode, runType), `forecast` event; save: run v3 (runType, story.seen), profile.tutorialDone; UI: mode select on setup, dialogue bar modal (one line at a time, Skip), guru quiz variant with mentor reaction, coach overlay, Expert hides the Next: line, expert unlocks on species win, admin action "Reset tutorial".
+- Files: js/content/{story,tutorial,myths}.js, js/director.js, js/ui/{coach,app,state,template}.js, js/main.js, js/sim/game.js, js/save.js, css/styles.css, tests/{story,save}.test.js, README.md, .ai/*
+- Verified: npm test 65/65; node tools/playtest.mjs unchanged; Playwright desktop 1280 + mobile 390 (touch): tutorial end to end (time frozen during steps, all 7 steps, action steps advance from real clicks, clock runs after), intro scene 3 lines with ids, guru quiz + mentor reaction, review → stage_grain scene → week card order, Skip; free play + Advanced: no scenes, customer quiz, admin panel shown; species win unlocks Expert; Expert run hides Next:. No console errors.
+- Fixed during verification: the "Read the room" ring pointed at the kitchen move option (now the closet); on 390px the coach card covered its own target (now placed on the free side, scrolls target clear); toasts covered the coach card and then the speed-bar ring (toasts move up or to mid-screen while the coach shows).
+- Unverified: real CDN loading (sandbox), screen readers on the dialogue bar, how the guru's tone lands with players.
+- Next step: Phase 6 task 1 — lion's mane species (content/species/lions-mane.js, stage ladder reuse, species select after pinks).

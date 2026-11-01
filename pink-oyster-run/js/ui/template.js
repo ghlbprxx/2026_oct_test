@@ -11,7 +11,7 @@ export default `
         <h1 style="margin-top:6px">Pink Oyster <em>Run</em></h1>
         <p class="lede">Start with a petri dish and an empty spare room. Each week a new part of the craft opens up, from agar to grain to substrate to fruiting, until your pink oysters reach the market table.</p>
         <div class="actions">
-          <button class="btn big" v-if="ui.saved" @click="resumeRun">Continue · week {{ ui.saved.week }}, {{ ui.saved.stage }}</button>
+          <button class="btn big" v-if="ui.saved" @click="resumeRun">Continue · week {{ ui.saved.week }}, {{ ui.saved.stage }}<template v-if="ui.saved.runType && ui.saved.runType!=='free'"> · {{ ui.saved.runType }}</template></button>
           <button class="btn" :class="ui.saved ? 'ghost' : 'big'" @click="ui.screen='setup'">New game</button>
           <button class="btn ghost" @click="openNb('guide')">Grower's notebook</button>
         </div>
@@ -34,9 +34,15 @@ export default `
   <section v-else-if="ui.screen==='setup'" class="title">
     <div class="card">
       <span class="label">New game</span>
-      <h2 style="font-size:clamp(28px,4vw,40px);margin:6px 0 4px">How forgiving should mold be?</h2>
-      <p class="muted">Pick a play style and how harsh mold should be. You can switch play style any time from the pause menu.</p>
-      <div class="playstyle" role="group" aria-label="Play style">
+      <h2 style="font-size:clamp(28px,4vw,40px);margin:6px 0 4px">Set up your run</h2>
+      <p class="muted">Pick a mode, a play style, and how harsh mold should be. You can switch play style any time from the pause menu.</p>
+      <div class="playstyle" role="group" aria-label="Mode">
+        <span class="label">Mode</span>
+        <div class="seg four">
+          <button v-for="r in RUN_TYPES_UI" :key="r.id" :data-run="r.id" :aria-pressed="ui.runType===r.id" :disabled="r.locked" @click="setRunType(r.id)"><b>{{ r.locked ? '🔒 ' : '' }}{{ r.name }}<span v-if="r.id==='tutorial' && !ui.tutorialDone" class="chip good" style="margin-left:6px">new player</span></b><small>{{ r.blurb }}</small></button>
+        </div>
+      </div>
+      <div class="playstyle" role="group" aria-label="Play style" style="margin-top:14px">
         <span class="label">Play style</span>
         <div class="seg two">
           <button :aria-pressed="ui.playMode==='basic'" @click="setPlayMode('basic')"><b>Basic</b><small>Quick play: recommended choices first, auto climate and market, no tuning panel.</small></button>
@@ -72,7 +78,7 @@ export default `
         <button class="ib" @click="toggleMute" :aria-label="ui.muted?'Unmute':'Mute'" title="Mute (M)">{{ ui.muted ? '🔇' : '🔊' }}</button>
       </div>
     </header>
-    <button class="tip" v-if="CONFIG.look.tips" aria-live="polite" @click="doTip"><b>Next:</b> {{ tip.t }}<span v-if="tip.slot!=null || tip.room || tip.dry || tip.heat || tip.shop" class="go"> →</span></button>
+    <button class="tip" v-if="showTip" aria-live="polite" @click="doTip"><b>Next:</b> {{ tip.t }}<span v-if="tip.slot!=null || tip.room || tip.dry || tip.heat || tip.shop" class="go"> →</span></button>
     <div v-else style="height:10px"></div>
 
     <!-- side-view cutaway: upstairs closet + tent, downstairs kitchen + garage, yard out the back door -->
@@ -326,7 +332,7 @@ export default `
         <details class="note" v-if="moveTargets.length && !['cooking','queued'].includes(sv.state)" :open="sheetFit.level!=='good' || isBlock(sv)">
           <summary>Move to another spot</summary>
           <div class="movegrid">
-            <button v-for="t in moveTargets" :key="t.i" class="opt" :class="{warn:t.fit.level==='bad'}" @click="moveTo(ui.sheet.slot,t.i)"><span><b>{{ t.zone }}</b><small>{{ t.fit.level==='good' ? '✓ good fit' : t.fit.level==='ok' ? 'OK' : '⚠ poor fit' }}</small></span><span class="cost">→</span></button>
+            <button v-for="t in moveTargets" :key="t.i" :data-zone="zoneOfSpot(t.i)" class="opt" :class="{warn:t.fit.level==='bad'}" @click="moveTo(ui.sheet.slot,t.i)"><span><b>{{ t.zone }}</b><small>{{ t.fit.level==='good' ? '✓ good fit' : t.fit.level==='ok' ? 'OK' : '⚠ poor fit' }}</small></span><span class="cost">→</span></button>
           </div>
         </details>
 
@@ -359,9 +365,47 @@ export default `
   </div>
 
   <!-- ============ EVENT MODALS ============ -->
-  <div v-if="ui.modal" class="scrim">
+  <div v-if="ui.modal && ui.modal.type==='scene' && scLine" class="scrim talk" @click.self="sceneNext">
+    <div class="dialog" role="dialog" aria-modal="true" :aria-label="'Story: '+cast(scLine.who).name" :data-scene="ui.modal.key">
+      <img class="face" :class="scLine.who" :src="src(cast(scLine.who).portrait)" :alt="cast(scLine.who).alt" :key="scLine.who">
+      <div class="said">
+        <span class="who">{{ cast(scLine.who).name }} <small>· {{ cast(scLine.who).role }}</small></span>
+        <p class="bubble" :data-line="scLine.id" :key="scLine.id">{{ scLine.text }}</p>
+        <div class="talkbar">
+          <span class="dots" aria-hidden="true"><i v-for="(l,k) in ui.modal.lines" :key="k" :class="{on:k===ui.modal.i}"></i></span>
+          <button v-if="ui.modal.i < ui.modal.lines.length-1" class="linkbtn" @click="sceneSkip">Skip</button>
+          <button class="btn sm" @click="sceneNext" autofocus>{{ ui.modal.i < ui.modal.lines.length-1 ? 'Next ›' : 'OK' }}</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div v-else-if="ui.modal" class="scrim">
     <div class="sheet" role="dialog" aria-modal="true">
-      <template v-if="ui.modal.type==='quiz'">
+      <template v-if="ui.modal.type==='quiz' && ui.modal.guru">
+        <span class="label">Market day · a customer shows you the forum</span>
+        <div class="mentor guru">
+          <img :src="src(cast('guru').portrait)" :alt="cast('guru').alt">
+          <div><span class="who">{{ cast('guru').name }} <small>· {{ cast('guru').role }}</small></span>
+            <p class="bubble" :data-line="ui.modal.guru.open.id">{{ ui.modal.guru.open.text }} <b :data-line="ui.modal.guru.claim.id">{{ ui.modal.m.s }}</b></p></div>
+        </div>
+        <p class="muted" style="margin:2px 0 10px">The customer wants to know: is the guru right?</p>
+        <div class="tf" v-if="ui.modal.ans===null">
+          <button class="btn ghost big" @click="answer(true)">Guru’s right</button>
+          <button class="btn ghost big" @click="answer(false)">Guru’s wrong</button>
+        </div>
+        <template v-else>
+          <div class="verdict" :class="ui.modal.ans===ui.modal.m.a?'good':'bad'">
+            <b>{{ ui.modal.ans===ui.modal.m.a ? 'You called it. The customer tips you '+money(RULES.quizTip)+'.' : 'Not quite.' }}</b>
+            {{ ui.modal.m.a ? 'Fact.' : 'Myth.' }} {{ ui.modal.m.w }}
+          </div>
+          <div class="mentor" style="margin-top:10px">
+            <img :src="src(cast('mentor').portrait)" :alt="cast('mentor').alt">
+            <p class="bubble" :data-line="ui.modal.guru.react.id">{{ ui.modal.guru.react.text }}</p>
+          </div>
+          <div class="actions" style="margin-top:12px"><button class="btn" @click="closeModal">Back to the farm</button></div>
+        </template>
+      </template>
+      <template v-else-if="ui.modal.type==='quiz'">
         <span class="label">Market day · a customer asks</span>
         <p class="myth">“{{ ui.modal.m.s }}” Fact or myth?</p>
         <div class="tf" v-if="ui.modal.ans===null">
@@ -519,7 +563,25 @@ export default `
     </div>
   </div>
 
-  <div class="toasts" aria-live="polite">
+  <!-- ============ TUTORIAL COACH ============ -->
+  <template v-if="ui.screen==='play' && ui.coach && tutStep">
+    <div v-if="ui.coach.ring" class="coach-ring" aria-hidden="true" :style="{left:ui.coach.ring.x+'px',top:ui.coach.ring.y+'px',width:ui.coach.ring.w+'px',height:ui.coach.ring.h+'px'}"></div>
+    <div class="coach" :class="ui.coach.top?'top':'bottom'" role="dialog" aria-live="polite" :aria-label="'Tutorial: '+tutStep.title" :data-step="tutStep.id">
+      <img :src="src('portrait_mentor')" alt="">
+      <div>
+        <span class="label">Tutorial · {{ ui.tut.k+1 }}/{{ TUTORIAL.length }} · time paused</span>
+        <b>{{ tutStep.title }}</b>
+        <p>{{ tutStep.text }}</p>
+        <div class="actions">
+          <button v-if="!tutStep.done" class="btn sm" @click="tutNext">{{ ui.tut.k===TUTORIAL.length-1 ? 'Start the clock' : 'Next ›' }}</button>
+          <span v-else class="hint">Do it to continue.</span>
+          <button class="linkbtn" @click="tutSkip">Skip tutorial</button>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <div class="toasts" :class="toastSpot" aria-live="polite">
     <div v-for="t in ui.toasts" :key="t.id" class="toast" :class="t.c"><template v-if="t.title"><b>{{ t.title }}</b> · </template>{{ t.text }}</div>
   </div>
   <template v-for="f in ui.floats" :key="f.id">

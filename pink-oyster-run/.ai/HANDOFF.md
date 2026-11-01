@@ -1,17 +1,17 @@
 # Handoff: Pink Oyster Run (for the next session)
 
-Written 2026-11-01. Read this first, then `DESIGN.md`, `PLAN.md`, the last entry of `PROGRESS.md`, and `DECISIONS.md` (all in this folder). Update `PLAN.md` and `PROGRESS.md` after every task (the brief requires it; sessions can die at any time).
+Written 2026-11-01, updated after Phase 5. Read this first, then `DESIGN.md`, `PLAN.md`, the last entry of `PROGRESS.md`, and `DECISIONS.md` (all in this folder). Update `PLAN.md` and `PROGRESS.md` after every task (the brief requires it; sessions can die at any time).
 
 ## 1. Where things stand
 
 | | |
 |---|---|
 | Repo | `ghlbprxx/2026_oct_test`. Default branch: `claude/gifted-tesla-f2wgdx` |
-| Work branch | `claude/optimistic-mayer-07fju9` (pushed, clean). **No PR exists; don't open one unless the user asks.** |
-| Last commit | `6d0f680` Pink Oyster Run: headless economy playtests, shelf rack, Basic/Advanced play |
-| Tests | `cd pink-oyster-run && npm test` → **58/58 pass** (Node 22, no dependencies) |
-| Done | Phases 0–4 of the brief, plus 4.5 (user requests: admin help, headless economy proof, Basic/Advanced play) |
-| Next | **Phase 5**: story mode (mentor + forum guru), Week 0 tutorial, mode select. Details in §6. |
+| Work branch | `claude/bold-hopper-kscom3` (Phase 5; fast-forwarded from `claude/optimistic-mayer-07fju9`, which holds Phases 0–4.5). **No PR exists; don't open one unless the user asks.** |
+| Last commit | Phase 5: story, tutorial, mode select (see `git log`) |
+| Tests | `cd pink-oyster-run && npm test` → **65/65 pass** (Node 22, no dependencies) |
+| Done | Phases 0–5 of the brief, plus 4.5 (user requests: admin help, headless economy proof, Basic/Advanced play) |
+| Next | **Phase 6**: lion's mane, wine cap in the yard, expert mode with liquid culture, optional automation. Details in §6. |
 
 Repo layout: the root holds only `README.md` and two projects: `walk-this-way/` (a different game, other sessions work on it; leave it alone) and `pink-oyster-run/` (this game).
 
@@ -81,7 +81,10 @@ pink-oyster-run/
     autoplay.js         headless strategies + runner (used by tests/economy.test.js and tools/playtest.mjs)
   js/content/           data: species/pink-oyster.js (biology in REAL days), stages.js (ladder, checklists, products, mentor lines),
                         zones.js, equipment.js, lessons.js, guide.js, myths.js, weeks.js (stage intro cards)
-  js/ui/                template.js (one big Vue template string), app.js (root component + actions), views.js (card helpers, tips), state.js
+                        story.js (cast, scenes ≤3 id'd lines, guru quiz lines), tutorial.js (7 steps; done(g) for action steps)
+  js/director.js        PURE story director: RUN_TYPES, isStory, scene(g, key) (once-only via g.story.seen), sceneKeyFor(event), guruQuiz(myth)
+  js/ui/                template.js (one big Vue template string), app.js (root component + actions), views.js (card helpers, tips), state.js,
+                        coach.js (tutorial: highlight ring, card side, auto-advance; time held while ui.tut is set)
   js/art.js js/images.js   SVG placeholders for every image id; images.json loader (missing → placeholder)
   js/audio.js js/fx.js js/save.js   synth SFX; toasts/floats + GSAP motion (lazy, optional); profile + run saves (versioned)
   assets/images.json    41 image entries with prompts, styles, alignWith/reveal; assets/IMAGE_PROMPTS.md (generated)
@@ -98,6 +101,7 @@ Key conventions:
 - **Stages:** `g.stage` indexes `STAGES`; `unlocked(g, 'jar'|'bag'|'room'|'market')` gates features. `count(g, key)` bumps checklist counters; units count only after the checklist is done.
 - **Saves:** `save.js` holds the profile (`por:profile`) and the run (`por:run`, v2, with `migrateRun`). The run autosaves at each weekly review and on tab hide/pagehide.
 - **Play style** (Basic/Advanced) is UI-only and stored in the profile. Never make the sim depend on it.
+- **Run type** (`g.runType`: tutorial/story/free/expert) is stored on the run, but the sim never reads it. Scenes are triggered in `main.js` from sim events via `director.js` and queued as `{type:'scene'}` modals before that event's own modal. New story beats: add the scene to `content/story.js`, map the event in `sceneKeyFor`, add a test.
 - **Knobs:** species/biology numbers belong in content files; cross-cutting multipliers belong in CONFIG. There are already 44 knobs (over the brief's 20–30), so prefer content data or `RULES` over new knobs.
 
 ## 5. Economy facts (don't break them)
@@ -116,22 +120,28 @@ Known risks:
 - Difficulty mostly changes cash and the dip toward zero, not careful-play outcomes.
 - About 11–22% of careful runs haven't finished the species by week 24.
 
-## 6. Next: Phase 5 (from PLAN.md)
+## 6. Next: Phase 6 (from PLAN.md)
 
-1. `js/content/story.js`: mentor (retired-mycologist neighbor: blunt, dramatic about mold, secretly proud) and forum guru (confidently wrong about half the time) scenes. Max 3 lines each, every line with an `id` (Phase 7 maps ids to `audio/voice-lines.json`). Include the realism beats from the brief: free wood chips from an arborist (wine cap), and the mentor's aside on why golden oysters were skipped (invasive in US forests). Weekly-review mentor lines already exist in `content/stages.js` `MENTOR` with ids.
-2. A speech-bubble component (portraits `portrait_mentor` / `portrait_guru` already exist in `images.json` and `art.js`; the bubble CSS `.mentor`/`.bubble` exists from the review modal). In-world, never text walls.
-3. The forum guru takes over the market myth/fact quiz (`economy.market` → `emit('quiz')`; modal in `template.js`, type `quiz`). When the guru is right, the mentor grudgingly admits it.
-4. `js/content/tutorial.js` + a Week 0 tutorial: skippable, one step at a time, time paused, highlighting real UI elements. Steps: zones, pour a plate in the still-air box, read the room, playback controls, notebook. It ends by unlocking week 1. The current "Next:" tip line and stage intro cards (`content/weeks.js`) are the stopgap.
-5. Mode select: Story / Free play (same systems, no script) / Tutorial / Expert (after the first win; `ui.expert` exists, set by the admin action "Unlock expert").
-6. Verify with tests, Playwright desktop + 390px mobile, and Basic + Advanced; update the `.ai/` notes; commit; push; give the one-screen phase report.
+Phase 5 is done (story, tutorial, mode select; see the last PROGRESS entry and DECISIONS). Phase 6:
 
-After that: Phase 6 (lion's mane, wine cap in the yard, expert mode with liquid culture, optional automation), Phase 7 (audio manifest, Suno `PROMPTS.md`, `voice-lines.json`, `gen-voice.mjs` with a configurable command and `--dry-run`, GSAP polish, species art), Phase 8 (full self-verification).
+1. Lion's mane: `js/content/species/lions-mane.js` (real-day biology; prices are low-confidence, see DESIGN › Researched numbers), species selection after pinks, reuse the stage ladder. "Learned lessons shorten later species" (`unitsNeeded` comment in `sim/mastery.js`).
+2. Wine cap in the yard (spots 13–14, outdoor weather, wood-chip bed). The story already teases the arborist's free hardwood chips in `species_done`; give wine cap its own stage scenes in `content/story.js`.
+3. Expert mode + liquid culture stage. Expert currently = free play without the Next: line (`showTip` in `ui/app.js`); it unlocks on the first species win.
+4. Optional automation after mastery + metrics.
+
+After that: Phase 7 (audio manifest, Suno `PROMPTS.md`, `voice-lines.json` built from `allLines()` in `content/story.js` + `MENTOR` in `content/stages.js` + `guru_claim_<myth id>`, `gen-voice.mjs` with a configurable command and `--dry-run`, GSAP polish, species art), Phase 8 (full self-verification).
+
+### Phase 5 notes worth knowing
+- The tutorial's highlight targets are CSS selectors (`[data-item]`, `[data-slot]`, `.movegrid [data-zone]`, `.speeds`, `#mastery`). Renaming those breaks the tutorial silently; the Playwright flow in PROGRESS is how it was checked.
+- Toast position follows the coach (`toastSpot` in `ui/app.js`) so toasts never cover the card or ring.
+- Admin action "Reset tutorial" makes Tutorial the default mode again.
 
 ## 7. Open questions to raise with the user
 
 - fal.ai: the user hasn't provided their CLI syntax. `assets/tools/image.config.json` has `command: null` by design.
 - Should the admin help show the arithmetic midpoint instead of Default (the user wrote "avg")?
 - Knob count (44 vs the brief's 20–30): trim, or keep the Essentials filter as the answer?
+- Phase 5 interpretation choices to confirm: the tutorial ends by starting the clock in week 0 (no extra pre-week); Expert has no new content until Phase 6.
 - The pressure cooker research contradicted the brief: the 16-qt also holds 7 quart jars. Implemented as "16 qt can't fit bags; 23 qt fits 2 bags".
 - Price data for pinks and lion's mane is low-confidence (see `DESIGN.md` › Researched numbers).
 
