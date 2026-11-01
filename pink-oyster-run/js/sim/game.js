@@ -5,7 +5,9 @@ import { RULES } from './rules.js';
 import { rand } from './rng.js';
 import { emit } from './events.js';
 import { log, learn } from './journal.js';
-import { envNow } from './environment.js';
+import { SPOTS, zoneOf, spotOpen, allEnvs, zoneFit } from './zones.js';
+import { workspace, workFactor, canSterilizeJars, canSterilizeBags, buy } from './shop.js';
+import { ZONE_BY_ID } from '../content/zones.js';
 import { stepCooker } from './equipment.js';
 import { stepLots, market, pay, money } from './economy.js';
 import { mk, stepVessel, afterFlush, canShake, harvestKg, vName } from './growth.js';
@@ -17,28 +19,28 @@ import { RECIPES, MEDIA, SUPPLIES } from '../content/species/pink-oyster.js';
 
 export function newGame(mode = 'normal') {
   const day = C.dev.startLevel * RULES.daysPerWeek;
-  const g = { mode, day, week: weekOf(day), cash: startCash(mode), slots: Array(C.equipment.slots).fill(null), queue: [], cooker: { batch: [], t: 0 },
-    hasSab: false, heater: 0, fae: 2, mist: 80, lots: [], lotSeq: 0, dried: 0, nextMarket: day + C.economy.marketEvery, snap: null, forecast: null,
+  const g = { mode, day, week: weekOf(day), cash: startCash(mode), slots: Array(SPOTS.length).fill(null), queue: [], cookers: [], gear: {},
+    heater: 0, fae: 2, mist: 80, lots: [], lotSeq: 0, dried: 0, nextMarket: day + C.economy.marketEvery, snap: null, forecast: null,
     coffeeDay: unlockWeek('bag') * RULES.daysPerWeek + 3 + Math.floor(rand() * 10), coffeeDone: false, log: [], learned: [], asked: [], seq: 0, over: false, endReason: '',
     stats: { harvestKg: 0, freshKg: 0, driedKg: 0, rotKg: 0, dropped: 0, lost: {}, revenue: 0, spent: 0, energy: 0, rescued: 0 } };
   g.startCash = g.cash;
-  log(g, 'Week 0. An empty spare room, a box of supplies, and a neighbor who knows a lot about mold.');
+  log(g, 'Week 0. A kitchen, a closet shelf, a garage, a box of supplies, and a neighbor who knows a lot about mold.');
   return g;
 }
 
 export function update(g, dd) {
   if (!g || g.over) return;
   g.day += dd;
-  const env = envNow(g);
+  const envs = allEnvs(g);
   const wk = weekOf(g.day);
   if (wk !== g.week) { g.week = wk; emit('week', { week: wk, news: newIn(wk) }); }
-  if (g.heater > 0 && unlocked(g, 'room')) {
+  if (g.heater > 0 && g.gear.heatmat) {
     const cost = g.heater * C.economy.heaterCost * dd;
     if (g.cash >= cost) { g.cash -= cost; g.stats.energy += cost; }
     else { g.heater = 0; emit('toast', { text: 'Out of cash: the heater switched off.', c: 'bad' }); log(g, 'Heater switched off (no cash).', 'bad'); }
   }
   stepCooker(g, dd);
-  g.slots.forEach((v, i) => { if (v) stepVessel(g, v, dd, env, i); });
+  g.slots.forEach((v, i) => { if (v) stepVessel(g, v, dd, envs[zoneOf(i)], i); });
   stepLots(g, dd);
   if (g.day >= g.nextMarket) { g.nextMarket += C.economy.marketEvery; if (unlocked(g, 'room')) market(g, false); } // markets start with the grow room
   stepEvents(g, dd);
@@ -59,31 +61,36 @@ function stepEvents(g, dd) {
 export function endSeason(g, reason) {
   if (g.over) return;
   market(g, true); g.over = true; g.endReason = reason;
-  const profit = g.cash - g.startCash;
+  const profit = g.cash - g.startCash + (g.stats.gear || 0); // operating profit: gear is equipment you keep
   emit('track', { type: 'runEnd', data: { profit: Math.round(profit), day: Math.floor(g.day), reason, harvestKg: +g.stats.harvestKg.toFixed(2), lost: Object.values(g.stats.lost).reduce((a, b) => a + b, 0) } });
   emit('end', { profit });
 }
 
 /* ---------- player actions: return false when nothing happened (e.g. not enough cash) ---------- */
-function place(g, i, v, msg) { g.slots[i] = v; emit('sfx', { name: 'build' }); log(g, msg); return true; }
+function place(g, i, v, msg) {
+  if (!spotOpen(g, i) || g.slots[i]) { emit('toast', { text: 'That spot isn’t available.', c: 'bad' }); return false; }
+  g.slots[i] = v; emit('sfx', { name: 'build' }); emit('placed', { slot: i }); log(g, msg);
+  const fit = zoneFit(g, zoneOf(i), v); if (fit.level === 'bad') emit('toast', { text: fit.note, c: 'bad' });
+  return true;
+}
 export function pourPlate(g, i, medium) {
-  if (!pay(g, SUPPLIES.plate)) return false;
-  const ws = g.hasSab ? 'sab' : 'open';
-  return place(g, i, mk(g, 'plate', { medium, ws }), `Poured a ${MEDIA[medium].name} plate ${ws === 'sab' ? 'in the still-air box' : 'on the open counter'}.`);
+  if (!spotOpen(g, i) || g.slots[i] || !pay(g, SUPPLIES.plate)) return false;
+  const ws = workspace(g);
+  return place(g, i, mk(g, 'plate', { medium, ws }), `Poured a ${MEDIA[medium].name} plate ${ws === 'hood' ? 'at the flow hood' : ws === 'sab' ? 'in the still-air box' : 'on the open counter'}.`);
 }
-/** One-time DIY still-air box: a clear tote with arm holes. Cuts airborne spores during plate work and inoculation. */
-export function buildSab(g) {
-  if (g.hasSab || !pay(g, SUPPLIES.sab)) return false;
-  g.hasSab = true; learn(g, 'sab'); emit('sfx', { name: 'good' }); log(g, 'Built a still-air box from a clear tote. Still air, fewer spores.', 'good'); return true;
-}
+export { buy };
 export function prepJar(g, i, prep) {
-  if (!unlocked(g, 'jar') || !pay(g, SUPPLIES.jar)) return false;
-  const v = mk(g, 'jar', { prep, state: prep === 'ster' ? 'queued' : 'bath' }); if (prep === 'ster') g.queue.push(v.id);
+  if (!unlocked(g, 'jar') || !spotOpen(g, i) || g.slots[i]) return false;
+  if (prep === 'ster' && !canSterilizeJars(g)) { emit('toast', { text: 'You need a pressure cooker to sterilize grain. The shop has two sizes.', c: 'bad' }); return false; }
+  if (!pay(g, SUPPLIES.jar)) return false;
+  const v = mk(g, 'jar', { prep, state: prep === 'ster' ? 'queued' : 'bath', scaled: !!g.gear.scale }); if (prep === 'ster') g.queue.push(v.id);
   return place(g, i, v, `Grain jar #${v.id}: ${prep === 'ster' ? 'queued for the pressure cooker' : 'into the hot-water bath'}.`);
 }
 export function prepBag(g, i, recipe, prep) {
-  if (!unlocked(g, 'bag') || !pay(g, RECIPES[recipe].cost)) return false;
-  const v = mk(g, 'bag', { recipe, prep, state: prep === 'ster' ? 'queued' : 'bath' }); if (prep === 'ster') g.queue.push(v.id);
+  if (!unlocked(g, 'bag') || !spotOpen(g, i) || g.slots[i]) return false;
+  if (prep === 'ster' && !canSterilizeBags(g)) { emit('toast', { text: 'Grow bags only fit the 23 qt pressure canner.', c: 'bad' }); return false; }
+  if (!pay(g, RECIPES[recipe].cost)) return false;
+  const v = mk(g, 'bag', { recipe, prep, state: prep === 'ster' ? 'queued' : 'bath', scaled: !!g.gear.scale, sealed: !!g.gear.sealer }); if (prep === 'ster') g.queue.push(v.id);
   return place(g, i, v, `${RECIPES[recipe].name} bag #${v.id}: ${prep === 'ster' ? 'queued for the pressure cooker' : 'pasteurizing'}.`);
 }
 /** Colonized vessels that can inoculate target t (plates → jars, jars → bags). */
@@ -93,8 +100,8 @@ export function inoculate(g, ti, si) {
   t.state = 'colonizing'; t.prog = 0; t.parent = s.id; s.uses--;
   const why = inheritedCause(s);
   if (why) { t.contam.onset = g.day; t.contam.why = why; }
-  else if (!C.dev.god && rand() < C.contam.openAirInoc * (g.hasSab ? C.contam.sabFactor : 1) * C.contam.hazardScale * hazardMult(g)) {
-    t.contam.onset = g.day; t.contam.why = g.hasSab ? 'luck' : 'open_air'; // spores got in while the jar/bag was open
+  else if (!C.dev.god && rand() < C.contam.openAirInoc * workFactor(workspace(g)) * C.contam.hazardScale * hazardMult(g)) {
+    t.contam.onset = g.day; t.contam.why = workspace(g) === 'open' ? 'open_air' : 'luck'; // spores got in while the jar/bag was open
   }
   if (s.medium === 'super') t.medium = 'super'; // remember the super-agar lineage for hidden-mold attribution
   emit('sfx', { name: 'build' }); emit('float', { slot: ti, text: 'Spawned!', c: 'good' });
@@ -104,12 +111,12 @@ export function inoculate(g, ti, si) {
 }
 export function toss(g, i) {
   const v = g.slots[i]; if (!v) return false;
-  g.queue = g.queue.filter(id => id !== v.id); g.cooker.batch = g.cooker.batch.filter(id => id !== v.id);
+  g.queue = g.queue.filter(id => id !== v.id); g.cookers.forEach(k => { k.batch = k.batch.filter(id => id !== v.id); });
   g.slots[i] = null; emit('sfx', { name: 'tap' }); log(g, `Tossed #${v.id} ${vName(v)}.`); return true;
 }
 export function cutEdge(g, i) {
   const v = g.slots[i]; if (!pay(g, SUPPLIES.plate)) return false;
-  v.contam = { onset: null, vis: 0, why: null }; v.prog = 0.3; v.state = 'colonizing'; v.uses = 0; v.ws = g.hasSab ? 'sab' : 'open';
+  v.contam = { onset: null, vis: 0, why: null }; v.prog = 0.3; v.state = 'colonizing'; v.uses = 0; v.ws = workspace(g);
   g.stats.rescued++; learn(g, 'agar_job'); emit('sfx', { name: 'good' }); emit('float', { slot: i, text: 'Rescued!', c: 'good' });
   log(g, `Cut a clean edge from #${v.id} onto a fresh plate.`, 'good'); return true;
 }
@@ -136,6 +143,18 @@ export function salvage(g, i) {
   emit('sfx', { name: 'good' }); emit('float', { slot: i, text: 'Salvaged', c: 'good' });
   log(g, `Cut the mold out of #${v.id}. It keeps going at ${Math.round(v.salvage * 100)}%.`); return true;
 }
+/** Move a vessel to an empty, open spot (e.g. a colonized block from the closet into the grow tent). */
+export function move(g, from, to) {
+  const v = g.slots[from];
+  if (!v || from === to || g.slots[to] || !spotOpen(g, to)) return false;
+  if (['cooking', 'queued'].includes(v.state)) { emit('toast', { text: 'It’s waiting for the pressure cooker. Move it after.', c: 'bad' }); return false; }
+  g.slots[to] = v; g.slots[from] = null;
+  const z = ZONE_BY_ID[zoneOf(to)], fit = zoneFit(g, z.id, v);
+  emit('sfx', { name: 'tap' }); emit('moved', { from, to });
+  log(g, `Moved #${v.id} to the ${z.name.toLowerCase()}.`);
+  if (fit.level === 'bad') emit('toast', { text: fit.note, c: 'bad' }); else if (fit.note && fit.level === 'good' && z.id === 'tent') emit('toast', { text: `#${v.id} is in the tent. ${fit.note}`, c: 'good' });
+  return true;
+}
 export function soak(g, i) { const v = g.slots[i]; v.state = 'resting'; v.t = 0; emit('sfx', { name: 'tap' }); log(g, `Soaking #${v.id} for a third flush.`); return true; }
 export function retire(g, i) { const v = g.slots[i]; g.slots[i] = null; emit('sfx', { name: 'tap' }); log(g, `Retired #${v.id} after ${v.flush} flush${v.flush === 1 ? '' : 'es'}.`); return true; }
 export function acceptCoffee(g, yes) {
@@ -145,7 +164,7 @@ export function acceptCoffee(g, yes) {
 }
 export function answerQuiz(g, myth, answer) {
   const right = answer === myth.a;
-  if (right) { g.cash += RULES.quizTip; g.stats.revenue += RULES.quizTip; emit('sfx', { name: 'coin' }); } else emit('sfx', { name: 'bad' });
+  if (right) { g.cash += RULES.quizTip; g.stats.revenue += RULES.quizTip; emit('sfx', { name: 'coin' }); emit('cash', { delta: RULES.quizTip }); } else emit('sfx', { name: 'bad' });
   return right;
 }
 export { money };

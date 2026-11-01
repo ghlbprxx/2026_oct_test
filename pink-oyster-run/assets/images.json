@@ -1,14 +1,14 @@
 {
-  "version": 1,
+  "version": 2,
   "game": "Pink Oyster Run",
   "howToUse": [
     "Each entry in 'images' is one picture the game shows. 'file' is where to save it, relative to pink-oyster-run/index.html.",
-    "Full prompt to send to the image model = stylePrompt + ' ' + prompt + ' ' + backgroundSuffix[background]. Use negativePrompt where the model supports it.",
+    "Full prompt = (styles[style].prompt if the image has a `style`, else stylePrompt) + prompt + 'Framing: ' + framing + backgroundSuffix[background]. Negative prompt: styles[style].negative or negativePrompt. assets/IMAGE_PROMPTS.md lists every assembled prompt.",
     "Generate at width x height (or any larger size with the same aspect ratio). PNG keeps transparency; WebP also works if you change the extension in 'file'.",
     "Entries with 'alignWith' are revealed on top of that image with a growing mask, so the object must sit in the exact same place. Make them by editing the 'alignWith' image (img2img / inpaint / 'same image but...'), not from scratch.",
     "'reveal' says which part of the canvas the growth mask sweeps over (fractions of width/height). If your art is framed differently, adjust these numbers instead of regenerating.",
     "Missing files are fine: the game falls back to its built-in placeholder art for that id. Open the Notebook > Art tab in the game to see which files it found.",
-    "After editing this file, run: node pink-oyster-run/tools/sync-manifest.mjs  (copies it into index.html so the game also works when opened straight from disk)."
+    "To generate with a CLI (e.g. fal.ai): fill in assets/tools/image.config.json, then run `node assets/tools/gen-images.mjs --dry-run` to preview and `node assets/tools/gen-images.mjs` to create every missing file. Full prompts are also listed in assets/IMAGE_PROMPTS.md."
   ],
   "stylePrompt": "Cozy storybook illustration for a casual mobile game. Clean vector-like shapes, soft cel shading and gentle gradients, confident dark plum outlines (#2a1b2e). Warm palette: flamingo pink (#e2557a), deep rose (#b8325a), cream-white mycelium (#fbf8f1), honey-amber agar (#ead7a8), wheat straw (#d9b65a), sawdust brown (#8a6040). One centered subject, front view tilted slightly from above, soft contact shadow directly underneath, even studio lighting, readable at small sizes.",
   "backgroundSuffix": {
@@ -20,7 +20,9 @@
     {
       "id": "plate_empty",
       "file": "assets/img/plate_empty.png",
-      "width": 512, "height": 512, "background": "transparent",
+      "width": 512,
+      "height": 512,
+      "background": "transparent",
       "usedFor": "Agar plate on a shelf before mycelium grows. Bottom layer of every plate.",
       "prompt": "A round glass petri dish seen from slightly above, filled with smooth, glossy honey-amber agar. Clean and empty: no growth, no spots. Small specular highlight on the upper-left rim.",
       "framing": "Dish centered at 50% x, 49% y. Outer rim diameter about 86% of the canvas width. Agar surface radius about 40% of the width."
@@ -28,9 +30,16 @@
     {
       "id": "plate_colonized",
       "file": "assets/img/plate_colonized.png",
-      "width": 512, "height": 512, "background": "transparent",
+      "width": 512,
+      "height": 512,
+      "background": "transparent",
       "alignWith": "plate_empty",
-      "reveal": { "type": "radial", "cx": 0.5, "cy": 0.49, "r": 0.40 },
+      "reveal": {
+        "type": "radial",
+        "cx": 0.5,
+        "cy": 0.49,
+        "r": 0.4
+      },
       "usedFor": "Revealed over plate_empty as a growing circle while the plate colonizes.",
       "prompt": "The exact same petri dish as the reference, now covered edge to edge in dense, fluffy cream-white mycelium, with fine ropey rhizomorphic strands radiating outward from a small square agar wedge in the center. Healthy and clean: no green, no other colors.",
       "framing": "Identical framing to plate_empty."
@@ -38,7 +47,9 @@
     {
       "id": "jar_empty",
       "file": "assets/img/jar_empty.png",
-      "width": 512, "height": 512, "background": "transparent",
+      "width": 512,
+      "height": 512,
+      "background": "transparent",
       "usedFor": "Grain spawn jar before colonization (also while in the pressure cooker or waiting for spawn).",
       "prompt": "A quart glass mason jar with a grey metal lid that has a small round white filter patch in its center, filled about 90% with plump, hydrated golden-brown rye berries. Clean glass, kernels loose, no water pooling at the bottom.",
       "framing": "Jar centered. Lid top at about 8% of the height, jar bottom at about 94%. Grain fills from about 27% to 92% of the height."
@@ -46,9 +57,15 @@
     {
       "id": "jar_colonized",
       "file": "assets/img/jar_colonized.png",
-      "width": 512, "height": 512, "background": "transparent",
+      "width": 512,
+      "height": 512,
+      "background": "transparent",
       "alignWith": "jar_empty",
-      "reveal": { "type": "top-down", "from": 0.27, "to": 0.92 },
+      "reveal": {
+        "type": "top-down",
+        "from": 0.27,
+        "to": 0.92
+      },
       "usedFor": "Revealed over jar_empty from the top down as the grain colonizes.",
       "prompt": "The exact same mason jar as the reference, the grain now fully colonized: every rye kernel bound together by bright cream-white mycelium, a few kernels faintly visible through the white.",
       "framing": "Identical framing to jar_empty."
@@ -56,7 +73,9 @@
     {
       "id": "bag_straw",
       "file": "assets/img/bag_straw.png",
-      "width": 512, "height": 512, "background": "transparent",
+      "width": 512,
+      "height": 512,
+      "background": "transparent",
       "usedFor": "Grow bag filled with chopped straw (pasteurized or sterilized), before colonization.",
       "prompt": "A clear plastic mushroom grow bag standing upright, top folded flat, with a small white rectangular filter patch near the top. The bottom 60% is filled with chopped golden wheat straw pieces.",
       "framing": "Bag centered. Bag top at about 5%, bottom at about 95% of the height. Substrate top edge at about 39% of the height."
@@ -64,7 +83,9 @@
     {
       "id": "bag_sawdust",
       "file": "assets/img/bag_sawdust.png",
-      "width": 512, "height": 512, "background": "transparent",
+      "width": 512,
+      "height": 512,
+      "background": "transparent",
       "alignWith": "bag_straw",
       "usedFor": "Grow bag filled with supplemented hardwood (sawdust + bran, or Masters Mix), before colonization.",
       "prompt": "The exact same grow bag as the reference, but the bottom 60% is filled with dense dark-brown hardwood sawdust and pellets with lighter tan flecks of soy hulls and bran.",
@@ -73,7 +94,9 @@
     {
       "id": "bag_coir",
       "file": "assets/img/bag_coir.png",
-      "width": 512, "height": 512, "background": "transparent",
+      "width": 512,
+      "height": 512,
+      "background": "transparent",
       "alignWith": "bag_straw",
       "usedFor": "Grow bag filled with coir + vermiculite (also used for the coffee-grounds event bag).",
       "prompt": "The exact same grow bag as the reference, but the bottom 60% is filled with dark-brown fluffy coco coir mixed with small sparkly white-grey vermiculite flecks.",
@@ -82,9 +105,15 @@
     {
       "id": "bag_colonized",
       "file": "assets/img/bag_colonized.png",
-      "width": 512, "height": 512, "background": "transparent",
+      "width": 512,
+      "height": 512,
+      "background": "transparent",
       "alignWith": "bag_sawdust",
-      "reveal": { "type": "top-down", "from": 0.39, "to": 0.95 },
+      "reveal": {
+        "type": "top-down",
+        "from": 0.39,
+        "to": 0.95
+      },
       "usedFor": "Revealed over any of the three bag images from the top down while the bag colonizes.",
       "prompt": "The exact same grow bag as the reference, the substrate now fully colonized into a solid cream-white block of mycelium, with faint texture of the substrate showing underneath.",
       "framing": "Identical framing to bag_straw / bag_sawdust."
@@ -92,7 +121,9 @@
     {
       "id": "block_ready",
       "file": "assets/img/block_ready.png",
-      "width": 512, "height": 512, "background": "transparent",
+      "width": 512,
+      "height": 512,
+      "background": "transparent",
       "usedFor": "Colonized fruiting block before pins appear, and while resting between flushes.",
       "prompt": "A fully colonized cream-white rectangular mushroom block with the plastic bag cut away, standing upright, with a small X-shaped cut on the front center. No mushrooms yet.",
       "framing": "Block in the lower half: top edge at about 51%, bottom at about 95% of the height, about 42% of the width wide. X-cut centered at about 50% x, 65% y. Keep the upper half empty so clusters can grow into it."
@@ -100,7 +131,9 @@
     {
       "id": "block_pins",
       "file": "assets/img/block_pins.png",
-      "width": 512, "height": 512, "background": "transparent",
+      "width": 512,
+      "height": 512,
+      "background": "transparent",
       "alignWith": "block_ready",
       "usedFor": "Block that is pinning (tiny primordia forming).",
       "prompt": "The exact same block as the reference, with a tight cluster of tiny bright-pink mushroom pins (primordia) bursting from the X-cut.",
@@ -109,7 +142,9 @@
     {
       "id": "cluster_young",
       "file": "assets/img/cluster_young.png",
-      "width": 512, "height": 512, "background": "transparent",
+      "width": 512,
+      "height": 512,
+      "background": "transparent",
       "alignWith": "block_ready",
       "usedFor": "Cluster growing toward harvest.",
       "prompt": "The exact same block as the reference, with a small young cluster of pink oyster mushrooms (Pleurotus djamor) growing from the X-cut: 5 to 6 small fan-shaped caps with edges curled under, rich flamingo pink.",
@@ -118,7 +153,9 @@
     {
       "id": "cluster_peak",
       "file": "assets/img/cluster_peak.png",
-      "width": 512, "height": 512, "background": "transparent",
+      "width": 512,
+      "height": 512,
+      "background": "transparent",
       "alignWith": "block_ready",
       "usedFor": "Healthy cluster at peak: the harvest moment.",
       "prompt": "The exact same block as the reference, with a large, perfect cluster of pink oyster mushrooms growing from the X-cut: 8 to 10 broad ruffled fan-shaped caps, edges still slightly curled down, vivid flamingo pink with deeper rose edges, short pale stems, pale-pink gills visible under the caps. Harvest-ready.",
@@ -127,7 +164,9 @@
     {
       "id": "cluster_leggy",
       "file": "assets/img/cluster_leggy.png",
-      "width": 512, "height": 512, "background": "transparent",
+      "width": 512,
+      "height": 512,
+      "background": "transparent",
       "alignWith": "block_ready",
       "usedFor": "Cluster grown in stale, high-CO2 air (too little fresh air exchange).",
       "prompt": "The exact same block as the reference, with a stretched, leggy cluster of pink oyster mushrooms: long thin pale stems reaching upward and small, undersized pink caps, the look of too little fresh air.",
@@ -136,7 +175,9 @@
     {
       "id": "cluster_dry",
       "file": "assets/img/cluster_dry.png",
-      "width": 512, "height": 512, "background": "transparent",
+      "width": 512,
+      "height": 512,
+      "background": "transparent",
       "alignWith": "block_ready",
       "usedFor": "Cluster grown in air that is too dry (low humidity).",
       "prompt": "The exact same block as the reference, with a pink oyster cluster whose caps are dry and cracked: split edges curling upward, slightly faded pink, a few crispy brown edges, the look of low humidity.",
@@ -145,7 +186,9 @@
     {
       "id": "cluster_overripe",
       "file": "assets/img/cluster_overripe.png",
-      "width": 512, "height": 512, "background": "transparent",
+      "width": 512,
+      "height": 512,
+      "background": "transparent",
       "alignWith": "block_ready",
       "usedFor": "Cluster left past its peak; will drop if not picked.",
       "prompt": "The exact same block as the reference, with an overripe pink oyster cluster: caps flattened and turned up at the edges, color faded to washed-out pale pink, wavy edges, and a fine dusting of pale spores on the block below.",
@@ -154,7 +197,9 @@
     {
       "id": "block_spent",
       "file": "assets/img/block_spent.png",
-      "width": 512, "height": 512, "background": "transparent",
+      "width": 512,
+      "height": 512,
+      "background": "transparent",
       "alignWith": "block_ready",
       "usedFor": "Block after its flushes are used up, waiting to be retired.",
       "prompt": "The exact same block as the reference, now tired and spent: shrunken, dented, slightly yellowed tan-cream, with a couple of small dried brown mushroom stubs at the X-cut.",
@@ -163,7 +208,9 @@
     {
       "id": "mold_overlay",
       "file": "assets/img/mold_overlay.png",
-      "width": 512, "height": 512, "background": "transparent",
+      "width": 512,
+      "height": 512,
+      "background": "transparent",
       "usedFor": "Drawn on top of any plate, jar or bag when contamination becomes visible. Opacity and size grow with the infection.",
       "prompt": "Only patches of green Trichoderma mold and nothing else: 5 to 7 fuzzy round colonies, dark emerald-green centers fading to a soft white fuzzy ring at the edges, scattered across the middle of the frame.",
       "framing": "Patches stay inside the central 60% of the canvas. Transparency everywhere else is essential: this layer sits on top of other images."
@@ -171,7 +218,9 @@
     {
       "id": "crate_fresh",
       "file": "assets/img/crate_fresh.png",
-      "width": 256, "height": 256, "background": "transparent",
+      "width": 256,
+      "height": 256,
+      "background": "transparent",
       "usedFor": "Icon for the fresh-harvest crate.",
       "prompt": "A small woven wicker basket heaped with fresh, bright pink oyster mushroom clusters.",
       "framing": "Basket centered, filling about 85% of the canvas."
@@ -179,7 +228,9 @@
     {
       "id": "crate_dried",
       "file": "assets/img/crate_dried.png",
-      "width": 256, "height": 256, "background": "transparent",
+      "width": 256,
+      "height": 256,
+      "background": "transparent",
       "usedFor": "Icon for dehydrated mushrooms.",
       "prompt": "A small glass jar with a cork lid filled with dried, shriveled tan and faded-pink oyster mushroom pieces.",
       "framing": "Jar centered, filling about 85% of the canvas."
@@ -187,7 +238,9 @@
     {
       "id": "cooker",
       "file": "assets/img/cooker.png",
-      "width": 256, "height": 256, "background": "transparent",
+      "width": 256,
+      "height": 256,
+      "background": "transparent",
       "usedFor": "Icon for the pressure cooker (sterilizer) widget.",
       "prompt": "A stovetop aluminum pressure cooker with a round pressure gauge on the lid and two black handles, a small puff of steam rising from the valve.",
       "framing": "Pot centered, filling about 85% of the canvas."
@@ -195,10 +248,220 @@
     {
       "id": "title_hero",
       "file": "assets/img/title_hero.png",
-      "width": 1280, "height": 720, "background": "opaque",
+      "width": 1280,
+      "height": 720,
+      "background": "opaque",
       "usedFor": "Title screen illustration.",
       "prompt": "A cozy small home mushroom grow room in the evening: wooden shelves holding petri dishes, mason jars of white grain spawn and grow bags; in the foreground right, a large vivid pink oyster mushroom cluster fruiting from a cream block; soft warm lamp light and a little humidifier mist; pastel pink and cream palette.",
-      "framing": "Wide 16:9 scene. Main cluster in the right half."
+      "framing": "Wide 16:9 scene. Main cluster in the right half.",
+      "style": "scene"
+    },
+    {
+      "id": "zone_kitchen",
+      "file": "assets/img/zone_kitchen.png",
+      "width": 768,
+      "height": 384,
+      "background": "opaque",
+      "usedFor": "Background of the kitchen zone in the side-view house. Drawn at ~55% opacity behind the vessel spots.",
+      "prompt": "A cozy home kitchen wall seen straight on: cream tile backsplash, warm wooden upper cabinets, a small window with daylight, a butcher-block counter running along the bottom. Clean and tidy, warm morning light.",
+      "framing": "Wide 2:1 interior/exterior wall, seen straight on like a dollhouse cutaway. Keep the lower two-thirds calm and uncluttered: vessel cards sit on top of it. No people.",
+      "style": "scene"
+    },
+    {
+      "id": "zone_closet",
+      "file": "assets/img/zone_closet.png",
+      "width": 768,
+      "height": 384,
+      "background": "opaque",
+      "usedFor": "Background of the closet zone in the side-view house. Drawn at ~55% opacity behind the vessel spots.",
+      "prompt": "The inside of a small wooden closet seen straight on: dark wood paneling, a sturdy shelf near the bottom, a warm dim glow from a small lamp at the top, cozy and still. Dark, calm, stable mood.",
+      "framing": "Wide 2:1 interior/exterior wall, seen straight on like a dollhouse cutaway. Keep the lower two-thirds calm and uncluttered: vessel cards sit on top of it. No people.",
+      "style": "scene"
+    },
+    {
+      "id": "zone_tent",
+      "file": "assets/img/zone_tent.png",
+      "width": 768,
+      "height": 384,
+      "background": "opaque",
+      "usedFor": "Background of the tent zone in the side-view house. Drawn at ~55% opacity behind the vessel spots.",
+      "prompt": "The inside of a small hobby grow tent seen straight on: reflective silver mylar walls with soft vertical folds, black frame poles at the edges, a small round clip fan in the upper left, an LED light bar along the top, a faint humid haze.",
+      "framing": "Wide 2:1 interior/exterior wall, seen straight on like a dollhouse cutaway. Keep the lower two-thirds calm and uncluttered: vessel cards sit on top of it. No people.",
+      "style": "scene"
+    },
+    {
+      "id": "zone_garage",
+      "file": "assets/img/zone_garage.png",
+      "width": 768,
+      "height": 384,
+      "background": "opaque",
+      "usedFor": "Background of the garage zone in the side-view house. Drawn at ~55% opacity behind the vessel spots.",
+      "prompt": "A home garage wall seen straight on: grey concrete block wall, a pegboard with a few hand tools, a wooden workbench, part of a roll-up door with horizontal panels on the right, cool and slightly drafty light.",
+      "framing": "Wide 2:1 interior/exterior wall, seen straight on like a dollhouse cutaway. Keep the lower two-thirds calm and uncluttered: vessel cards sit on top of it. No people.",
+      "style": "scene"
+    },
+    {
+      "id": "zone_yard",
+      "file": "assets/img/zone_yard.png",
+      "width": 768,
+      "height": 384,
+      "background": "opaque",
+      "usedFor": "Background of the yard zone in the side-view house. Drawn at ~55% opacity behind the vessel spots.",
+      "prompt": "A small back yard seen from the back door: pale blue sky, a wooden privacy fence, a leafy tree on the right, green lawn, and a long low raised bed of fresh hardwood chips in the foreground.",
+      "framing": "Wide 2:1 interior/exterior wall, seen straight on like a dollhouse cutaway. Keep the lower two-thirds calm and uncluttered: vessel cards sit on top of it. No people.",
+      "style": "scene"
+    },
+    {
+      "id": "gear_sab",
+      "file": "assets/img/gear_sab.png",
+      "width": 256,
+      "height": 256,
+      "background": "transparent",
+      "usedFor": "Shop icon for the still-air box; also drawn small inside its zone once owned.",
+      "prompt": "A DIY still-air box for mushroom work: a clear plastic storage tote turned on its side with two round arm holes cut in the front, lid on, very clean.",
+      "framing": "Object centered, filling about 80% of the canvas, slight three-quarter view."
+    },
+    {
+      "id": "gear_flowhood",
+      "file": "assets/img/gear_flowhood.png",
+      "width": 256,
+      "height": 256,
+      "background": "transparent",
+      "usedFor": "Shop icon for the laminar flow hood; also drawn small inside its zone once owned.",
+      "prompt": "A compact laminar flow hood for a home mushroom lab: a metal box with a large white HEPA filter face covered in a fine grille, a small power switch.",
+      "framing": "Object centered, filling about 80% of the canvas, slight three-quarter view."
+    },
+    {
+      "id": "gear_cooker16",
+      "file": "assets/img/gear_cooker16.png",
+      "width": 256,
+      "height": 256,
+      "background": "transparent",
+      "usedFor": "Shop icon for the 16-quart pressure cooker; also drawn small inside its zone once owned.",
+      "prompt": "A 16-quart aluminum stovetop pressure cooker, medium height, with a weighted regulator on the lid and two black handles.",
+      "framing": "Object centered, filling about 80% of the canvas, slight three-quarter view."
+    },
+    {
+      "id": "gear_cooker23",
+      "file": "assets/img/gear_cooker23.png",
+      "width": 256,
+      "height": 256,
+      "background": "transparent",
+      "usedFor": "Shop icon for the 23-quart pressure canner; also drawn small inside its zone once owned.",
+      "prompt": "A tall 23-quart aluminum pressure canner with a round dial pressure gauge on the lid and two black handles.",
+      "framing": "Object centered, filling about 80% of the canvas, slight three-quarter view."
+    },
+    {
+      "id": "gear_scale",
+      "file": "assets/img/gear_scale.png",
+      "width": 256,
+      "height": 256,
+      "background": "transparent",
+      "usedFor": "Shop icon for the kitchen scale; also drawn small inside its zone once owned.",
+      "prompt": "A flat digital kitchen scale with a stainless steel platform and a small green LCD display (no readable digits).",
+      "framing": "Object centered, filling about 80% of the canvas, slight three-quarter view."
+    },
+    {
+      "id": "gear_sealer",
+      "file": "assets/img/gear_sealer.png",
+      "width": 256,
+      "height": 256,
+      "background": "transparent",
+      "usedFor": "Shop icon for the impulse sealer; also drawn small inside its zone once owned.",
+      "prompt": "A tabletop impulse bag sealer: a white base with a hinged grey sealing arm and a thin heating strip.",
+      "framing": "Object centered, filling about 80% of the canvas, slight three-quarter view."
+    },
+    {
+      "id": "gear_tent",
+      "file": "assets/img/gear_tent.png",
+      "width": 256,
+      "height": 256,
+      "background": "transparent",
+      "usedFor": "Shop icon for the grow tent; also drawn small inside its zone once owned.",
+      "prompt": "A small black fabric grow tent, front panel zipped partly open showing a reflective silver interior and a small clip fan.",
+      "framing": "Object centered, filling about 80% of the canvas, slight three-quarter view."
+    },
+    {
+      "id": "gear_heatmat",
+      "file": "assets/img/gear_heatmat.png",
+      "width": 256,
+      "height": 256,
+      "background": "transparent",
+      "usedFor": "Shop icon for the heat mat with thermostat; also drawn small inside its zone once owned.",
+      "prompt": "A thin black seedling heat mat with a small plug-in digital thermostat controller beside it.",
+      "framing": "Object centered, filling about 80% of the canvas, slight three-quarter view."
+    },
+    {
+      "id": "gear_humidifier",
+      "file": "assets/img/gear_humidifier.png",
+      "width": 256,
+      "height": 256,
+      "background": "transparent",
+      "usedFor": "Shop icon for the humidifier; also drawn small inside its zone once owned.",
+      "prompt": "A small white ultrasonic humidifier with a soft plume of mist rising from the top nozzle.",
+      "framing": "Object centered, filling about 80% of the canvas, slight three-quarter view."
+    },
+    {
+      "id": "gear_hygrometer",
+      "file": "assets/img/gear_hygrometer.png",
+      "width": 256,
+      "height": 256,
+      "background": "transparent",
+      "usedFor": "Shop icon for the hygrometer; also drawn small inside its zone once owned.",
+      "prompt": "A round analog hygrometer/thermometer dial with a green comfort zone arc and a red needle, no readable numbers.",
+      "framing": "Object centered, filling about 80% of the canvas, slight three-quarter view."
+    },
+    {
+      "id": "gear_co2",
+      "file": "assets/img/gear_co2.png",
+      "width": 256,
+      "height": 256,
+      "background": "transparent",
+      "usedFor": "Shop icon for the CO2 monitor; also drawn small inside its zone once owned.",
+      "prompt": "A small white desktop CO2 monitor with a dark display panel and three status lights (green, amber, red), no readable text.",
+      "framing": "Object centered, filling about 80% of the canvas, slight three-quarter view."
+    },
+    {
+      "id": "gear_dehydrator",
+      "file": "assets/img/gear_dehydrator.png",
+      "width": 256,
+      "height": 256,
+      "background": "transparent",
+      "usedFor": "Shop icon for the dehydrator; also drawn small inside its zone once owned.",
+      "prompt": "A round stacking food dehydrator with four translucent trays holding sliced pink oyster mushrooms.",
+      "framing": "Object centered, filling about 80% of the canvas, slight three-quarter view."
+    },
+    {
+      "id": "portrait_mentor",
+      "file": "assets/img/portrait_mentor.png",
+      "width": 512,
+      "height": 512,
+      "background": "transparent",
+      "usedFor": "Speech-bubble portrait of the mentor: a retired mycologist who lives next door (story mode, weekly reviews).",
+      "prompt": "Head-and-shoulders portrait of a retired mycologist neighbor in their late 60s: silver hair in a loose bun, round glasses, raised skeptical eyebrows, a hint of a proud smile, a purple cardigan with a small pink mushroom pin. Expressive, warm, a little dramatic.",
+      "framing": "Bust portrait, face centered in the upper half, shoulders cut by the bottom edge, facing slightly right.",
+      "style": "portrait"
+    },
+    {
+      "id": "portrait_guru",
+      "file": "assets/img/portrait_guru.png",
+      "width": 512,
+      "height": 512,
+      "background": "transparent",
+      "usedFor": "Speech-bubble portrait of the forum guru: a confidently-wrong-half-the-time internet mushroom poster (myth quizzes).",
+      "prompt": "Head-and-shoulders portrait of an enthusiastic internet mushroom-forum guru in their late 20s: mustard beanie, big confident grin, eyebrows mid-lecture, holding up a smartphone, a green hoodie. Comedic, friendly, slightly overconfident.",
+      "framing": "Bust portrait, face centered in the upper half, shoulders cut by the bottom edge, facing slightly left.",
+      "style": "portrait"
     }
-  ]
+  ],
+  "styles": {
+    "scene": {
+      "prompt": "Cozy storybook illustration for a casual mobile game, same art style as the object images: clean vector-like shapes, soft cel shading, gentle gradients, dark plum outlines (#2a1b2e), warm muted palette with flamingo-pink (#e2557a) accents. Flat, straight-on dollhouse-cutaway view, soft even lighting, low detail so overlaid game pieces stay readable.",
+      "negative": "text, letters, numbers, labels, watermark, logo, signature, people, faces, hands, photorealistic, grainy noise, harsh shadows, fisheye, frame, border"
+    },
+    "portrait": {
+      "prompt": "Cozy storybook character portrait for a casual mobile game, same art style as the object images: clean vector-like shapes, soft cel shading, dark plum outlines (#2a1b2e), warm palette with flamingo-pink (#e2557a) accents, expressive but friendly face, readable at small sizes.",
+      "negative": "text, letters, numbers, watermark, logo, signature, photorealistic, uncanny, extra fingers, deformed hands, multiple people, busy background, frame, border"
+    }
+  }
 }

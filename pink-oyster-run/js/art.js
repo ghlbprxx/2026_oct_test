@@ -139,6 +139,84 @@ export const ART = (() => {
     b += `<ellipse cx="960" cy="360" rx="330" ry="300" fill="#fff" opacity=".45"/>` + nest(clusterImg('h6', 'peak'), 700, 40, 620);
     return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720">${b}</svg>`;
   }
+
+  /* ---------- zones (768x384, opaque scenes) ---------- */
+  const W = 768, H = 384;
+  function zone(id) {
+    const r = rngFrom(id.length * 7); let b = '', d = '';
+    if (id === 'kitchen') {
+      b += `<rect width="${W}" height="${H}" fill="#f6e7d8"/>`;
+      for (let x = 0; x < W; x += 32) for (let y = 120; y < 250; y += 24) b += `<rect x="${x + ((y / 24) % 2) * 16}" y="${y}" width="30" height="22" fill="#fbf3ea" stroke="#e8d6c3"/>`;
+      b += `<rect x="0" y="0" width="${W}" height="96" fill="#d9b48a"/><rect x="40" y="10" width="160" height="76" rx="6" fill="#c69a6b"/><rect x="560" y="10" width="170" height="76" rx="6" fill="#c69a6b"/>`;
+      b += `<rect x="290" y="14" width="190" height="96" rx="6" fill="#bfe1f0" stroke="#8a6040" stroke-width="8"/><path d="M385 14V110M290 62H480" stroke="#8a6040" stroke-width="5"/>`;
+      b += `<rect x="0" y="250" width="${W}" height="22" fill="#6b4a31"/><rect x="0" y="272" width="${W}" height="112" fill="#8a6040"/>`;
+      for (let x = 30; x < W; x += 150) b += `<rect x="${x}" y="290" width="120" height="80" rx="6" fill="#9b7050" stroke="#6b4a31" stroke-width="3"/><circle cx="${x + 108}" cy="330" r="4" fill="#e9d2b5"/>`;
+    } else if (id === 'closet') {
+      d = `<radialGradient id="cl"><stop offset="0" stop-color="#ffe9b0" stop-opacity=".55"/><stop offset="1" stop-color="#ffe9b0" stop-opacity="0"/></radialGradient>`;
+      b += `<rect width="${W}" height="${H}" fill="#4b3a2e"/>`;
+      for (let x = 0; x < W; x += 48) b += `<rect x="${x}" y="0" width="46" height="${H}" fill="${r() < .5 ? '#56443a' : '#4f3e33'}"/>`;
+      b += `<ellipse cx="384" cy="40" rx="300" ry="160" fill="url(#cl)"/><rect x="0" y="300" width="${W}" height="20" fill="#7a5a44"/><rect x="0" y="320" width="${W}" height="64" fill="#3a2c22"/>`;
+      b += `<rect x="10" y="10" width="${W - 20}" height="${H - 20}" fill="none" stroke="#2c211a" stroke-width="14"/>`;
+    } else if (id === 'tent') {
+      b += `<rect width="${W}" height="${H}" fill="#cfd5dc"/>`;
+      for (let x = 0; x < W; x += 40) b += `<rect x="${x}" y="0" width="20" height="${H}" fill="#e3e8ee" opacity=".7"/>`;
+      b += `<rect x="0" y="0" width="${W}" height="16" fill="#222"/><rect x="0" y="0" width="14" height="${H}" fill="#222"/><rect x="${W - 14}" y="0" width="14" height="${H}" fill="#222"/>`;
+      b += `<rect x="220" y="22" width="330" height="14" rx="7" fill="#f6f7f9" stroke="#777" stroke-width="2"/><circle cx="90" cy="90" r="46" fill="#333"/><circle cx="90" cy="90" r="36" fill="#555"/>`;
+      for (let k = 0; k < 4; k++) b += `<path d="M90 90 L${90 + Math.cos(k * 1.57) * 32} ${90 + Math.sin(k * 1.57) * 32}" stroke="#bbb" stroke-width="10" stroke-linecap="round"/>`;
+      b += `<rect x="0" y="330" width="${W}" height="54" fill="#2b2b2b"/>`;
+    } else if (id === 'garage') {
+      b += `<rect width="${W}" height="${H}" fill="#b9b6b0"/><rect x="0" y="300" width="${W}" height="84" fill="#8f8c86"/>`;
+      for (let y = 30; y < 290; y += 34) b += `<rect x="420" y="${y}" width="330" height="26" fill="#cfccc6" stroke="#9a978f"/>`;
+      b += `<rect x="30" y="40" width="300" height="180" fill="#c9a77c" stroke="#8a6c48" stroke-width="4"/>`;
+      for (let x = 45; x < 320; x += 18) for (let y = 55; y < 210; y += 18) b += `<circle cx="${x}" cy="${y}" r="2" fill="#8a6c48"/>`;
+      b += `<path d="M80 80 l40 60 M180 70 v70 M240 80 l20 50" stroke="#555" stroke-width="8" stroke-linecap="round"/><rect x="40" y="240" width="300" height="60" fill="#7d5b3c"/>`;
+    } else {
+      d = `<linearGradient id="sk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#bfe3f5"/><stop offset="1" stop-color="#eaf6fb"/></linearGradient>`;
+      b += `<rect width="${W}" height="${H}" fill="url(#sk)"/><rect x="0" y="210" width="${W}" height="174" fill="#7fb069"/>`;
+      for (let x = 0; x < W; x += 28) b += `<rect x="${x}" y="150" width="20" height="70" fill="#d9c3a0" stroke="#b39b78"/>`;
+      b += `<rect x="0" y="175" width="${W}" height="8" fill="#b39b78"/><circle cx="640" cy="90" r="70" fill="#5c9a4f"/><rect x="630" y="120" width="20" height="100" fill="#6b4a31"/>`;
+      b += `<rect x="60" y="270" width="560" height="80" rx="18" fill="#8a6040"/>`;
+      for (let k = 0; k < 220; k++) b += `<rect x="${(70 + r() * 540).toFixed(0)}" y="${(276 + r() * 66).toFixed(0)}" width="${(6 + r() * 10).toFixed(0)}" height="4" fill="${r() < .5 ? '#b0835a' : '#6f4b2e'}" transform="rotate(${Math.floor(r() * 180)} ${(70 + r() * 540).toFixed(0)} 300)"/>`;
+    }
+    return wrap(W, H, d, b);
+  }
+
+  /* ---------- equipment icons (256, transparent) ---------- */
+  function gear(id) {
+    const g2 = (body) => wrap(256, 256, `<linearGradient id="mt" x1="0" x2="1"><stop offset="0" stop-color="#c9ced6"/><stop offset=".5" stop-color="#f2f4f7"/><stop offset="1" stop-color="#aab1bb"/></linearGradient>`, shadow(128, 236, 90) + body);
+    switch (id) {
+      case 'sab': return g2(`<rect x="28" y="70" width="200" height="150" rx="16" fill="#e8f3f7" fill-opacity=".8" stroke="${OL}" stroke-width="5"/><rect x="22" y="56" width="212" height="22" rx="8" fill="#b7d3df" stroke="${OL}" stroke-width="5"/><circle cx="88" cy="170" r="26" fill="#fff" stroke="${OL}" stroke-width="4"/><circle cx="168" cy="170" r="26" fill="#fff" stroke="${OL}" stroke-width="4"/>`);
+      case 'flowhood': return g2(`<rect x="34" y="40" width="188" height="180" rx="10" fill="url(#mt)" stroke="${OL}" stroke-width="5"/><rect x="52" y="60" width="152" height="120" fill="#f7f7f7" stroke="#888" stroke-width="3"/>${Array.from({ length: 9 }, (_, k) => `<path d="M${60 + k * 17} 64v112" stroke="#ccc" stroke-width="3"/>`).join('')}<rect x="52" y="190" width="40" height="14" rx="4" fill="#2b8a5d"/>`);
+      case 'cooker16': return g2(`<rect x="52" y="104" width="152" height="118" rx="18" fill="url(#mt)" stroke="${OL}" stroke-width="5"/><path d="M48 108 Q128 64 208 108 Z" fill="url(#mt)" stroke="${OL}" stroke-width="5"/><circle cx="160" cy="84" r="14" fill="#fff" stroke="${OL}" stroke-width="4"/><rect x="18" y="126" width="36" height="14" rx="7" fill="${OL}"/><rect x="202" y="126" width="36" height="14" rx="7" fill="${OL}"/>`);
+      case 'cooker23': return g2(`<rect x="52" y="64" width="152" height="158" rx="18" fill="url(#mt)" stroke="${OL}" stroke-width="5"/><path d="M48 68 Q128 22 208 68 Z" fill="url(#mt)" stroke="${OL}" stroke-width="5"/><circle cx="160" cy="44" r="14" fill="#fff" stroke="${OL}" stroke-width="4"/><path d="M160 44l8-7" stroke="#c0392b" stroke-width="3"/><rect x="18" y="96" width="36" height="14" rx="7" fill="${OL}"/><rect x="202" y="96" width="36" height="14" rx="7" fill="${OL}"/>`);
+      case 'scale': return g2(`<rect x="40" y="150" width="176" height="62" rx="14" fill="#eceff3" stroke="${OL}" stroke-width="5"/><rect x="56" y="128" width="144" height="24" rx="8" fill="url(#mt)" stroke="${OL}" stroke-width="5"/><rect x="92" y="168" width="72" height="28" rx="4" fill="#1f3b2d"/><rect x="100" y="176" width="40" height="12" fill="#5cc995"/>`);
+      case 'sealer': return g2(`<rect x="34" y="150" width="188" height="56" rx="10" fill="#f2f2f2" stroke="${OL}" stroke-width="5"/><path d="M40 146 L208 110 L216 126 L48 160 Z" fill="#9aa0aa" stroke="${OL}" stroke-width="5"/><rect x="60" y="164" width="140" height="8" rx="4" fill="#e2557a"/>`);
+      case 'tent': return g2(`<rect x="48" y="28" width="160" height="194" rx="6" fill="#262626" stroke="${OL}" stroke-width="5"/><rect x="66" y="56" width="124" height="140" rx="4" fill="#cfd5dc"/><path d="M128 56v140" stroke="#9aa0aa" stroke-width="4"/><circle cx="96" cy="78" r="12" fill="#555"/>`);
+      case 'heatmat': return g2(`<rect x="30" y="150" width="196" height="54" rx="10" fill="#2b2b2b" stroke="${OL}" stroke-width="5"/><path d="M44 178 ${Array.from({ length: 9 }, (_, k) => `L${54 + k * 20} ${k % 2 ? 166 : 190}`).join(' ')}" fill="none" stroke="#e2557a" stroke-width="4"/><rect x="150" y="96" width="62" height="42" rx="8" fill="#eee" stroke="${OL}" stroke-width="4"/><rect x="160" y="106" width="34" height="14" fill="#1f3b2d"/>`);
+      case 'humidifier': return g2(`<rect x="78" y="100" width="100" height="122" rx="26" fill="#f4f6f8" stroke="${OL}" stroke-width="5"/><rect x="104" y="84" width="48" height="22" rx="8" fill="#d6dde3" stroke="${OL}" stroke-width="4"/><path d="M128 76 q-18 -20 0 -40 q18 -18 0 -36" stroke="#bfe3f5" stroke-width="10" fill="none" stroke-linecap="round"/><rect x="104" y="150" width="48" height="48" rx="8" fill="#bfe3f5"/>`);
+      case 'hygrometer': return g2(`<circle cx="128" cy="132" r="84" fill="#fafafa" stroke="${OL}" stroke-width="6"/><path d="M70 150 A62 62 0 0 1 186 150" fill="none" stroke="#2b8a5d" stroke-width="10"/><path d="M128 132 L170 96" stroke="#c0392b" stroke-width="5" stroke-linecap="round"/><circle cx="128" cy="132" r="7" fill="${OL}"/>`);
+      case 'co2': return g2(`<rect x="44" y="70" width="168" height="140" rx="22" fill="#f4f4f4" stroke="${OL}" stroke-width="5"/><rect x="62" y="90" width="132" height="64" rx="6" fill="#1f3b2d"/><rect x="74" y="104" width="22" height="36" fill="#5cc995"/><rect x="104" y="104" width="22" height="36" fill="#5cc995"/><rect x="134" y="104" width="22" height="36" fill="#5cc995"/><circle cx="96" cy="182" r="9" fill="#2b8a5d"/><circle cx="128" cy="182" r="9" fill="#e2ac52"/><circle cx="160" cy="182" r="9" fill="#c0392b"/>`);
+      default: return g2(`${[0, 1, 2, 3].map(k => `<rect x="44" y="${66 + k * 38}" width="168" height="32" rx="8" fill="#f4f4f4" stroke="${OL}" stroke-width="4"/><path d="M60 ${82 + k * 38}h136" stroke="#e7a3b5" stroke-width="5" stroke-dasharray="10 8"/>`).join('')}<rect x="44" y="40" width="168" height="28" rx="12" fill="#d6dde3" stroke="${OL}" stroke-width="4"/>`);
+    }
+  }
+
+  /* ---------- portraits (512, transparent) ---------- */
+  function portrait(who) {
+    const skin = who === 'mentor' ? '#e8c4a6' : '#c98f6b';
+    let b = `<path d="M96 512 Q96 360 256 350 Q416 360 416 512 Z" fill="${who === 'mentor' ? '#7a5a8a' : '#3a7d6b'}" stroke="${OL}" stroke-width="6"/>`;
+    b += `<rect x="226" y="300" width="60" height="70" fill="${skin}" stroke="${OL}" stroke-width="6"/><ellipse cx="256" cy="230" rx="110" ry="126" fill="${skin}" stroke="${OL}" stroke-width="6"/>`;
+    if (who === 'mentor') {
+      b += `<path d="M146 210 Q150 90 256 92 Q362 90 366 210 Q340 140 256 140 Q172 140 146 210 Z" fill="#d9d9de" stroke="${OL}" stroke-width="6"/><circle cx="256" cy="86" r="40" fill="#d9d9de" stroke="${OL}" stroke-width="6"/>`;
+      b += `<circle cx="212" cy="236" r="30" fill="none" stroke="${OL}" stroke-width="6"/><circle cx="300" cy="236" r="30" fill="none" stroke="${OL}" stroke-width="6"/><path d="M242 236h28" stroke="${OL}" stroke-width="6"/>`;
+      b += `<circle cx="212" cy="238" r="6" fill="${OL}"/><circle cx="300" cy="238" r="6" fill="${OL}"/><path d="M220 300 Q256 286 292 300" stroke="${OL}" stroke-width="6" fill="none" stroke-linecap="round"/><path d="M188 196 l40 8 M324 196 l-40 8" stroke="${OL}" stroke-width="7" stroke-linecap="round"/>`;
+      b += `<path d="M232 400 q24 -30 48 0 q-24 20 -48 0z" fill="#e2557a" stroke="${OL}" stroke-width="4"/>`;
+    } else {
+      b += `<path d="M146 200 Q146 96 256 96 Q366 96 366 200 L366 176 Q256 140 146 176 Z" fill="#e2ac52" stroke="${OL}" stroke-width="6"/><rect x="232" y="60" width="48" height="40" rx="20" fill="#e2ac52" stroke="${OL}" stroke-width="6"/>`;
+      b += `<circle cx="214" cy="236" r="9" fill="${OL}"/><circle cx="298" cy="236" r="9" fill="${OL}"/><path d="M204 296 Q256 336 308 296" stroke="${OL}" stroke-width="7" fill="#fff" stroke-linejoin="round"/>`;
+      b += `<rect x="330" y="300" width="56" height="96" rx="10" fill="#2b2b2b" stroke="${OL}" stroke-width="5" transform="rotate(14 358 348)"/><path d="M196 200 l36 -6 M316 194 l-36 0" stroke="${OL}" stroke-width="7" stroke-linecap="round"/>`;
+    }
+    return wrap(512, 512, '', b);
+  }
   const gen = {
     plate_empty: () => plate('a', false), plate_colonized: () => plate('a', true),
     jar_empty: () => jar('b', false), jar_colonized: () => jar('b', true),
@@ -147,6 +225,10 @@ export const ART = (() => {
     cluster_young: () => clusterImg('d', 'young'), cluster_peak: () => clusterImg('d', 'peak'), cluster_leggy: () => clusterImg('d', 'leggy'),
     cluster_dry: () => clusterImg('d', 'dry'), cluster_overripe: () => clusterImg('d', 'overripe'), block_spent: spent,
     mold_overlay: () => mold('e'), crate_fresh: () => crateFresh('f'), crate_dried: crateDried, cooker: () => cooker('g'), title_hero: hero,
+    zone_kitchen: () => zone('kitchen'), zone_closet: () => zone('closet'), zone_tent: () => zone('tent'), zone_garage: () => zone('garage'), zone_yard: () => zone('yard'),
+    gear_sab: () => gear('sab'), gear_flowhood: () => gear('flowhood'), gear_cooker16: () => gear('cooker16'), gear_cooker23: () => gear('cooker23'), gear_scale: () => gear('scale'), gear_sealer: () => gear('sealer'),
+    gear_tent: () => gear('tent'), gear_heatmat: () => gear('heatmat'), gear_humidifier: () => gear('humidifier'), gear_hygrometer: () => gear('hygrometer'), gear_co2: () => gear('co2'), gear_dehydrator: () => gear('dehydrator'),
+    portrait_mentor: () => portrait('mentor'), portrait_guru: () => portrait('guru'),
   };
   const cache = {};
   return {

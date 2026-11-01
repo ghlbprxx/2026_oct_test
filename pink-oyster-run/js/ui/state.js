@@ -3,7 +3,7 @@ import { reactive } from 'vue';
 import { loadProfile, saveProfile } from '../save.js';
 
 const profile = loadProfile();
-export const ui = reactive({ screen: 'title', sheet: null, modal: null, notebook: false, nbTab: 'guide', nbStage: 'agar', paused: false, autoPaused: false, speed: 1, modalQueue: [],
+export const ui = reactive({ screen: 'title', sheet: null, modal: null, notebook: false, nbTab: 'guide', nbStage: 'agar', paused: false, autoPaused: false, speed: 1, modalQueue: [], shop: false, hover: null,
   toasts: [], floats: [], muted: profile.muted, best: profile.best, lessons: profile.lessons, newBest: false });
 export const S = reactive({ g: null });
 /** Modals queue up instead of overwriting each other (e.g. a week card and a market quiz in one tick). */

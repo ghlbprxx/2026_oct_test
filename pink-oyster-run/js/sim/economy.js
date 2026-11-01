@@ -17,7 +17,7 @@ export const shelfLifeDays = g => C.economy.shelfLife * rotMult(g);
 export const money = (v, d) => { const a = Math.abs(v); d ??= (a < 100 && Math.abs(a - Math.round(a)) > 0.004) ? 2 : 0; return (v < 0 ? '−$' : '$') + a.toFixed(d); };
 export function pay(g, cost) {
   if (g.cash < cost) { emit('toast', { text: `Not enough cash (${money(cost)}).`, c: 'bad' }); emit('sfx', { name: 'bad' }); return false; }
-  g.cash -= cost; g.stats.spent += cost; return true;
+  g.cash -= cost; g.stats.spent += cost; if (cost >= 1) emit('cash', { delta: -cost }); return true;
 }
 export function stepLots(g, dd) {
   if (C.dev.god) return;
@@ -32,6 +32,7 @@ export function stepLots(g, dd) {
   }
 }
 export function dryAll(g) {
+  if (!g.gear.dehydrator) { emit('toast', { text: 'You need a dehydrator to dry mushrooms. It’s in the shop.', c: 'bad' }); return false; }
   const kg = g.lots.reduce((a, l) => a + l.kg, 0); if (!kg) return false;
   g.dried += kg; g.lots = []; emit('sfx', { name: 'good' }); learn(g, 'dry_save');
   log(g, `Dehydrated ${fmtLb(kg)}.`, 'good'); emit('toast', { text: `Dried ${fmtLb(kg)}. It keeps all season.` });
@@ -39,7 +40,7 @@ export function dryAll(g) {
 }
 export function sellAll(g) {
   const P = C.economy, fresh = g.lots.reduce((a, l) => a + l.kg, 0), dried = g.dried, rev = lb(fresh) * P.priceFresh + lb(dried) * P.priceDried;
-  g.cash += rev; g.stats.revenue += rev; g.stats.freshKg += fresh; g.stats.driedKg += dried; g.lots = []; g.dried = 0;
+  g.cash += rev; g.stats.revenue += rev; if (rev > 0) emit('cash', { delta: rev }); g.stats.freshKg += fresh; g.stats.driedKg += dried; g.lots = []; g.dried = 0;
   return { fresh, dried, rev };
 }
 export function market(g, closing) {

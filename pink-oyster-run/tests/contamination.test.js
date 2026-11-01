@@ -5,7 +5,7 @@ import { baseHazard, hazard, causeOf, revealLag, inheritedCause } from '../js/si
 import { hazardMult, startCash, canSalvage } from '../js/sim/stages.js';
 import { mk } from '../js/sim/growth.js';
 
-const env = { temp: 75, rh: 90 };
+const env = { temp: 75, rh: 90, dirt: 1 };
 const g = (o = {}) => ({ seq: 0, day: 30, mode: 'normal', ...o });
 
 test('pasteurized grain is far riskier than sterilized grain', () => {

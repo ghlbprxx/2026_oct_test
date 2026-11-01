@@ -1,51 +1,55 @@
-// Bot check: doing nothing must not pay; careful play must beat sloppy play.
+// Bot check: doing nothing must earn nothing; careful play must clearly beat sloppy play.
+// Gear is an investment (~$400 for the careful kit), so skill is compared on revenue, and net profit is reported.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { setup, run } from './helpers.js';
 import * as sim from '../js/sim/game.js';
-import { baseTemp } from '../js/sim/environment.js';
 import { canShake } from '../js/sim/growth.js';
 import { dryAll } from '../js/sim/economy.js';
-export { median };
+import { buy, canBuy } from '../js/sim/shop.js';
+import { spotsIn, spotOpen } from '../js/sim/zones.js';
+import { isBlock } from '../js/sim/contamination.js';
 
-function bot(style) {
+const KITS = { good: ['sab', 'cooker23', 'hygrometer', 'tent', 'heatmat', 'humidifier', 'dehydrator'], sloppy: ['cooker16', 'tent'] };
+export function bot(style) {
   return g => {
     if (style === 'idle') return;
-    g.heater = baseTemp(g) + 8 >= 72 ? 1 : 2; g.fae = 5; g.mist = 98;
-    if (style !== 'sloppy' && !g.hasSab) sim.buildSab(g);
+    for (const id of KITS[style]) if (!g.gear[id] && canBuy(g, id).ok) buy(g, id);
+    g.heater = 1; g.fae = 5; g.mist = style === 'good' ? 98 : 80;
     g.slots.forEach((v, i) => {
       if (!v) return;
       if (v.state === 'lost' || (v.contam.vis > 0 && v.kind !== 'plate')) return sim.toss(g, i);
-      if (v.contam.vis > 0) return g.cash >= 1 ? sim.cutEdge(g, i) : sim.toss(g, i);
+      if (v.contam.vis > 0) return sim.cutEdge(g, i);
       if (v.state === 'peak' || v.state === 'overripe') return sim.harvest(g, i);
       if (v.state === 'spent') return sim.retire(g, i);
       if (canShake(v)) return sim.shake(g, i);
       if (v.state === 'ready') { const s = sim.sources(g, v).filter(x => !(x.v.contam.vis > 0)); if (s.length) sim.inoculate(g, i, s[0].i); }
+      if (isBlock(v) && !spotsIn('tent').includes(i)) { const t = spotsIn('tent').find(j => !g.slots[j] && spotOpen(g, j)); if (t != null) sim.move(g, i, t); }
     });
-    if (g.lots.length) dryAll(g);
-    const prep = style === 'sloppy' ? 'past' : 'ster', e = g.slots.findIndex(v => !v);
+    if (g.lots.length && g.gear.dehydrator) dryAll(g);
+    const free = ['closet', 'kitchen'].flatMap(spotsIn).find(i => !g.slots[i]);
+    if (free == null) return;
     const pending = k => g.slots.filter(v => v && v.kind === k && ['queued', 'cooking', 'bath', 'ready'].includes(v.state)).length;
     const spawn = g.slots.filter(v => v && v.kind === 'jar' && ['colonizing', 'colonized'].includes(v.state)).reduce((a, v) => a + (v.state === 'colonized' ? v.uses : 2), 0);
-    if (e < 0) return;
-    if (g.slots.filter(v => v && v.kind === 'plate').length < 2 && g.cash >= 2) sim.pourPlate(g, e, style === 'sloppy' ? 'super' : 'mea');
-    else if (pending('bag') < spawn && g.cash >= 8) sim.prepBag(g, e, 'masters', prep);
-    else if (pending('jar') + spawn < 2 && g.cash >= 2) sim.prepJar(g, e, prep);
+    const prep = style === 'sloppy' ? 'past' : 'ster';
+    if (g.slots.filter(v => v && v.kind === 'plate').length < 1) sim.pourPlate(g, free, style === 'sloppy' ? 'super' : 'mea');
+    else if (pending('bag') < spawn) sim.prepBag(g, free, 'masters', prep);
+    else if (pending('jar') + spawn < 2) sim.prepJar(g, free, prep === 'ster' && !g.cookers.length ? 'past' : prep);
   };
 }
-async function median(style, n = 9) {
-  const out = [];
-  for (let k = 0; k < n; k++) {
-    const C = setup(100 + k);
-    const g = sim.newGame();
-    await run(g, C.time.seasonWeeks * 5 + 1, bot(style), 0.1);
-    out.push(g.cash - g.startCash);
-  }
-  return out.sort((a, b) => a - b)[Math.floor(n / 2)];
+export async function season(style, seed) {
+  const C = setup(seed);
+  const g = sim.newGame();
+  await run(g, C.time.seasonWeeks * 5 + 1, bot(style), 0.1);
+  return { revenue: g.stats.revenue, profit: g.cash - g.startCash, lost: g.stats.lost };
 }
+const median = a => [...a].sort((x, y) => x - y)[Math.floor(a.length / 2)];
 
-test('idle earns nothing; careful play beats sloppy play', async () => {
-  const idle = await median('idle'), good = await median('good'), sloppy = await median('sloppy');
-  assert.ok(idle <= 0, `idle median ${idle}`);
-  assert.ok(good > sloppy + 20, `good ${good} vs sloppy ${sloppy}`);
-  assert.ok(good > 0, `good median ${good}`);
+test('idle earns nothing; careful play clearly out-earns sloppy play', async () => {
+  const out = {};
+  for (const st of ['idle', 'good', 'sloppy']) { const r = []; for (let k = 0; k < 7; k++) r.push(await season(st, 100 + k)); out[st] = { revenue: median(r.map(x => x.revenue)), profit: median(r.map(x => x.profit)) }; }
+  console.log('# bot medians', JSON.stringify(out));
+  assert.equal(out.idle.revenue, 0);
+  assert.ok(out.idle.profit <= 0);
+  assert.ok(out.good.revenue > out.sloppy.revenue * 1.5 + 50, JSON.stringify(out));
 });

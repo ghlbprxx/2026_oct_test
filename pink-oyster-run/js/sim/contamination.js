@@ -3,6 +3,7 @@ import { C } from './cfg.js';
 import { RULES } from './rules.js';
 import { hazardMult } from './stages.js';
 import { RECIPES, SPECIES } from '../content/species/pink-oyster.js';
+import { workFactor } from './shop.js';
 
 export const FRUIT = ['pinning', 'growing', 'peak', 'overripe', 'resting', 'spent'];
 export const isBlock = v => !!v && v.kind === 'bag' && FRUIT.includes(v.state === 'lost' ? v.lostFrom : v.state);
@@ -10,8 +11,11 @@ export const mediumSpeed = m => m === 'super' ? RULES.superSpeed : m === 'cma' ?
 
 /** Base chance per real day, before difficulty and hazardScale. */
 export function baseHazard(v, env) {
+  return rawHazard(v, env) * (env.dirt ?? 1) * (v.scaled ? RULES.scaleFactor : 1) * (v.sealed ? RULES.sealerFactor : 1);
+}
+function rawHazard(v, env) {
   const K = SPECIES.contam;
-  if (v.kind === 'plate') return K.plateOpenAir * (v.ws === 'sab' ? C.contam.sabFactor : 1) * (v.state === 'colonized' ? 0.5 : 1);
+  if (v.kind === 'plate') return K.plateOpenAir * workFactor(v.ws || 'open') * (v.state === 'colonized' ? 0.5 : 1);
   if (['queued', 'cooking', 'bath', 'spent'].includes(v.state)) return 0;
   if (v.kind === 'jar') { const h = v.prep === 'ster' ? K.jarSterile : K.jarPasteurized; return h * (v.state === 'ready' ? 0.5 : v.state === 'colonized' ? 0.3 : 1); }
   let h = RECIPES[v.recipe].hz[v.prep];
@@ -28,7 +32,7 @@ export const hazard = (g, v, env) => baseHazard(v, env) * C.contam.hazardScale *
 
 /** Lesson id that explains a fresh infection. */
 export function causeOf(v, env) {
-  if (v.kind === 'plate') return v.ws === 'open' ? 'open_air' : 'luck';
+  if (v.kind === 'plate') return v.ws === 'open' || !v.ws ? 'open_air' : 'luck';
   if (v.kind === 'jar') return v.prep === 'past' ? 'past_grain' : 'luck';
   const R = RECIPES[v.recipe];
   if (v.recipe === 'coffee') return 'coffee';

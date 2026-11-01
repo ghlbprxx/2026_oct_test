@@ -15,3 +15,6 @@
 - 2026-11-01 Phase 2 slow start gates systems by week (plates → jars → bags → grow room, every progression.unlockPace weeks). Interim: Phase 4 replaces it with mastery.
 - 2026-11-01 Still-air box is a one-time $15 DIY build offered in the build menu (cleanliness = the week-1 variable); Phase 3 folds it into the equipment shop.
 - 2026-11-01 Relaxed "soft contamination" = mold on jars/bags can be cut out (keeps difficulty.salvageQuality of yield/uses) instead of tossing.
+- 2026-11-01 (user add-on) Images stay optional: assets/tools/gen-images.mjs runs a user-filled command template from assets/tools/image.config.json per missing file; it never guesses fal.ai CLI flags, mirrors the brief's gen-voice.mjs design.
+- 2026-11-01 GSAP 3.12.5 via import map ("gsap" → jsDelivr index.js, ESM), loaded with dynamic import() in fx.js so a CDN failure only drops animations; moves across zones animate a fixed-position clone because zones clip overflow.
+- 2026-11-01 Season rank uses operating profit (cash change + gear bought); gear is equipment the player keeps — careful-bot season: ~$300 revenue vs ~$430 of gear, so cash profit punished good play. Phase 4 (shop sales of mastered stages) is where the money loop is meant to close.

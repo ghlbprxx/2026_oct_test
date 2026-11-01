@@ -12,6 +12,7 @@ export const CONFIG_SCHEMA = {
   contam: {
     hazardScale: { value: 1, min: 0, max: 3, step: 0.05, note: 'Multiplies every species contamination chance' },
     sabFactor: { value: 0.3, min: 0.05, max: 1, step: 0.05, note: 'Still-air box multiplier on open-air risk (hobby claims: 85–95% clean vs 50–70% open)' },
+    flowHoodFactor: { value: 0.1, min: 0.01, max: 1, step: 0.01, note: 'Flow hood multiplier on open-air risk (claims: 99%+ clean)' },
     openAirInoc: { value: 0.15, min: 0, max: 0.5, step: 0.01, note: 'Chance one inoculation in open air carries spores in (SAB multiplies it)' },
     revealDays: { value: 3, min: 0, max: 10, step: 0.5, note: 'Real days from infection until mold is visible' },
     overrunDays: { value: 6, min: 1, max: 15, step: 0.5, note: 'Real days from visible mold to a fully overrun vessel' },
@@ -24,15 +25,17 @@ export const CONFIG_SCHEMA = {
     heaterCost: { value: 1, min: 0, max: 10, step: 0.25, note: '$ per game day per heater step (small thermostat heater in a closed room)' },
     targetProfit: { value: 300, min: 50, max: 3000, step: 25, note: 'Season profit that earns the top rank' },
   },
+  shop: {
+    priceScale: { value: 1, min: 0.25, max: 3, step: 0.05, note: 'Multiplies every equipment price (approximate US retail)' },
+  },
   equipment: {
-    slots: { value: 9, min: 4, max: 15, step: 1, restart: true, note: 'Shelves in the grow room' },
-    cookerCapacity: { value: 7, min: 1, max: 14, step: 1, note: 'Quart jars per cooker load (Presto 16 and 23 qt: 7)' },
     cookerDays: { value: 1, min: 0.25, max: 3, step: 0.25, note: 'Real days per cooker cycle incl. cooling' },
   },
   room: {
-    seasonStartTemp: { value: 63, min: 50, max: 85, step: 1, note: 'Unheated room °F at the start of the season' },
-    seasonEndTemp: { value: 55, min: 40, max: 85, step: 1, note: 'Unheated room °F at the end of the season' },
-    coldSnapChance: { value: 0.04, min: 0, max: 0.3, step: 0.01, note: 'Chance per game day of a forecast cold snap, once the room unlocks' },
+    houseTemp: { value: 68, min: 55, max: 80, step: 1, note: 'Thermostat °F: kitchen +2, closet +4, tent + heat mat' },
+    seasonStartTemp: { value: 63, min: 50, max: 85, step: 1, note: 'Outdoor °F (garage, yard) at the start of the season' },
+    seasonEndTemp: { value: 55, min: 40, max: 85, step: 1, note: 'Outdoor °F at the end of the season' },
+    coldSnapChance: { value: 0.04, min: 0, max: 0.3, step: 0.01, note: 'Chance per game day of a forecast cold snap (hits the garage hard, the house a little)' },
   },
   progression: {
     unlockPace: { value: 1, min: 1, max: 3, step: 1, restart: true, note: 'Weeks between new systems (plates → jars → bags → grow room). Slow start.' },

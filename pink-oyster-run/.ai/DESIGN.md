@@ -21,10 +21,10 @@ Fantasy: "I'm becoming a real home grower." Pillars: **Mastery**, **Discovery**,
 
 ## Economy
 [now] Cash by difficulty ($2,500/$1,500/$800); costs: plates $1.50, jars $3, bags $3–7, SAB $15, heater $1/step/game day; income: market every 2 game days once the grow room opens (fresh $14/lb, dried $8/fresh-lb), quiz tips. Careful-bot season (12 wk): +$125..+$350. Cash is far more than consumables need until Phase 3's equipment shop.
-[target] Equipment shop; online shop listings w/ player-set price, demand, reputation; farmers market (fresh only, booth fee); dehydrator → dried sells online; ≥2 competing sinks per currency (gear vs inventory vs booth vs automation).
+[now] Equipment shop (12 items, capability-changing, approx. US prices, shop.priceScale). Season ranked by operating profit (gear excluded). [target] Online shop listings w/ player-set price, demand, reputation; farmers market (fresh only, booth fee); dehydrator → dried sells online; ≥2 competing sinks per currency (gear vs inventory vs booth vs automation).
 
 ## Environment / zones
-[now] 9 unlabeled shelves; closet at 72°F until week 4, then the grow room (heater 3 steps, fresh air, mist).
+[now] Side-view house: kitchen 2 (70°F, dry, dirt 1.3), closet 3 (72°F steady, CO₂ 2500, dirt 0.8), tent 3 (needs tent; heat mat +6°F/step, fan, mist capped 88% without humidifier), garage 2 (outdoor season −4°F ±7 swing, cold snaps), yard 2 (locked until wine cap). zoneFit explains wrong-zone placement; move action with GSAP fly. Readings need hygrometer / CO₂ monitor, else qualitative.
 [target] Side-view house cutaway: kitchen counter, closet shelf, grow tent, garage, back yard; each zone 2–3 spots with own temp/RH/cleanliness; wrong-zone placement has visible, explained consequence.
 
 ## Story & mentors
@@ -37,7 +37,7 @@ Fantasy: "I'm becoming a real home grower." Pillars: **Mastery**, **Discovery**,
 
 ## UI / UX & feel
 [now] Vue 3 single page; shelf grid; side panel; action sheet; notebook (guide, lessons, cheat sheet, art); toasts/floats; admin panel.
-[now] Playback bar (pause, 0.5–8×, `[` `]`). [target] Zone cutaway with GSAP, weekly review cards, settings panel.
+[now] Playback bar (pause, 0.5–8×, `[` `]`). GSAP: place/move/stage pops/pluck/cash/mold alarm/week cards/house entrance; CSS tent mist + cooker steam. [target] Zone cutaway with GSAP, weekly review cards, settings panel.
 
 ## Audio
 [now] WebAudio synth SFX, mute.

@@ -23,51 +23,74 @@ Or use `python3 -m http.server 8000` and open `http://localhost:8000`. You need 
 | `css/styles.css` | Design tokens, dark mode, layout |
 | `js/main.js` | Boot, sim-event → UI wiring, game loop, keyboard, admin hooks |
 | `js/config-schema.js`, `js/config.js` | Tuning knobs; the ISF admin panel (template verbatim) |
-| `js/sim/` | Pure simulation (no DOM, no Vue): clock, environment, growth, contamination, economy, equipment, game |
-| `js/content/` | Data: field guide, myths, lessons, species recipes |
+| `js/sim/` | Pure simulation (no DOM, no Vue): clock, stages, zones, shop, environment, growth, contamination, economy, equipment (cookers), game |
+| `js/content/` | Data: field guide, myths, lessons, species biology, zones, equipment, week cards |
 | `js/ui/` | Vue template, root component, view helpers |
 | `js/art.js`, `js/images.js` | SVG placeholders; image-manifest loader |
-| `js/audio.js`, `js/fx.js`, `js/save.js` | Synth SFX; toasts/floats; versioned profile save |
+| `js/audio.js`, `js/fx.js`, `js/save.js` | Synth SFX; toasts, floats and GSAP motion; versioned profile save |
+| `assets/tools/` | `gen-images.mjs` + `image.config.json`: optional image generation from images.json |
 | `.ai/` | Working notes: design, plan, progress log, decisions |
 
 ## How it plays
 
 **New game:** pick Relaxed ($2,500; mold can be cut out of jars and bags, produce keeps longer), Normal ($1,500; gentle mold odds in weeks 0–1) or Hardcore ($800; full losses, grace only in week 0).
 
+**Your house, side view.** Every zone has its own temperature, humidity, CO₂ and cleanliness, and a vessel in the wrong zone shows a ⚠ with the reason:
+
+| Zone | Spots | Conditions | What belongs there |
+|---|---|---|---|
+| Kitchen counter | 2 | ~70°F, dry, busy air (more spores) | Plate work. Your still-air box or flow hood lives here. |
+| Closet shelf | 3 | Steady ~72°F, dark, still, cleanest | Incubating plates, jars and bags |
+| Grow tent | 3 | You set it: heat mat, fan, mist | Fruiting blocks (bought from week 4) |
+| Garage | 2 | Follows the weather, swings ±7°F, cold snaps hit hard | The pressure cooker; cheap storage |
+| Back yard | 2 | Outdoors | Wine cap beds (a later species) |
+
+Tap a vessel to see its zone's verdict and move it (moves animate between rooms). Exact readings need a hygrometer and a CO₂ monitor; without them you only get "warm / dry air / stale air".
+
+**The shop** (approximate US prices): still-air box $15 (DIY tote), flow hood $900 (week 6+), pressure cooker 16 qt $100 (7 jars) or 23 qt $150 (7 jars or 2 grow bags; needed to sterilize bags), scale $25, impulse sealer $60, grow tent $90, heat mat $30, humidifier $45, hygrometer $12, CO₂ monitor $120, dehydrator $60. Each item changes what you can do or your odds; none is a flat "+X%".
+
 | Week | What opens | What it teaches |
 |---|---|---|
-| 0–1 | Agar plates, in a steady 72°F closet | Cleanliness. Plates poured on the open counter catch spores; a $15 DIY still-air box cuts that sharply. MEA vs super agar (fast, hides mold) vs CMA (slow, shows mold). |
-| 2 | Grain jars + pressure cooker (7 quart jars per load) | Grain must be pressure-cooked. Shake at about a third. Spawning from a moldy (or secretly moldy) plate carries it downstream. |
-| 3 | Substrate bags (coir, straw, sawdust + bran, Masters Mix) | Richer mixes yield more, mold more and colonize slower (straw 10–14 days, supplemented 14–21). Rich mixes must be sterilized; plain straw does worse sterilized. |
-| 4+ | The grow room (heater, fresh air, mist) and market days | Pinks won't pin below ~64°F. Stale air gives leggy clusters, dry air cracks caps. Fresh pinks last 1–3 days: sell or dehydrate. |
+| 0–1 | Agar plates | Cleanliness: open counter vs still-air box. MEA vs super agar (fast, hides mold) vs CMA (slow, shows mold). |
+| 2 | Grain jars (needs a cooker) | Grain must be pressure-cooked. Shake at about a third. A moldy (or secretly moldy) plate carries mold downstream. |
+| 3 | Substrate bags | Richer mixes yield more, mold more, colonize slower. Rich mixes need sterilizing (23 qt); plain straw prefers a hot bath. |
+| 4+ | Grow tent and market days | Pinks won't pin below ~64°F; stale air makes leggy clusters; dry air cracks caps. Fresh pinks last 1–3 days. |
 
-The season ends after 12 weeks with a closing market and a report. Prices are in $/lb (fresh $14/lb; see `.ai/DESIGN.md` for how confident the researched numbers are).
+The season ends after 12 weeks. It's ranked by operating profit (gear is equipment you keep, so it isn't counted against you).
 
-**Controls:** tap or click a shelf. Keys: `1`–`9` shelves · `Space` pause · `[` `]` slower/faster · `H` heater · `D` dehydrate · `N` notebook · `M` mute · `` ` `` admin panel.
+**Controls:** tap or click a spot. Keys: `1`–`9`, `0`, `-`, `=` spots (left to right, top to bottom on phones) · `Space` pause · `[` `]` slower/faster · `S` shop · `H` heat mat · `D` dehydrate · `N` notebook · `M` mute · `` ` `` admin panel.
 
-## Replacing the art with AI-generated images
+**Motion:** GSAP 3.12.5 (pinned, loaded lazily from jsDelivr) animates placing, moving, growth stages, harvests, money changes, mold alarms and week cards; CSS adds tent mist and cooker steam. Everything turns off with reduced motion or the admin panel's `dev.juice`, and if GSAP can't load the game still works.
 
-Everything is driven by **`assets/images.json`**. Each of its 21 entries has:
+## Images (optional): generating them with fal.ai or any CLI
 
-| Field | Meaning |
-|---|---|
-| `id` | Name the game uses internally |
-| `file` | Where to save the image, relative to `index.html` (e.g. `assets/img/cluster_peak.png`) |
-| `width`, `height` | Size to generate (or a larger size with the same aspect ratio) |
-| `background` | `transparent` or `opaque`; selects the `backgroundSuffix` to append |
-| `prompt` | Subject description |
-| `framing` | Where the subject must sit on the canvas |
-| `alignWith` | This image is layered over another one, so make it by **editing** that image (img2img / inpaint) to keep the outlines lined up |
-| `reveal` | The area the colonization mask sweeps over; adjust these numbers if your art is framed differently |
+The game ships with built-in placeholder art for every picture, so image files are optional. All 40 images are listed in **`assets/images.json`**: object art, five zone backgrounds, twelve equipment icons, and portraits of the mentor and the forum guru. Each entry has a file path, size, background, and a prompt. **`assets/IMAGE_PROMPTS.md`** has every assembled prompt ready to copy and paste.
 
-**Full prompt** = `stylePrompt` + `prompt` + `backgroundSuffix[background]`, plus `negativePrompt` where your generator supports one.
+**With your fal.ai CLI:**
 
-Workflow:
+1. Open `assets/tools/image.config.json` and set `command` to your CLI as an argv array. Use the tokens `{prompt}`, `{negative}`, `{file}`, `{width}`, `{height}`, `{aspect}`, `{id}` and `{background}`. The `shape` entry shows where they go; its flags are placeholders, not real fal.ai flags.
+2. Optional: set `editCommand` to an image-to-image command that takes `{ref}`. It's used for images that must line up with another one (`alignWith`, e.g. the colonized plate over the empty plate).
+3. Preview what will run:
 
-1. Generate each entry and save it at its `file` path. Do the non-`alignWith` ones first.
-2. Reload the game. Any missing file falls back to placeholder art, so you can replace images one at a time.
-3. Check **Notebook › Art** in the game to see which files it found. You can also flip `look.customImages` in the admin panel to compare against the placeholders.
-4. Edits to `images.json` (paths, framing numbers) take effect on reload. If the JSON is missing or invalid, the game says so in Notebook › Art and uses placeholders for everything.
+   ```bash
+   node assets/tools/gen-images.mjs --dry-run
+   ```
+
+4. Generate every missing file (add `--only id1,id2` for a few, `--force` to redo):
+
+   ```bash
+   node assets/tools/gen-images.mjs
+   ```
+
+5. Reload the game. **Notebook › Art** shows which files it found, and the admin panel's `look.customImages` toggles back to the placeholders to compare.
+
+If your CLI prints a URL instead of saving a file, wrap it in a tiny script that downloads to the `{file}` path and point `command` at that script. After editing `images.json`, refresh the prompt list:
+
+```bash
+node assets/tools/gen-images.mjs --write-md
+```
+
+**How the full prompt is built:** a style preset (`stylePrompt`, or `styles.scene` / `styles.portrait` for rooms and characters), then the image's own prompt, its framing, and the transparent/opaque suffix. "Colonized" images reveal over their empty twin with a growing mask; the `reveal` numbers in the JSON say where, so adjust them instead of regenerating if your framing differs.
 
 ## Tuning (admin panel)
 
@@ -76,7 +99,7 @@ Press `` ` `` or tap ⚙. The values are live, grouped by system, and persist in
 Tune these first:
 
 - `time.secondsPerDay` (and `time.bioDaysPerGameDay`) set the pace.
-- `progression.unlockPace` sets how slow the slow start is.
+- `shop.priceScale` sets how hard gear choices are (with each difficulty's starting cash).
 - `contam.hazardScale` and `contam.sabFactor` set how hard mold bites and how much the still-air box helps.
 
 ## Tests

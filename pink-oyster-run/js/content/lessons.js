@@ -12,6 +12,7 @@ export const LESSONS = {
   coffee:          { stage: 'sub', title: 'Old coffee grounds', why: 'Week-old grounds are already colonized by mold.', fix: 'Use grounds under 24 h old, pasteurized and cut with straw.' },
   open_air:        { stage: 'agar', title: 'Open-air work', why: 'Every breath of moving air carries mold spores. Plates and jars opened on a bare counter catch them.', fix: 'Do plate work and inoculations inside a still-air box (or, later, in front of a flow hood).' },
   sab:             { stage: 'agar', good: true, title: 'Still air, fewer spores', why: 'A still-air box stops air currents, so spores settle instead of drifting onto your plates.', fix: 'Wipe it down with alcohol, move slowly, and work near the bottom.' },
+  garage_swing:    { stage: 'grain', title: 'Too cold to colonize', why: 'Mycelium crawls below ~60°F. Garages and porches swing with the weather.', fix: 'Incubate in the closet (dark, ~72°F, steady).' },
   luck:            { stage: 'agar', title: 'Some loss is normal', why: 'Even with clean technique, a few vessels contaminate.', fix: 'Keep a few plates and jars going so one loss doesn’t stall the pipeline, and catch it early.' },
   rot:             { stage: 'harvest', title: 'Pinks don’t keep', why: 'Fresh pink oysters last about 1–2 days.', fix: 'Sell fresh fast, or dehydrate the surplus.' },
   overripe:        { stage: 'harvest', title: 'Missed the peak', why: 'Overripe clusters flatten, drop spores, then collapse.', fix: 'Pick when caps are broad but edges still curl down.' },

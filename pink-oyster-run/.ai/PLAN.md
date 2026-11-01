@@ -28,10 +28,14 @@
 
 - [x] browser verification (setup, playback, week cards, locks, SAB, mobile)
 
-## Phase 3 — zones + equipment shop
-- [ ] side-view cutaway (kitchen, closet, tent, garage, yard), spots, per-zone env
-- [ ] wrong-zone consequences + explanations
-- [ ] equipment shop (SAB, flow hood, cookers 16/23 qt, tent, humidifier, heater, hygrometer, CO₂ monitor, dehydrator, etc.)
+## Phase 3 — zones + equipment shop (+ user add-on 2026-11-01: more animations, optional fal.ai images)
+- [x] sim/zones.js: kitchen 2, closet 3, tent 3, garage 2, yard 2 spots; per-zone temp/RH/CO₂/cleanliness; zone fit + explanations; move action; tests
+- [x] content/equipment.js + shop: buy gear (SAB, flow hood, cookers 16/23 qt, scale, sealer, tent, humidifier, heat mat, hygrometer, CO₂ monitor, dehydrator); capability effects; tests
+- [x] UI: side-view house cutaway replacing the shelf grid; spot hover/tap readouts; shop sheet; locked-zone states
+- [x] fx: GSAP (pinned CDN ESM, lazy, optional) for place/move/stage pops/cash/week cards; CSS ambient (tent mist, cooker steam); no-ops when juice off / reduced motion
+- [x] art: images.json entries for zones, house, equipment, mentor + guru portraits; SVG placeholders for each
+- [x] assets/tools/gen-images.mjs + image.config.json (command template, never guessed fal flags; --dry-run, --only, --force) + assets/IMAGE_PROMPTS.md
+- [x] verify (tests, Playwright desktop + mobile, zero image files) + commit
 
 ## Phase 4 — ladder, weekly review, mastery, shop, market
 - [ ] stages.js + mastery.js (checklist → N units)
@@ -53,7 +57,7 @@
 ## Phase 7 — audio, GSAP polish, art manifest
 - [ ] audio-manifest.json, PROMPTS.md, voice-lines.json, gen-voice.mjs (+ voice.config.json, --dry-run)
 - [ ] audio.js loader w/ synth fallback; settings volumes
-- [ ] GSAP fx; images.json new entries + SVG placeholders
+- [ ] GSAP polish pass; images.json species entries (lion's mane, wine cap) + placeholders
 
 ## Phase 8 — self-verify
 - [ ] no console errors; full loop; admin; zero audio/image files; tests; desktop + mobile touch

@@ -9,8 +9,12 @@ export const RULES = {
   soggyHazard: 0.015, heatHazard: 0.015, flush3Hazard: 0.025, // per real day
   flushMult: [1, 0.5, 0.15],          // pinks front-load their yield
   stageMult: { young: 0.6, peak: 1, overripe: 0.7 },
-  heaterStep: 8,                      // °F per heater step
-  incubationTemp: 72,                 // the closet before the grow room unlocks
+  heaterStep: 6,                      // °F per heat-mat step in the tent
+  handMistMax: 88,                    // tent mist cap without a humidifier
+  snapHouseDrop: 2,                   // a cold snap chills the house a little, the garage a lot
+  bagUnits: 3.5,                      // a grow bag takes 3.5 jar-spaces in a cooker
+  scaleFactor: 0.85, sealerFactor: 0.8, // prep gear: mold multipliers
+  garageLesson: 2,                    // real days colonizing below 60°F before the lesson fires
   coldSnapDrop: 8, coldSnapDays: 4,   // game days
   quizTip: 3, quizChance: 0.35,
   relaxedRotMult: 1.5,                // Relaxed: fresh lasts longer, peak lasts longer

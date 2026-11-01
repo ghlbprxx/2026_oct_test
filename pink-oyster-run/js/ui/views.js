@@ -1,7 +1,9 @@
 // View helpers: what each vessel card shows (image layers, status text, badge, bar) and the coaching line.
 import { CONFIG } from '../config.js';
 import { RULES } from '../sim/rules.js';
-import { envNow } from '../sim/environment.js';
+import { zoneEnv, zoneOf, zoneFit, spotOpen } from '../sim/zones.js';
+import { canDry, seesClimate, seesCO2, canSterilizeJars } from '../sim/shop.js';
+import { ZONE_BY_ID } from '../content/zones.js';
 import { FRUIT, isBlock } from '../sim/contamination.js';
 import { canShake, phaseDays, peakWindow } from '../sim/growth.js';
 import { unlocked } from '../sim/stages.js';
@@ -40,7 +42,7 @@ export function status(g, v) {
     case 'ready': return 'Tap to spawn';
     case 'colonizing': return (canShake(v) ? 'Shake me · ' : 'Colonizing ') + pct + '%';
     case 'colonized': return `Ready · ${v.uses} use${v.uses > 1 ? 's' : ''}`;
-    case 'pinning': return envNow(g).temp < SPECIES.fruiting.minTemp ? 'Too cold!' : 'Pinning ' + pct + '%';
+    case 'pinning': return envAt(g, v).temp < SPECIES.fruiting.minTemp ? 'Too cold!' : 'Pinning ' + pct + '%';
     case 'growing': return (v.prog >= 0.6 ? 'Young · ' : 'Growing ') + pct + '%';
     case 'peak': return 'Peak! Harvest';
     case 'overripe': return 'Overripe! Pick now';
@@ -53,7 +55,7 @@ export function badge(v) { if (v.state === 'lost' || v.contam.vis > 0) return '�
 export function barPct(g, v) {
   const dur = phaseDays(v);
   if (v.contam.vis > 0) return v.contam.vis * 100;
-  if (v.state === 'cooking') return g.cooker.t / CONFIG.equipment.cookerDays * 100;
+  if (v.state === 'cooking') { const k = g.cookers.find(k => k.batch.includes(v.id)); return k ? k.t / CONFIG.equipment.cookerDays * 100 : 0; }
   if (v.state === 'bath') return v.t / dur * 100;
   if (v.state === 'peak' || v.state === 'overripe') return Math.max(0, 100 - v.t / peakWindow(g) * 100);
   if (v.state === 'resting') return v.t / dur * 100;
@@ -68,14 +70,15 @@ export function slotCls(g, v) {
   if (v.state === 'overripe') return 'attn-urgent';
   if (v.state === 'peak') return 'attn-harvest';
   if (v.state === 'ready' && sources(g, v).length) return 'attn-ready';
-  if (v.state === 'pinning' && envNow(g).temp < SPECIES.fruiting.minTemp) return 'attn-warn';
+  if (v.state === 'pinning' && envAt(g, v).temp < SPECIES.fruiting.minTemp) return 'attn-warn';
+  if (fitOf(g, v).level === 'bad') return 'attn-warn';
   if (canShake(v)) return 'attn-ready';
   return '';
 }
 
 /* ---------- coaching line: first thing worth doing ---------- */
 export function tipFor(g) {
-  const env = envNow(g), V = g.slots.map((v, i) => ({ v, i })).filter(s => s.v);
+  const V = g.slots.map((v, i) => ({ v, i })).filter(s => s.v), env = zoneEnv(g, 'tent');
   const f = p => V.find(s => p(s.v));
   const T = (t, o = {}) => ({ t, ...o });
   let s;
@@ -83,22 +86,39 @@ export function tipFor(g) {
   if ((s = f(v => v.contam.vis > 0))) return T(`Mold on #${s.v.id}. ${s.v.kind === 'plate' ? 'Cut a clean edge onto a fresh plate, or toss it.' : 'It won’t recover: toss it, and never spawn from it.'}`, { slot: s.i });
   if ((s = f(v => v.state === 'overripe'))) return T(`#${s.v.id} is over-ripening. Pick it now before it drops.`, { slot: s.i });
   if ((s = f(v => v.state === 'peak'))) return T(`#${s.v.id} is at peak. Tap it to harvest.`, { slot: s.i });
-  if ((s = f(v => v.state === 'pinning')) && env.temp < SPECIES.fruiting.minTemp) return T(`#${s.v.id} won’t pin at ${env.temp}°F. Pinks need 70–85°F: turn the heater up.`, { heat: true });
+  if ((s = f(v => isBlock(v) && ['pinning', 'growing'].includes(v.state) && zoneOf(g.slots.indexOf(v)) !== 'tent'))) return T(g.gear.tent ? `#${s.v.id} is ready to fruit, but it’s in the ${ZONE_BY_ID[zoneOf(s.i)].short.toLowerCase()}. Move it to the grow tent.` : `#${s.v.id} is ready to fruit. It needs a grow tent: humid air and a fan. Open the shop.`, g.gear.tent ? { slot: s.i } : { shop: true });
+  if ((s = f(v => v.state === 'pinning')) && env.temp < SPECIES.fruiting.minTemp) return T(`#${s.v.id} won’t pin at ${env.temp}°F. Pinks need 70–85°F: ${g.gear.heatmat ? 'turn the heat mat up' : 'a heat mat in the tent fixes that (shop)'}.`, g.gear.heatmat ? { heat: true } : { shop: true });
   const fresh = g.lots.reduce((a, l) => a + l.kg, 0);
-  if (fresh && g.lots.some(l => l.age + (g.nextMarket - g.day) * CONFIG.time.bioDaysPerGameDay > shelfLifeDays(g))) return T(`Some fresh pinks won’t last until market day. Dehydrate them (D) or lose them.`, { dry: true });
+  if (fresh && g.lots.some(l => l.age + (g.nextMarket - g.day) * CONFIG.time.bioDaysPerGameDay > shelfLifeDays(g))) return canDry(g) ? T(`Some fresh pinks won’t last until market day. Dehydrate them (D) or lose them.`, { dry: true }) : T(`Some fresh pinks won’t last until market day. A dehydrator (shop) would save them.`, { shop: true });
   if (f(v => isBlock(v) && ['pinning', 'growing'].includes(v.state))) {
     if (env.co2 > 1000) return T(`CO₂ is ${env.co2} ppm: clusters will go leggy. Add fresh air.`, { room: true });
     if (env.rh < 85) return T(`Humidity is ${env.rh}%: caps will crack. Turn up the mist.`, { room: true });
     if (env.rh > 96) return T(`Humidity is ${env.rh}%: bacteria love that. Ease off the mist.`, { room: true });
-    if (env.temp < 70) return T(`${env.temp}°F is cool: pinning is slow. More heat speeds it up.`, { heat: true });
+    if (env.temp < 70) return T(`${env.temp}°F is cool: pinning is slow. ${g.gear.heatmat ? 'More heat speeds it up.' : 'A heat mat (shop) fixes that.'}`, g.gear.heatmat ? { heat: true } : { shop: true });
   }
   if ((s = f(v => v.state === 'ready' && sources(g, v).length))) return T(`#${s.v.id} is ${s.v.prep === 'ster' ? 'sterile' : 'pasteurized'} and ready. Tap it to spawn into it.`, { slot: s.i });
   if ((s = f(v => canShake(v)))) return T(`Jar #${s.v.id} is about a third colonized. Tap to break and shake it.`, { slot: s.i });
   if ((s = f(v => v.kind === 'jar' && v.state === 'ready'))) return T(`Jar #${s.v.id} needs a culture. Pour a plate on an empty shelf.`);
   if ((s = f(v => v.kind === 'bag' && v.state === 'ready'))) return T(`Bag #${s.v.id} needs grain spawn. Prep and colonize a grain jar.`);
-  if (!g.hasSab && f(v => v.kind === 'plate')) return T(`Plates on an open counter catch drifting spores. Build a still-air box ($15) from the build menu.`, { slot: g.slots.findIndex(v => !v) >= 0 ? g.slots.findIndex(v => !v) : null });
+  if (!g.gear.sab && !g.gear.flowhood && f(v => v.kind === 'plate')) return T(`Plates poured on an open counter catch drifting spores. A still-air box ($15 DIY) is in the shop.`, { shop: true });
+  if (unlocked(g, 'jar') && !canSterilizeJars(g)) return T(`Grain jars are open, but grain must be pressure-cooked. Buy a cooker in the shop.`, { shop: true });
   if ((s = f(v => v.kind === 'plate' && v.state === 'colonized')) && !unlocked(g, 'jar')) return T(`Plate #${s.v.id} is colonized. Pour a few more and compare: clean plates now mean clean jars next week.`);
-  const e = g.slots.findIndex(v => !v);
+  const e = g.slots.findIndex((v, i) => !v && spotOpen(g, i));
   if (e >= 0) return T(unlocked(g, 'bag') ? `Empty shelf. Tap it to pour a plate, prep a jar, or prep a substrate bag.` : unlocked(g, 'jar') ? `Empty shelf. Tap it to pour a plate or prep a grain jar.` : `Empty shelf. Tap it to pour an agar plate.`, { slot: e });
   return T(unlocked(g, 'room') ? `Market in ${(g.nextMarket - g.day).toFixed(1)} days. Keep the room warm, fresh and humid.` : `Plates and jars are incubating. Speed time up with the playback buttons ( ] ).`);
+}
+
+/** Conditions where vessel v sits. */
+export function envAt(g, v) { return zoneEnv(g, zoneOf(g.slots.indexOf(v))); }
+export function fitOf(g, v) { const i = g.slots.indexOf(v); return i < 0 ? { level: 'good', note: '' } : zoneFit(g, zoneOf(i), v); }
+
+const word = (v, cuts, words) => words[cuts.findIndex(c => v < c) < 0 ? words.length - 1 : cuts.findIndex(c => v < c)];
+/** Zone readout. Exact numbers need a hygrometer (temp/RH) or CO2 monitor; otherwise you get what you can feel. */
+export function zoneReadout(g, zid) {
+  const e = zoneEnv(g, zid), clim = seesClimate(g), co2 = seesCO2(g);
+  const temp = clim ? `${e.temp}°F` : word(e.temp, [58, 66, 76, 86], ['cold', 'cool', 'mild', 'warm', 'hot']);
+  const rh = clim ? `${e.rh}% RH` : word(e.rh, [60, 80, 92], ['dry air', 'so-so air', 'humid', 'damp']);
+  const air = co2 ? `${e.co2} ppm CO₂` : word(e.co2, [1000, 2000], ['fresh air', 'stuffy', 'stale air']);
+  const dirt = ZONE_BY_ID[zid].env.dirt, clean = dirt <= 0.85 ? 'clean' : dirt <= 1.05 ? 'normal' : dirt <= 1.35 ? 'busy, dusty' : 'outdoors';
+  return { temp, rh, air, clean, exact: clim, e };
 }

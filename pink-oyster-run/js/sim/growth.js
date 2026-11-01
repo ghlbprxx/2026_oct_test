@@ -71,6 +71,7 @@ export function stepVessel(g, v, dd, env, i) {
     return; // growth stops once mold shows
   }
   const cf = colF(env.temp), dur = phaseDays(v);
+  if (v.state === 'colonizing' && env.temp < 60) { v.coldT = (v.coldT || 0) + db; if (v.coldT > RULES.garageLesson) learn(g, 'garage_swing'); }
   switch (v.kind + ':' + v.state) {
     case 'plate:colonizing': v.prog += db / dur * cf; if (v.prog >= 1) { v.prog = 1; v.state = 'colonized'; v.uses = RULES.plateUses; emit('sfx', { name: 'pop' }); emit('float', { slot: i, text: 'Colonized!', c: 'good' }); log(g, `Plate #${v.id} is fully colonized.`); } break;
     case 'jar:bath': case 'bag:bath': v.t += db; if (v.t >= dur) { v.state = 'ready'; v.t = 0; } break;

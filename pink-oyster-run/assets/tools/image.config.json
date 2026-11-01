@@ -1,0 +1,13 @@
+{
+  "$comment": [
+    "Fill in `command` with your fal.ai CLI (or any image CLI) as an argv array. No shell is used, so no quoting is needed.",
+    "Tokens replaced per image: {prompt} {negative} {file} (absolute path to write) {width} {height} {aspect} (e.g. 2:1) {id} {background} (transparent|opaque).",
+    "`editCommand` (optional) is used for images that must line up with another one (`alignWith` in images.json). It also gets {ref}: absolute path of that reference image. If it is null, those images use `command` and may not line up.",
+    "Your CLI must write the image to {file}. If it only prints a URL, wrap it in a small script that downloads to {file}, and put that script here.",
+    "The flags in `shape` are placeholders, not real fal.ai flags. Replace them with your CLI's actual syntax."
+  ],
+  "command": null,
+  "editCommand": null,
+  "shape": ["<your-cli>", "<generate-subcommand>", "<prompt-flag>", "{prompt}", "<size-flags>", "{width}", "{height}", "<output-flag>", "{file}"],
+  "timeoutSeconds": 300
+}
