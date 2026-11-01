@@ -66,3 +66,8 @@
 - Changed: js/sim/autoplay.js, tools/playtest.mjs, tests/economy.test.js (bot.test.js removed); rack gear + per-spot locks; marketMode auto/book/skip + haulWorthIt; species-done no longer re-masters; Basic/Advanced play style (setup + pause menu), basic-only filtered build menu/shop, Set for pinks, admin panel hidden in Basic, essentials filter in Advanced; gear_rack art + manifest entry.
 - Verified: npm test 58/58; playtest table (README + DESIGN); Playwright: Basic default hides admin, starts 4×, build menu 1 medium / 2 bag rows / 2 buttons, Show all → 3 / 4; shop 8 vs 13 items; switch to Advanced shows admin with 15 essential rows; no console errors.
 - Next step: Phase 5 task 1 — content/story.js (mentor + forum guru scenes, ≤3 lines, ids), speech-bubble component with portraits; forum guru delivers market quizzes.
+
+## 2026-11-01 07:55 UTC — Handoff written
+- Changed: .ai/HANDOFF.md (state, how to run/test, sandbox gotchas, architecture map, conventions, economy invariants, Phase 5 plan, open questions); PLAN.md points to it.
+- Verified: npm test 58/58 at handoff time.
+- Next step: Phase 5 task 1 — js/content/story.js (mentor + forum guru scenes with ids).

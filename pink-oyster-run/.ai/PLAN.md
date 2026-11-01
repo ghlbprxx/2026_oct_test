@@ -1,5 +1,7 @@
 # Plan (update after every task)
 
+New session? Start with `.ai/HANDOFF.md`.
+
 ## Phase 0 — notes
 - [x] Create .ai/ DESIGN, PLAN, PROGRESS, DECISIONS
 
