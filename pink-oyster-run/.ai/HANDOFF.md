@@ -1,17 +1,17 @@
 # Handoff: Pink Oyster Run (for the next session)
 
-Written 2026-11-01, updated after Phase 6. Read this first, then `DESIGN.md`, `PLAN.md`, the last entry of `PROGRESS.md`, and `DECISIONS.md` (all in this folder). Update `PLAN.md` and `PROGRESS.md` after every task (the brief requires it; sessions can die at any time).
+Written 2026-11-01, updated after Phase 7. Read this first, then `DESIGN.md`, `PLAN.md`, the last entry of `PROGRESS.md`, and `DECISIONS.md` (all in this folder). Update `PLAN.md` and `PROGRESS.md` after every task (the brief requires it; sessions can die at any time).
 
 ## 1. Where things stand
 
 | | |
 |---|---|
 | Repo | `ghlbprxx/2026_oct_test`. Default branch: `claude/gifted-tesla-f2wgdx` |
-| Work branch | `claude/bold-hopper-kscom3` (Phases 5–6; fast-forwarded from `claude/optimistic-mayer-07fju9`, which holds Phases 0–4.5). **No PR exists; don't open one unless the user asks.** |
-| Last commit | Phase 6: species, Expert liquid culture, automation (see `git log`) |
-| Tests | `cd pink-oyster-run && npm test` → **84/84 pass** (Node 22, no dependencies) |
-| Done | Phases 0–6 of the brief, plus 4.5 (user requests: admin help, headless economy proof, Basic/Advanced play) |
-| Next | **Phase 7**: audio manifest + voice lines, Suno prompts, gen-voice.mjs, GSAP polish, species art. Details in §6. |
+| Work branch | `claude/bold-hopper-kscom3` (Phases 5–7; fast-forwarded from `claude/optimistic-mayer-07fju9`, which holds Phases 0–4.5). **No PR exists; don't open one unless the user asks.** |
+| Last commit | Phase 7: media pipeline, audio playback, generate-media skill (see `git log`) |
+| Tests | `cd pink-oyster-run && npm test` → **90/90 pass** (Node 22, no dependencies) |
+| Done | Phases 0–7 of the brief (Phase 7 except actually generating media, which runs on the user's machine), plus 4.5 (user requests: admin help, headless economy proof, Basic/Advanced play) |
+| Next | User: run the `generate-media` skill locally. Then **Phase 8**: full self-verification. Details in §6. |
 
 Repo layout: the root holds only `README.md` and two projects: `walk-this-way/` (a different game, other sessions work on it; leave it alone) and `pink-oyster-run/` (this game).
 
@@ -120,16 +120,17 @@ Known risks:
 - Difficulty mostly changes cash and the dip toward zero, not careful-play outcomes.
 - About 11–22% of careful runs haven't finished the species by week 24.
 
-## 6. Next: Phase 7 (from PLAN.md)
+## 6. Next: generate media (user, locally), then Phase 8
 
-Phase 6 is done: three species, Expert liquid culture, optional automation (last PROGRESS entry, DESIGN › Species / Expert / Automation, DECISIONS). Phase 7:
+**Media.** The user has their own fal.ai CLI on their machine. From the repo root, run Claude Code and ask it to generate the game's media; the project skill `.claude/skills/generate-media/SKILL.md` takes over: it asks where the CLI is, learns its flags from `--help` (never guesses), fills `assets/tools/{image,audio,voice}.config.json` (+ wrappers in `assets/tools/local/` if needed), dry-runs, asks before spending, makes a test batch, checks it (`check-media.mjs`, looking at PNGs), then generates the rest. Counts: 50 images, 11 sfx, 3 music, 66 voice lines. If the script changes: `node assets/tools/build-voice-lines.mjs` (a test fails when stale).
 
-1. `assets/audio/audio-manifest.json` (music, sfx, voice) + `PROMPTS.md` (Suno prompts) + `voice-lines.json`. Build voice lines from `allLines()` in `content/story.js` (cast scenes + guru opener/reactions), `MENTOR` in `content/stages.js` (review lines), and one `guru_claim_<myth id>` per myth (text = `MYTHS[k].s`). A test should assert every id used in code is in voice-lines.json.
-2. `assets/tools/gen-voice.mjs` + `voice.config.json`: same pattern as `gen-images.mjs` (user fills the command template; never guess a CLI's flags; `--dry-run`, `--only`, `--force`).
-3. `audio.js`: load the manifest; fall back to the current synth SFX for anything missing; Music/SFX/Voice volumes in settings (the `look.sfxVolume` knob exists). The dialogue bar has `data-line` ids ready for voice playback.
-4. GSAP polish pass; species art: `images.json` entries for lion's mane and wine cap clusters/blocks (today they reuse pink art with a CSS filter: `.slot.sp-*` in styles.css) + SVG placeholders in `art.js`.
+**Phase 8** (self-verify): no console errors; full loop on all three species + Expert + automation; admin panel; works with zero media files AND with a full set; tests; desktop + 390px touch; Basic + Advanced; tutorial; real CDN load if a network allows it.
 
-Then Phase 8 (full self-verification: no console errors, full loop on all species + Expert, admin, zero audio/image files, tests, desktop + mobile touch).
+### Phase 7 notes worth knowing
+- Audio: `js/audio.js` (files decoded after the first gesture; synth fallback for sfx; `setMusic(id)` per screen; `sting('music_review')`; `say(ids)` for voice with a generation counter; volume buses from `ui.vol` in the profile). Wiring in `main.js` (watchers on `ui.screen` and `ui.modal`).
+- Generators share `assets/tools/lib/media.mjs` (argv templates, `{token}` fill, unknown-token warning, file-written check). `gen-images.mjs` predates it and has its own copy of the loop.
+- `tests/media.test.js` checks that the skill only mentions scripts, flags and files that exist: update the skill when renaming tools.
+- Species art ids: `lm_young|peak|overripe` (on `block_ready`), `wc_young|peak|overripe` (on `bed`); `fruitImg` in `ui/views.js` picks them by `v.sp`.
 
 ### Phase 6 notes worth knowing
 - **Species lookups:** `content/species/index.js` (`spv(v)`, `spg(g)`, `recipeOf(v)`, `packOf(id)`). Vessels carry `v.sp`, harvest lots `l.sp`. No species = pink, so old saves and the pink playtest stay identical. **Keep the pink table byte-identical** when touching the sim (`node tools/playtest.mjs --strategies careful`): it's the cheapest regression check there is.
@@ -143,7 +144,7 @@ Then Phase 8 (full self-verification: no console errors, full loop on all specie
 
 ## 7. Open questions to raise with the user
 
-- fal.ai: the user hasn't provided their CLI syntax. `assets/tools/image.config.json` has `command: null` by design.
+- fal.ai: resolved by design. The user's own CLI is configured locally by the `generate-media` skill (it asks for the path and reads `--help`); the configs ship with `command: null`.
 - Should the admin help show the arithmetic midpoint instead of Default (the user wrote "avg")?
 - Knob count (44 vs the brief's 20–30): trim, or keep the Essentials filter as the answer?
 - Phase 6 choices to confirm: wine cap uses the fast end of real bed timing; Expert keeps the story cast; automation is tuned to break even, not profit; lion's mane prices are low-confidence.

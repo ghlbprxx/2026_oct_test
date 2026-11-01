@@ -92,6 +92,7 @@ export default `
         </header>
         <div class="ambient" aria-hidden="true">
           <i v-if="z.id==='tent' && g.gear.humidifier" class="mist" v-for="k in 5" :key="k" :style="{'--k':k}"></i>
+          <i v-if="z.id==='yard'" class="drop" v-for="k in 14" :key="'r'+k" :style="{'--k':k}"></i>
           <i v-if="z.id==='garage' && cooking" class="steam" v-for="k in 3" :key="'s'+k" :style="{'--k':k}"></i>
           <img v-if="z.id==='garage' && g.cookers.length" class="zgear" :src="src(g.cookers[g.cookers.length-1].id==='cooker23'?'gear_cooker23':'gear_cooker16')" alt="">
           <img v-if="z.id==='kitchen' && (g.gear.sab || g.gear.flowhood)" class="zgear" :src="src(g.gear.flowhood?'gear_flowhood':'gear_sab')" alt="">

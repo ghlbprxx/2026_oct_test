@@ -45,11 +45,11 @@ content/automation.js + sim/automation.js: 6 routines, unlocked by stages master
 
 ## UI / UX & feel
 [now] Vue 3 single page; shelf grid; side panel; action sheet; notebook (guide, lessons, cheat sheet, art); toasts/floats; admin panel.
+[now] Phase 7 motion: dialogue bar slides in, speaker portraits bob on change, rain shower over the yard (CSS streaks + bed bounce).
 [now] Playback bar (pause, 0.5–8×, `[` `]`). GSAP: place/move/stage pops/pluck/cash/mold alarm/week cards/house entrance; CSS tent mist + cooker steam. [target] Zone cutaway with GSAP, weekly review cards, settings panel.
 
 ## Audio
-[now] WebAudio synth SFX, mute.
-[target] Optional manifest (music/sfx/voice) with synth fallback; Music/SFX/Voice volumes; Suno prompts; voice-lines.json + configurable gen script.
+[now] Phase 7: assets/audio/audio-manifest.json (11 sfx = synth names, 3 music with Suno-style prompts, cast voice notes) + voice-lines.json (66, built from the script by build-voice-lines.mjs; `speak` strips emoji). audio.js: files when present (decoded on first click), synth fallback for sfx, music per screen + review sting, voice for scene lines / review mentor / guru post + reaction (generation counter cancels stale lines), 3 buses with Music/SFX/Voice volumes in the profile (pause menu), mute. Generators gen-audio.mjs / gen-voice.mjs (+ gen-images.mjs) run the user's CLI argv template; check-media.mjs validates files. Claude Code skill .claude/skills/generate-media drives the user's local fal.ai CLI (asks for its path, learns flags from --help).
 
 ## Difficulty
 [target] Relaxed / Normal / Hardcore picker (cash $2,500/$1,500/$800; contamination soft/normal/hard). All in CONFIG.

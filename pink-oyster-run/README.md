@@ -124,35 +124,39 @@ Medians from 9 seeds × 24 weeks (profit includes about $460 of gear):
 
 What the numbers say: the online shop (plates, spawn, grow kits, dried) is where a small home operation makes its money. Fresh pinks rarely last until market day, so market-only growers dry most of their harvest at a lower price. The $60 shelf rack (+3 closet spots) is what lets a grower make enough product to sell.
 
-## Images (optional): generating them with fal.ai or any CLI
+## Media (optional): images, sound effects, music and voices
 
-The game ships with built-in placeholder art for every picture, so image files are optional. All 40 images are listed in **`assets/images.json`**: object art, five zone backgrounds, twelve equipment icons, and portraits of the mentor and the forum guru. Each entry has a file path, size, background, and a prompt. **`assets/IMAGE_PROMPTS.md`** has every assembled prompt ready to copy and paste.
+The game needs no media files. Missing images use built-in placeholder art, missing sound effects use a WebAudio synth, and missing music and voice lines are silent. Everything that *can* have a file is listed in a manifest with its path and a prompt:
 
-**With your fal.ai CLI:**
+| Kind | Manifest | Prompts to read | Generator | Config |
+|---|---|---|---|---|
+| Images (50) | `assets/images.json` | `assets/IMAGE_PROMPTS.md` | `node assets/tools/gen-images.mjs` | `assets/tools/image.config.json` |
+| Sound effects (11) | `assets/audio/audio-manifest.json` | `assets/audio/PROMPTS.md` | `node assets/tools/gen-audio.mjs --kind sfx` | `assets/tools/audio.config.json` |
+| Music (3, Suno-style prompts) | `assets/audio/audio-manifest.json` | `assets/audio/PROMPTS.md` | `node assets/tools/gen-audio.mjs --kind music` | `assets/tools/audio.config.json` |
+| Voice lines (66) | `assets/audio/voice-lines.json` (built from the game script) | `assets/audio/PROMPTS.md` | `node assets/tools/gen-voice.mjs` | `assets/tools/voice.config.json` |
 
-1. Open `assets/tools/image.config.json` and set `command` to your CLI as an argv array. Use the tokens `{prompt}`, `{negative}`, `{file}`, `{width}`, `{height}`, `{aspect}`, `{id}` and `{background}`. The `shape` entry shows where they go; its flags are placeholders, not real fal.ai flags.
-2. Optional: set `editCommand` to an image-to-image command that takes `{ref}`. It's used for images that must line up with another one (`alignWith`, e.g. the colonized plate over the empty plate).
-3. Preview what will run:
+**Easiest: let Claude Code do it.** From the repo root, run Claude Code and ask it to generate the media. The project skill `.claude/skills/generate-media/SKILL.md` makes Claude:
 
-   ```bash
-   node assets/tools/gen-images.mjs --dry-run
-   ```
+1. ask you where your fal.ai CLI is;
+2. read its `--help` to learn its real flags (it never guesses);
+3. fill in the three configs and, if needed, small wrappers in `assets/tools/local/` (for example: download a printed URL, remove backgrounds for transparent sprites);
+4. dry-run, confirm with you before spending credits, and generate a small test batch;
+5. check the results (`check-media.mjs`, and by looking at the images) before generating the rest.
 
-4. Generate every missing file (add `--only id1,id2` for a few, `--force` to redo):
-
-   ```bash
-   node assets/tools/gen-images.mjs
-   ```
-
-5. Reload the game. **Notebook › Art** shows which files it found, and the admin panel's `look.customImages` toggles back to the placeholders to compare.
-
-If your CLI prints a URL instead of saving a file, wrap it in a tiny script that downloads to the `{file}` path and point `command` at that script. After editing `images.json`, refresh the prompt list:
+**By hand:** set `command` in each config to your CLI as an argv array (no shell) using the tokens listed in the config's `$comment`. The `shape` entry shows where tokens go; its flags are placeholders, not real flags. For images, `editCommand` (with `{ref}`) is used for layers that must line up with another image (`alignWith`). Then:
 
 ```bash
-node assets/tools/gen-images.mjs --write-md
+node assets/tools/gen-images.mjs --dry-run          # preview; same for gen-audio.mjs and gen-voice.mjs
+node assets/tools/gen-images.mjs --only plate_empty # a test item
+node assets/tools/gen-images.mjs                    # every missing file (--force to redo)
+node assets/tools/check-media.mjs                   # ok / problem / missing per kind (PNG alpha + size, real MP3s)
 ```
 
-**How the full prompt is built:** a style preset (`stylePrompt`, or `styles.scene` / `styles.portrait` for rooms and characters), then the image's own prompt, its framing, and the transparent/opaque suffix. "Colonized" images reveal over their empty twin with a growing mask; the `reveal` numbers in the JSON say where, so adjust them instead of regenerating if your framing differs.
+A job only counts as done if your command exits 0 and writes the file at `{file}`. If your CLI prints a URL instead, wrap it in a script that downloads to `{file}`. After editing the game script, rebuild the voice list with `node assets/tools/build-voice-lines.mjs` (a test fails if it's stale). After editing a manifest, refresh the prompt lists with `node assets/tools/gen-images.mjs --write-md` and `node assets/tools/gen-audio.mjs --write-md`.
+
+**In the game:** **Notebook › Art** shows which images are custom and how many sounds were found. The pause menu has Music / Sound effects / Voices volume sliders (saved in your profile). Music plays per screen (title, farm, a sting when a stage is mastered); voices play with story scenes, the mentor's weekly-review line, and guru posts. Browsers only load audio after your first click.
+
+**How the full image prompt is built:** a style preset (`stylePrompt`, or `styles.scene` / `styles.portrait` for rooms and characters), then the image's own prompt, its framing, and the transparent/opaque suffix. "Colonized" images reveal over their empty twin with a growing mask; the `reveal` numbers in the JSON say where, so adjust them instead of regenerating if your framing differs. Lion's mane (`lm_*`) and wine cap (`wc_*`) art is layered over the shared block and the yard bed.
 
 ## Tuning (admin panel)
 
@@ -170,7 +174,7 @@ Tune these first:
 npm test
 ```
 
-Run it from this folder (Node 18+, no dependencies). It covers playback speeds and compressed time, real-world colonization ranges per recipe, contamination (pasteurized vs sterilized, still-air box, difficulty modes, salvage), the stage ladder, save/migration, the image manifest, the story script rules (≤3 lines per scene, unique voice ids, required story beats), the story director, tutorial steps completing from real actions, headless economy playtests on every difficulty, the three species (data, cool/warm fruiting, beds, rain, skill transfer, the full journey), Expert liquid culture, and automation (unlock, fees, hands-off break-even).
+Run it from this folder (Node 18+, no dependencies). It covers playback speeds and compressed time, real-world colonization ranges per recipe, contamination (pasteurized vs sterilized, still-air box, difficulty modes, salvage), the stage ladder, save/migration, the image manifest, the story script rules (≤3 lines per scene, unique voice ids, required story beats), the story director, tutorial steps completing from real actions, headless economy playtests on every difficulty, the media tooling (voice lines in sync with the script, manifests, generators running a fake CLI, the PNG/audio checker, and that the generate-media skill only names real scripts and flags), the three species (data, cool/warm fruiting, beds, rain, skill transfer, the full journey), Expert liquid culture, and automation (unlock, fees, hands-off break-even).
 
 ## Design notes
 

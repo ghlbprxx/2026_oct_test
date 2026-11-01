@@ -95,3 +95,16 @@ test('check-media: PNG size/alpha and audio signatures', () => {
   assert.match(checkAudio({ id: 'x', file: 'assets/img/x.mp3' }, dir).problems.join(), /not a recognizable/);
   assert.equal(node('assets/tools/check-media.mjs', '--strict').status, 0);
 });
+
+test('the generate-media skill only names scripts, files and flags that exist', () => {
+  const skill = readFileSync(join(root, '..', '.claude/skills/generate-media/SKILL.md'), 'utf8');
+  assert.match(skill, /^---\nname: generate-media\ndescription: .+\n---/);
+  const scripts = [...new Set([...skill.matchAll(/node (assets\/tools\/[\w-]+\.mjs)/g)].map(m => m[1]))];
+  assert.ok(scripts.length >= 5);
+  for (const s of scripts) {
+    const src = readFileSync(join(root, s), 'utf8') + readFileSync(join(root, 'assets/tools/lib/media.mjs'), 'utf8');
+    for (const m of skill.matchAll(new RegExp(`node ${s.replace(/[.]/g, '\\.')}((?: --[\\w-]+(?: [^\\s#\`]+)?)*)`, 'g')))
+      for (const f of (m[1].match(/--[\w-]+/g) || [])) assert.ok(src.includes(`'${f}'`), `${s} does not support ${f}`);
+  }
+  for (const p of skill.match(/`(assets\/[\w./-]+\.(?:json|mjs|md))`/g).map(x => x.slice(1, -1))) assert.doesNotThrow(() => readFileSync(join(root, p)), p);
+});

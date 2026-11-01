@@ -8,7 +8,8 @@
     "Entries with 'alignWith' are revealed on top of that image with a growing mask, so the object must sit in the exact same place. Make them by editing the 'alignWith' image (img2img / inpaint / 'same image but...'), not from scratch.",
     "'reveal' says which part of the canvas the growth mask sweeps over (fractions of width/height). If your art is framed differently, adjust these numbers instead of regenerating.",
     "Missing files are fine: the game falls back to its built-in placeholder art for that id. Open the Notebook > Art tab in the game to see which files it found.",
-    "To generate with a CLI (e.g. fal.ai): fill in assets/tools/image.config.json, then run `node assets/tools/gen-images.mjs --dry-run` to preview and `node assets/tools/gen-images.mjs` to create every missing file. Full prompts are also listed in assets/IMAGE_PROMPTS.md."
+    "To generate with a CLI (e.g. fal.ai): fill in assets/tools/image.config.json, then run `node assets/tools/gen-images.mjs --dry-run` to preview and `node assets/tools/gen-images.mjs` to create every missing file. Full prompts are also listed in assets/IMAGE_PROMPTS.md.",
+    "Claude Code: the generate-media skill (.claude/skills/generate-media at the repo root) sets up your CLI and generates images, sound and voices."
   ],
   "stylePrompt": "Cozy storybook illustration for a casual mobile game. Clean vector-like shapes, soft cel shading and gentle gradients, confident dark plum outlines (#2a1b2e). Warm palette: flamingo pink (#e2557a), deep rose (#b8325a), cream-white mycelium (#fbf8f1), honey-amber agar (#ead7a8), wheat straw (#d9b65a), sawdust brown (#8a6040). One centered subject, front view tilted slightly from above, soft contact shadow directly underneath, even studio lighting, readable at small sizes.",
   "backgroundSuffix": {

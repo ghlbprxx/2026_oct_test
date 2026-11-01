@@ -96,3 +96,22 @@ export function bought(id) {
   gsap.fromTo(el, { scale: 0.95 }, { scale: 1, duration: 0.5, ease: 'back.out(3)', clearProps: 'transform' });
   const img = el.querySelector('img'); if (img) gsap.fromTo(img, { rotate: -20, scale: 0.6 }, { rotate: 0, scale: 1, duration: 0.6, ease: 'back.out(2.5)', clearProps: 'transform' });
 }
+
+/** Story dialogue: the bar slides up the first time; each new speaker's portrait bobs in. */
+let lastWho = null;
+export function dialogue(who, first) {
+  if (!motion()) { lastWho = who; return; }
+  nextTick(() => {
+    const bar = document.querySelector('.dialog'), face = bar && bar.querySelector('.face');
+    if (bar && first) gsap.fromTo(bar, { y: 40, opacity: 0 }, { y: 0, opacity: 1, duration: 0.35, ease: 'power3.out', clearProps: 'all' });
+    if (face && (first || who !== lastWho)) gsap.fromTo(face, { scale: 0.7, rotate: who === 'guru' ? 8 : -8 }, { scale: 1, rotate: 0, duration: 0.45, ease: 'back.out(3)', clearProps: 'transform' });
+    lastWho = who;
+  });
+}
+/** Rain over the yard: a short shower of streaks (CSS), plus a splash on each bed. */
+export function rain() {
+  const z = document.querySelector('.zone[data-zone="yard"]'); if (!z || !CONFIG.dev.juice || reduceMotion()) return;
+  z.classList.remove('raining'); void z.offsetWidth; z.classList.add('raining');
+  setTimeout(() => z.classList.remove('raining'), 2600);
+  if (motion()) z.querySelectorAll('.slot .art').forEach((el, k) => gsap.fromTo(el, { y: -4 }, { y: 0, duration: 0.5, delay: 0.3 + k * 0.1, ease: 'bounce.out', clearProps: 'transform' }));
+}

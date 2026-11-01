@@ -362,3 +362,8 @@ td code{font-family:var(--mono);font-size:12px}
 /* lion's mane and wine cap have their own cluster art (lm_*, wc_*); nothing to tint */
 .vols{display:grid;gap:6px;margin:12px auto;max-width:320px;text-align:left}
 .vols label{display:grid;grid-template-columns:120px 1fr;align-items:center;gap:10px;font-size:14px}
+/* rain over the yard (fx.rain adds .raining for ~2.5 s) */
+.drop{position:absolute;top:-10%;left:calc(var(--k)*7%);width:2px;height:16px;border-radius:2px;background:#7fb2d9;opacity:0}
+.zone.raining .drop{animation:rain .55s linear infinite;animation-delay:calc(var(--k)*.07s)}
+@keyframes rain{0%{opacity:0;transform:translate(0,0)}15%{opacity:.8}100%{opacity:0;transform:translate(-14px,380px)}}
+@media (prefers-reduced-motion:reduce){.zone.raining .drop{animation:none}}

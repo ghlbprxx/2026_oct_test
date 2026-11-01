@@ -74,9 +74,12 @@ New session? Start with `.ai/HANDOFF.md`.
 - [x] verify: tests 84/84, playtest pink table unchanged, journey + expert + automation headless proofs, Playwright desktop + 390px
 
 ## Phase 7 — audio, GSAP polish, art manifest
-- [ ] audio-manifest.json, PROMPTS.md, voice-lines.json, gen-voice.mjs (+ voice.config.json, --dry-run)
-- [ ] audio.js loader w/ synth fallback; settings volumes
-- [ ] GSAP polish pass; images.json species entries (lion's mane, wine cap) + placeholders
+- [x] audio-manifest.json, PROMPTS.md, voice-lines.json (+ build-voice-lines.mjs), gen-audio.mjs, gen-voice.mjs (+ audio/voice.config.json, --dry-run), check-media.mjs
+- [x] audio.js loader w/ synth fallback; music per screen; voice playback; Music/SFX/Voice volumes (pause menu)
+- [x] images.json species entries (lion's mane, wine cap) + placeholders
+- [x] Claude Code skill .claude/skills/generate-media (user's local fal.ai CLI: ask path, learn --help, configs, dry run, test batch, verify)
+- [x] GSAP polish (small): dialogue bar + speaker portraits, rain shower in the yard
+- [ ] real media generated with the user's CLI (runs locally via the skill; not possible in this sandbox)
 
 ## Phase 8 — self-verify
 - [ ] no console errors; full loop; admin; zero audio/image files; tests; desktop + mobile touch

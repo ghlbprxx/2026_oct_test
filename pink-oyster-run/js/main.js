@@ -16,7 +16,7 @@ import { persist as persistProfile } from './ui/state.js';
 import { unlocked } from './sim/stages.js';
 import { loadManifest, manifest } from './images.js';
 import { play, unlock, setMuted, loadAudioManifest, setMusic, sting, say, stopVoice, setVolumes } from './audio.js';
-import { toast, float, burst, wobble, pop, placed, moved, pluck, zoneAlarm, cash, revealCard, enterHouse, bought } from './fx.js';
+import { toast, float, burst, wobble, pop, placed, moved, pluck, zoneAlarm, cash, revealCard, enterHouse, bought, dialogue, rain } from './fx.js';
 import { watch } from 'vue';
 import { zoneOf } from './sim/zones.js';
 import { LESSONS } from './content/lessons.js';
@@ -64,6 +64,7 @@ on((type, d) => {
     }
     case 'speciesStart': autosave(); break;
     case 'listed': play('build'); break;
+    case 'rain': rain(); break;
     case 'lesson': {
       const first = !ui.lessons[d.id];
       if (first) { ui.lessons[d.id] = true; persist(); }
@@ -89,7 +90,7 @@ watch(() => ui.vol, v => { setVolumes(v); persist(); }, { deep: true });
 // Voice: speak whatever line is on screen (scene bubble, review mentor, guru post + mentor reaction). Missing files are silent.
 watch(() => { const m = ui.modal; return m ? [m.type, m.i, m.ans, m.key, m.r && m.r.week] : null; }, (k) => {
   const m = ui.modal; if (!m) return stopVoice();
-  if (m.type === 'scene') say(m.lines[m.i].id);
+  if (m.type === 'scene') { say(m.lines[m.i].id); dialogue(m.lines[m.i].who, m.i === 0); }
   else if (m.type === 'review') { say(m.r.mentor.id); if (m.r.mastered) sting('music_review'); }
   else if (m.type === 'quiz' && m.guru) say(m.ans === null ? [m.guru.open.id, m.guru.claim.id] : m.guru.react.id);
   else stopVoice();
