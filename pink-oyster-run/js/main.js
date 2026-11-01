@@ -2,7 +2,7 @@
 import { createApp } from 'vue';
 import { CONFIG, ISF } from './config.js';
 import { setConfig } from './sim/cfg.js';
-import { attachAdminHelp } from './admin-help.js';
+import { attachAdminHelp, setAdminVisible } from './admin-help.js';
 import * as equip from './sim/equipment.js';
 import { on } from './sim/events.js';
 import * as sim from './sim/game.js';
@@ -23,6 +23,7 @@ import { LESSONS } from './content/lessons.js';
 
 setConfig(CONFIG);
 attachAdminHelp();
+setAdminVisible(ui.playMode === 'advanced');
 setMuted(ui.muted);
 loadManifest();
 

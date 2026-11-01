@@ -310,3 +310,11 @@ td code{font-family:var(--mono);font-size:12px}
 .verdict-h.ok{color:var(--good)} .verdict-h.again{color:var(--warn)}
 .stagechip b{font-size:15px}
 .rc{margin-top:10px}
+/* ===== play style (Basic / Advanced) ===== */
+.playstyle{margin-top:12px;display:grid;gap:6px}
+.seg.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+.seg.two button{display:grid;gap:2px;text-align:left;padding:10px 12px;font-family:var(--body);font-size:14px}
+.seg.two button b{font-family:var(--display);font-size:17px}
+.seg.two button small{font-size:12.5px;opacity:.85}
+.linkbtn{border:none;background:none;padding:4px 0;color:var(--pink-deep);font-weight:700;text-decoration:underline;cursor:pointer;font-size:13.5px}
+@media (max-width:560px){.seg.two{grid-template-columns:minmax(0,1fr)}}

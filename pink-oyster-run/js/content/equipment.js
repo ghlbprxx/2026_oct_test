@@ -6,6 +6,7 @@ export const EQUIPMENT = {
   flowhood:   { name: 'Laminar flow hood', cat: 'Clean work', price: 900, opens: 'bag', img: 'gear_flowhood', effect: 'HEPA-filtered airflow: about 90% fewer spores than open air. Replaces the still-air box.' },
   cooker16:   { name: 'Pressure cooker, 16 qt', cat: 'Sterilizing', price: 100, img: 'gear_cooker16', cooker: { jars: 7, bags: 0 }, effect: '7 quart jars per cycle. Too short for grow bags.' },
   cooker23:   { name: 'Pressure canner, 23 qt', cat: 'Sterilizing', price: 150, img: 'gear_cooker23', cooker: { jars: 7, bags: 2 }, effect: '7 quart jars or 2 grow bags per cycle. Needed to sterilize bags.' },
+  rack:       { name: 'Wire shelf rack', cat: 'Space', price: 60, img: 'gear_rack', effect: 'Three more closet spots for incubating. More pipeline, more product to sell.' },
   scale:      { name: 'Kitchen scale', cat: 'Prep', price: 25, img: 'gear_scale', effect: 'Weigh water to field capacity: fewer wet spots, about 15% less mold on jars and bags you prep.' },
   sealer:     { name: 'Impulse sealer', cat: 'Prep', price: 60, img: 'gear_sealer', effect: 'Heat-seal grow bags instead of folding them: about 20% less mold on bags.' },
   tent:       { name: 'Grow tent with fan', cat: 'Fruiting', price: 90, opens: 'room', img: 'gear_tent', effect: 'Opens the 3 grow-tent spots, with a small fan for fresh air.' },
@@ -15,4 +16,4 @@ export const EQUIPMENT = {
   co2:        { name: 'CO₂ monitor', cat: 'Readings', price: 120, img: 'gear_co2', effect: 'Shows CO₂ ppm, so you can see stale air before clusters go leggy.' },
   dehydrator: { name: 'Dehydrator', cat: 'Harvest', price: 60, img: 'gear_dehydrator', effect: 'Dries fresh harvests so they keep instead of rotting.' },
 };
-export const EQUIPMENT_ORDER = ['sab', 'cooker16', 'cooker23', 'hygrometer', 'scale', 'sealer', 'tent', 'heatmat', 'humidifier', 'co2', 'dehydrator', 'flowhood'];
+export const EQUIPMENT_ORDER = ['sab', 'cooker16', 'cooker23', 'rack', 'hygrometer', 'scale', 'sealer', 'tent', 'heatmat', 'humidifier', 'co2', 'dehydrator', 'flowhood'];

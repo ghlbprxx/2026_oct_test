@@ -12,3 +12,9 @@ test('every admin knob has a description and min / default / max effects', () =>
   }
   for (const [g, f] of Object.entries(CONFIG_HELP)) for (const k of Object.keys(f)) assert.ok(CONFIG_SCHEMA[g] && CONFIG_SCHEMA[g][k], `help for unknown knob ${g}.${k}`);
 });
+
+import { ESSENTIALS } from '../js/admin-help.js';
+test('the Advanced admin panel opens on a short essentials list of real knobs', () => {
+  assert.ok(ESSENTIALS.length >= 8 && ESSENTIALS.length <= 16);
+  for (const id of ESSENTIALS) { const [g, k] = id.split('.'); assert.ok(CONFIG_SCHEMA[g] && CONFIG_SCHEMA[g][k], id); }
+});

@@ -352,6 +352,16 @@
       "framing": "Object centered, filling about 80% of the canvas, slight three-quarter view."
     },
     {
+      "id": "gear_rack",
+      "file": "assets/img/gear_rack.png",
+      "width": 256,
+      "height": 256,
+      "background": "transparent",
+      "usedFor": "Shop icon for the wire shelf rack (3 extra closet spots).",
+      "prompt": "A small chrome wire shelving rack with three shelves, a few mason jars of white grain spawn standing on the middle shelf.",
+      "framing": "Object centered, filling about 80% of the canvas, slight three-quarter view."
+    },
+    {
       "id": "gear_scale",
       "file": "assets/img/gear_scale.png",
       "width": 256,

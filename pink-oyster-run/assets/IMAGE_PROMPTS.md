@@ -294,6 +294,15 @@ Cozy storybook illustration for a casual mobile game. Clean vector-like shapes, 
 Cozy storybook illustration for a casual mobile game. Clean vector-like shapes, soft cel shading and gentle gradients, confident dark plum outlines (#2a1b2e). Warm palette: flamingo pink (#e2557a), deep rose (#b8325a), cream-white mycelium (#fbf8f1), honey-amber agar (#ead7a8), wheat straw (#d9b65a), sawdust brown (#8a6040). One centered subject, front view tilted slightly from above, soft contact shadow directly underneath, even studio lighting, readable at small sizes. A tall 23-quart aluminum pressure canner with a round dial pressure gauge on the lid and two black handles. Framing: Object centered, filling about 80% of the canvas, slight three-quarter view. Isolated subject on a fully transparent background (PNG alpha channel). Nothing else in frame.
 ```
 
+## gear_rack
+
+- **Save as:** `assets/img/gear_rack.png` (256×256, transparent)
+- **Used for:** Shop icon for the wire shelf rack (3 extra closet spots).
+
+```text
+Cozy storybook illustration for a casual mobile game. Clean vector-like shapes, soft cel shading and gentle gradients, confident dark plum outlines (#2a1b2e). Warm palette: flamingo pink (#e2557a), deep rose (#b8325a), cream-white mycelium (#fbf8f1), honey-amber agar (#ead7a8), wheat straw (#d9b65a), sawdust brown (#8a6040). One centered subject, front view tilted slightly from above, soft contact shadow directly underneath, even studio lighting, readable at small sizes. A small chrome wire shelving rack with three shelves, a few mason jars of white grain spawn standing on the middle shelf. Framing: Object centered, filling about 80% of the canvas, slight three-quarter view. Isolated subject on a fully transparent background (PNG alpha channel). Nothing else in frame.
+```
+
 ## gear_scale
 
 - **Save as:** `assets/img/gear_scale.png` (256×256, transparent)

@@ -48,6 +48,14 @@
 - [x] admin: js/admin-help.js (details per knob: what, min, default, max) attached to the verbatim panel; actions Master current stage, Unlock expert; metrics weeksRepeated, revenueByStage
 - [x] tests: mastery, shop, save, bot (idle can't master week 1; random < scripted); verify + commit
 
+## Phase 4.5 — user request 2026-11-01: playtest harness + Basic/Advanced
+- [x] js/sim/autoplay.js: pure headless runner + strategies (careful, market-only, sloppy, random, idle) that play the full ladder incl. online shop
+- [x] tools/playtest.mjs CLI: economy table per difficulty × strategy over N seeds (weeks per stage, min cash, revenue by source, profit)
+- [x] tests/economy.test.js: careful masters all stages, never runs out of cash, ends profitable on every difficulty; beats sloppy/random; idle earns 0
+- [x] tune economy until those hold (record numbers in DESIGN.md)
+- [x] Basic vs Advanced play mode (profile setting): Basic = recommended options first, extras folded, auto-climate button, fixed shop prices, always book market, no admin panel; Advanced = everything + admin panel with Essentials/All knobs filter
+- [x] verify + commit
+
 ## Phase 5 — story, tutorial, free play
 - [ ] story.js (mentor + forum guru), speech bubbles with ids
 - [ ] tutorial.js Week 0 with highlights

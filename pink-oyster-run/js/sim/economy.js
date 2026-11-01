@@ -53,8 +53,15 @@ export function sellAtMarket(g) {
   if (sold > 0) { count(g, 'marketDays'); count(g, 'marketLb', lb(sold)); }
   return { fresh: sold, dried, rev, fee: P.boothFee };
 }
+/** Is today's haul worth a booth? (fresh + dried value at least 3× the fee) */
+export function haulWorthIt(g) {
+  const P = C.economy, fresh = lb(g.lots.reduce((a, l) => a + l.kg, 0)), dried = lb(g.dried);
+  return fresh * P.priceFresh + dried * P.priceDried >= 3 * P.boothFee;
+}
+/** Market mode: 'auto' books only when the haul is worth it; 'book' always; 'skip' never. */
+export const attending = g => (g.marketMode || (g.attend === false ? 'skip' : 'auto')) === 'auto' ? haulWorthIt(g) : g.marketMode === 'book' || (!g.marketMode && g.attend !== false);
 export function market(g, closing) {
-  if (!g.attend && !closing) { log(g, 'Skipped market day (booth not booked).'); return { rev: 0 }; }
+  if (!closing && !attending(g)) { log(g, g.marketMode === 'skip' ? 'Skipped market day (booth not booked).' : 'Skipped market day: not enough to sell to cover the booth.'); return { rev: 0 }; }
   const s = sellAtMarket(g);
   if (s.rev > 0) {
     emit('sfx', { name: 'coin' });

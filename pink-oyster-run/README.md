@@ -33,7 +33,14 @@ Or use `python3 -m http.server 8000` and open `http://localhost:8000`. You need 
 
 ## How it plays
 
-**New game:** pick Relaxed ($2,500; mold can be cut out of jars and bags, produce keeps longer), Normal ($1,500; gentle mold odds in weeks 0–1) or Hardcore ($800; full losses, grace only in week 0).
+**New game:** choose a play style, then a difficulty.
+
+- **Basic** (default, quick play): each choice shows the recommended option first ("Show all options" reveals the rest), a one-tap **Set for pinks** climate button, fixed online prices, the market books itself only when your haul covers the booth fee, essential gear in the shop (the rest under "More gear"), no admin panel, and play starts at 4×.
+- **Advanced:** every option: all agar media and preps, price controls, market booking (Auto / Always / Skip), all gear, fine climate sliders, and the admin panel (⚙), which opens on 15 essential knobs with **Show all knobs** for the rest.
+
+Switch any time from the pause menu. Play style changes only the interface; the simulation and its numbers are identical.
+
+Difficulty: pick Relaxed ($2,500; mold can be cut out of jars and bags, produce keeps longer), Normal ($1,500; gentle mold odds in weeks 0–1) or Hardcore ($800; full losses, grace only in week 0).
 
 **Your house, side view.** Every zone has its own temperature, humidity, CO₂ and cleanliness, and a vessel in the wrong zone shows a ⚠ with the reason:
 
@@ -66,6 +73,31 @@ The run autosaves at every weekly review and when you leave the tab; **Continue*
 **Controls:** tap or click a spot. Keys: `1`–`9`, `0`, `-`, `=` spots (left to right, top to bottom on phones) · `Space` pause · `[` `]` slower/faster · `S` shop · `H` heat mat · `D` dehydrate · `N` notebook · `M` mute · `` ` `` admin panel.
 
 **Motion:** GSAP 3.12.5 (pinned, loaded lazily from jsDelivr) animates placing, moving, growth stages, harvests, money changes, mold alarms and week cards; CSS adds tent mist and cooker steam. Everything turns off with reduced motion or the admin panel's `dev.juice`, and if GSAP can't load the game still works.
+
+## Playtesting the economy (headless)
+
+The simulation in `js/sim/` is pure JavaScript with no browser needed. `js/sim/autoplay.js` plays complete games with scripted strategies through the same functions the UI calls: `careful` (good technique, sells online and at market), `marketOnly`, `sloppy`, `random` and `idle`. Print a report:
+
+```bash
+node tools/playtest.mjs
+```
+
+Options: `--weeks 30`, `--seeds 15`, `--modes normal,hardcore`, `--strategies careful,sloppy`, `--json`.
+
+`tests/economy.test.js` turns the important rows into assertions, so `npm test` fails if a tuning change breaks the money. On every difficulty a careful player must master all five stages, never run out of cash, and end in profit, and must beat market-only, sloppy, random and idle play.
+
+Medians from 9 seeds × 24 weeks (profit includes about $460 of gear):
+
+| Difficulty | Strategy | Stages | Lowest cash | Revenue (online / market) | Profit |
+|---|---|---|---|---|---|
+| Relaxed | careful | 5/5 | ~$1,960 | ~$1,830 (1,420 / 460) | **+$600** |
+| Normal | careful | 5/5 | ~$950 | ~$1,650 (1,190 / 430) | **+$380** |
+| Hardcore | careful | 5/5 | ~$260 | ~$1,650 (1,170 / 500) | **+$380** |
+| Normal | market only | 5/5 | ~$930 | ~$1,030 (0 / 1,030) | about −$100 to −$200 |
+| Normal | sloppy | 0/5 | — | $0 | −$22 |
+| Normal | random | 1/5 | — | $0 | −$310 |
+
+What the numbers say: the online shop (plates, spawn, grow kits, dried) is where a small home operation makes its money. Fresh pinks rarely last until market day, so market-only growers dry most of their harvest at a lower price. The $60 shelf rack (+3 closet spots) is what lets a grower make enough product to sell.
 
 ## Images (optional): generating them with fal.ai or any CLI
 

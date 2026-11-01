@@ -16,6 +16,7 @@ import { unlocked, startCash, canSalvage, currentStage, opensAt } from '../sim/s
 import { checklist, unitsNeeded, forceMaster } from '../sim/mastery.js';
 import { STAGES, PRODUCTS } from '../content/stages.js';
 import { loadRun, saveRun, clearRun } from '../save.js';
+import { setAdminVisible } from '../admin-help.js';
 import { phaseDays } from '../sim/growth.js';
 import { canShake, vName } from '../sim/growth.js';
 import { money, fmtLb, shelfLifeDays } from '../sim/economy.js';
@@ -36,8 +37,9 @@ const NB_TABS = [['guide', 'Field guide'], ['lessons', 'Lessons'], ['cheat', 'Ch
 export function start(mode = (S.g && S.g.mode) || 'normal') {
   unlock(); S.g = sim.newGame(mode); ui.screen = 'play'; ui.sheet = null; ui.paused = false; ui.autoPaused = false; ui.newBest = false;
   ui.modalQueue = []; ui.modal = stageModal(0, true);
+  if (ui.playMode !== 'advanced') ui.speed = 4; // quick play
   saveRun(S.g); ui.saved = savedSummary();
-  ISF.track('runStart', { mode }); window.scrollTo({ top: 0 });
+  ISF.track('runStart', { mode, playMode: ui.playMode }); window.scrollTo({ top: 0 });
 }
 /** Resume the autosaved run. */
 export function resume() {
@@ -45,6 +47,9 @@ export function resume() {
   unlock(); S.g = g; ui.screen = 'play'; ui.sheet = null; ui.modal = null; ui.modalQueue = []; ui.paused = true; ui.autoPaused = false;
   window.scrollTo({ top: 0 }); return true;
 }
+/** Basic (quick play) or Advanced (every option + admin panel). UI only: the simulation is identical. */
+export function setPlayMode(m) { ui.playMode = m; persist(); setAdminVisible(m === 'advanced'); play('tap'); }
+export const ESSENTIAL_GEAR = ['sab', 'cooker23', 'rack', 'hygrometer', 'tent', 'heatmat', 'humidifier', 'dehydrator'];
 export function savedSummary() {
   const g = loadRun(); if (!g || g.over) return null;
   return { week: g.week, stage: STAGES[Math.min(g.stage, STAGES.length - 1)].name, mode: g.mode, cash: g.cash };
@@ -64,10 +69,10 @@ export function setSpeed(sp) { ui.speed = sp; ui.paused = false; ui.autoPaused =
 export const speedUp = () => setSpeed(faster(ui.speed));
 export const speedDown = () => setSpeed(slower(ui.speed));
 const done = ok => { if (ok !== false) ui.sheet = null; return ok; };
-export function openSheet(i) { ui.sheet = { slot: i }; }
+export function openSheet(i) { ui.sheet = { slot: i }; ui.moreOpts = false; }
 export function tapSlot(i) {
   unlock(); const g = S.g, v = g.slots[i];
-  if (!v && !spotOpen(g, i)) { if (zoneOf(i) === 'tent' && unlocked(g, 'room')) openShop(); return; }
+  if (!v && !spotOpen(g, i)) { if ((zoneOf(i) === 'tent' && unlocked(g, 'room')) || (zoneOf(i) === 'closet')) openShop(); return; }
   if (!v) return openSheet(i);
   if (v.state === 'lost') return sim.toss(g, i);
   if (v.contam.vis > 0) return openSheet(i);
@@ -95,6 +100,11 @@ export const App = {
         { id: 'hardcore', name: 'Hardcore', cash: startCash('hardcore'), blurb: 'Tight money, full losses, and no grace after week 0.' },
       ];
     },
+    advanced() { return ui.playMode === 'advanced'; },
+    showAll() { return this.advanced || ui.moreOpts; },
+    mediaShown() { return this.showAll ? MEDIA : { mea: MEDIA.mea }; },
+    bagsShown() { return this.showAll ? BUYABLE : { straw: BUYABLE.straw, masters: BUYABLE.masters }; },
+    gearShown() { return this.advanced || ui.moreGear ? EQUIPMENT_ORDER : EQUIPMENT_ORDER.filter(id => ESSENTIAL_GEAR.includes(id) || S.g.gear[id]); },
     weekPct() { return (S.g.day % RULES.daysPerWeek) / RULES.daysPerWeek * 100; },
     stage() { return currentStage(S.g); },
     stageList() { return checklist(S.g); },
@@ -173,7 +183,9 @@ export const App = {
     listIt(i) { done(shop.listVessel(S.g, i)); },
     listDried() { shop.listDried(S.g); },
     bumpPrice(id, d) { shop.setPrice(S.g, id, shop.priceOf(S.g, id) + d); },
-    toggleMarket() { S.g.attend = !S.g.attend; play('tap'); },
+    setMarket(m) { S.g.marketMode = m; play('tap'); },
+    setPlayMode,
+    autoClimate() { const g = S.g; if (g.gear.heatmat) g.heater = 1; g.fae = 5; g.mist = g.gear.humidifier ? 98 : 88; play('good'); },
     keepGrowing() { nextModal(); }, spotsIn, badge, barColor, vName, isBlock, canShake, tapSlot, setHeater, toggleMute,
     status(v) { return status(S.g, v); },
     barPct(v) { return barPct(S.g, v); },
@@ -193,6 +205,7 @@ export const App = {
     fitOf(v) { return fitOf(S.g, v); },
     readout(zid) { return zoneReadout(S.g, zid); },
     zoneIsOpen(zid) { return zoneOpen(S.g, zid); },
+    spotIsOpen(i) { return spotOpen(S.g, i); },
     zoneOfSpot(i) { return zoneOf(i); },
     zoneById(id) { return ZONE_BY_ID[id]; },
     keyFor(i) { return spotOpen(S.g, i) ? SPOT_KEYS[i] : ''; },

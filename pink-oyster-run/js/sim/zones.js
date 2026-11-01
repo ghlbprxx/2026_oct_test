@@ -16,7 +16,12 @@ export function zoneOpen(g, zid) {
   if (z.locked) return false;
   return z.needs ? !!g.gear[z.needs] : true;
 }
-export const spotOpen = (g, i) => zoneOpen(g, zoneOf(i));
+/** A spot is open when its zone is, and (for extra spots like the closet rack) its gear is owned. */
+export function spotOpen(g, i) {
+  const sp = SPOTS[i]; if (!sp || !zoneOpen(g, sp.zone)) return false;
+  const x = ZONE_BY_ID[sp.zone].extra;
+  return !(x && sp.k >= x.from && !g.gear[x.needs]);
+}
 
 /** Outdoor temperature: season drift + daily swing − cold snap. */
 export function outdoorTemp(g, swing = 0) {

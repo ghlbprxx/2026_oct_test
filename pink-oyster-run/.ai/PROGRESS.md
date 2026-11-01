@@ -57,3 +57,12 @@
 - Verified: npm test 52/52 (mastery order, review → next stage, agar masterable by sensible play in ≤5 weeks, idle can't master week 1, random bot ≪ scripted, shop price/demand/reputation/refunds, market fee/cap, run save round-trip + migration, every knob has help). Playwright: review modal order fixed (review then stage card), list-in-shop action, admin help blocks (44), Continue after reload, mobile 390px, no console errors.
 - Known: scripted careful bot that sells only at market nets ~$360 revenue vs ~$430 gear per 12 weeks; online listings (not used by the bot) are the intended profit path, unmeasured. 44 knobs (+6 dev) vs the 20–30 target.
 - Next step: Phase 5 task 1 — content/story.js (mentor + forum guru scenes, ≤3 lines, ids), speech-bubble component with portraits; forum guru delivers market quizzes.
+
+## 2026-11-01 06:45 UTC — Phase 4.5 started (user request)
+- Ask: extract simulation so tests prove playability and that money works at each level; Basic vs Advanced mode so quick play isn't overwhelming.
+- Next step: js/sim/autoplay.js strategies + tools/playtest.mjs; measure; tune; then UI modes.
+
+## 2026-11-01 07:40 UTC — Phase 4.5 complete (playtest harness + Basic/Advanced)
+- Changed: js/sim/autoplay.js, tools/playtest.mjs, tests/economy.test.js (bot.test.js removed); rack gear + per-spot locks; marketMode auto/book/skip + haulWorthIt; species-done no longer re-masters; Basic/Advanced play style (setup + pause menu), basic-only filtered build menu/shop, Set for pinks, admin panel hidden in Basic, essentials filter in Advanced; gear_rack art + manifest entry.
+- Verified: npm test 58/58; playtest table (README + DESIGN); Playwright: Basic default hides admin, starts 4×, build menu 1 medium / 2 bag rows / 2 buttons, Show all → 3 / 4; shop 8 vs 13 items; switch to Advanced shows admin with 15 essential rows; no console errors.
+- Next step: Phase 5 task 1 — content/story.js (mentor + forum guru scenes, ≤3 lines, ids), speech-bubble component with portraits; forum guru delivers market quizzes.

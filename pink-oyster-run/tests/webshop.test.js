@@ -35,6 +35,12 @@ test('stock sells over time; shipping hidden mold refunds and hurts reputation',
   assert.ok(g.rep < rep2, 'refunds cost reputation'); assert.ok(g.cash <= cash2 + 1e-9, 'no money for refunded items');
   assert.ok(g.learned.includes('shipped_mold'));
 });
+test('market auto-booking skips small hauls and books worthwhile ones', async () => {
+  const { market } = await import('../js/sim/economy.js');
+  setup(); const g = newGame(); g.stage = 3; g.lots.push({ kg: 0.3, age: 0, id: 1 });
+  const cash = g.cash; market(g, false); assert.equal(g.cash, cash, 'a small haul is not worth the booth');
+  g.lots.push({ kg: 4, age: 0, id: 2 }); market(g, false); assert.ok(g.cash > cash);
+});
 test('farmers market: booth fee only when bringing product; one market absorbs a limited amount', () => {
   const C = setup();
   const g = newGame(); g.stage = 3;

@@ -5,7 +5,7 @@ export const ZONES = [
   { id: 'kitchen', name: 'Kitchen counter', short: 'Kitchen', spots: 2, img: 'zone_kitchen',
     purpose: 'Plate work and prep. Your still-air box (or flow hood) lives here.',
     env: { dT: 2, rh: 45, co2: 700, dirt: 1.3 }, best: ['plate'] },
-  { id: 'closet', name: 'Closet shelf', short: 'Closet', spots: 3, img: 'zone_closet',
+  { id: 'closet', name: 'Closet shelf', short: 'Closet', spots: 6, extra: { from: 3, needs: 'rack' }, img: 'zone_closet',
     purpose: 'Incubation: dark, stable, warm-ish, still air.',
     env: { dT: 4, rh: 55, co2: 2500, dirt: 0.8 }, best: ['plate', 'jar', 'bag'] },
   { id: 'tent', name: 'Grow tent', short: 'Tent', spots: 3, img: 'zone_tent', needs: 'tent',

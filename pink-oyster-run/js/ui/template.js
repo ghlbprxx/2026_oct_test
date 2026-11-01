@@ -35,7 +35,15 @@ export default `
     <div class="card">
       <span class="label">New game</span>
       <h2 style="font-size:clamp(28px,4vw,40px);margin:6px 0 4px">How forgiving should mold be?</h2>
-      <p class="muted">You can change the numbers behind each mode in the admin panel (⚙).</p>
+      <p class="muted">Pick a play style and how harsh mold should be. You can switch play style any time from the pause menu.</p>
+      <div class="playstyle" role="group" aria-label="Play style">
+        <span class="label">Play style</span>
+        <div class="seg two">
+          <button :aria-pressed="ui.playMode==='basic'" @click="setPlayMode('basic')"><b>Basic</b><small>Quick play: recommended choices first, auto climate and market, no tuning panel.</small></button>
+          <button :aria-pressed="ui.playMode==='advanced'" @click="setPlayMode('advanced')"><b>Advanced</b><small>Every option: prices, market booking, all gear, fine climate control, the admin panel.</small></button>
+        </div>
+      </div>
+      <span class="label" style="display:block;margin-top:14px">Difficulty</span>
       <div class="modes">
         <button v-for="m in MODES_UI" :key="m.id" class="mode" :class="{rec:m.id==='normal'}" @click="start(m.id)">
           <b>{{ m.name }}</b><span class="mono">{{ money(m.cash) }} to start</span><small>{{ m.blurb }}</small>
@@ -83,7 +91,7 @@ export default `
           <img v-if="z.id==='kitchen' && (g.gear.sab || g.gear.flowhood)" class="zgear" :src="src(g.gear.flowhood?'gear_flowhood':'gear_sab')" alt="">
         </div>
         <div class="spots">
-          <button v-for="i in spotsIn(z.id)" :key="i+'-'+(g.slots[i]?g.slots[i].id:0)" class="slot" :class="[slotCls(g.slots[i]), {locked:!zoneIsOpen(z.id)}]" :data-slot="i"
+          <button v-for="i in spotsIn(z.id)" :key="i+'-'+(g.slots[i]?g.slots[i].id:0)" class="slot" :class="[slotCls(g.slots[i]), {locked:!spotIsOpen(i)}]" :data-slot="i"
                   @click="tapSlot(i)" @mouseenter="ui.hover=i" @mouseleave="ui.hover=null" @focus="ui.hover=i" @blur="ui.hover=null" :aria-label="slotAria(g.slots[i],i)">
             <template v-if="g.slots[i]">
               <span class="art"><img v-for="(l,k) in layers(g.slots[i])" :key="k" :src="src(l.id)" :style="l.style" alt=""></span>
@@ -94,7 +102,8 @@ export default `
               <span class="sbar"><i :style="{width:barPct(g.slots[i])+'%',background:barColor(g.slots[i])}"></i></span>
               <span v-if="CONFIG.dev.debug" class="dbg">{{ dbg(g.slots[i]) }}</span>
             </template>
-            <span v-else-if="zoneIsOpen(z.id)" class="empty">+<small>Empty</small></span>
+            <span v-else-if="spotIsOpen(i)" class="empty">+<small>Empty</small></span>
+            <span v-else-if="zoneIsOpen(z.id)" class="empty" title="Buy a wire shelf rack in the shop">🔒<small>Shelf rack</small></span>
             <span v-else class="empty">🔒</span>
             <span class="key" v-if="keyFor(i)">{{ keyFor(i) }}</span>
           </button>
@@ -129,8 +138,8 @@ export default `
         <div class="cardh"><span class="label">Online shop</span><span class="mono" style="font-size:12px">Reputation {{ Math.round(g.rep) }}/100</span></div>
         <div class="mini rep"><i :style="{width:g.rep+'%'}"></i></div>
         <div class="prod" v-for="p in products" :key="p.id" :class="{locked:!p.open}">
-          <div><b>{{ p.name }}</b><small v-if="p.open">{{ p.stock }} in stock · ~{{ p.rate.toFixed(1) }} sales/game day at this price</small><small v-else>Opens when you master {{ p.stageName.toLowerCase() }}.</small></div>
-          <div class="pricer" v-if="p.open">
+          <div><b>{{ p.name }}</b><small v-if="p.open">{{ p.stock }} in stock · {{ money(p.price) }} · ~{{ p.rate.toFixed(1) }} sales/game day</small><small v-else>Opens when you master {{ p.stageName.toLowerCase() }}.</small></div>
+          <div class="pricer" v-if="p.open && advanced">
             <button class="ib" @click="bumpPrice(p.id,-1)" :aria-label="'Lower price of '+p.name">−</button>
             <span class="mono" :title="'Base price '+money(p.base)">{{ money(p.price) }}</span>
             <button class="ib" @click="bumpPrice(p.id,1)" :aria-label="'Raise price of '+p.name">+</button>
@@ -147,6 +156,8 @@ export default `
           <div class="actions" style="margin-top:8px" v-if="roomOpen"><button class="btn sm" @click="openShop">Open the shop</button></div>
         </template>
         <template v-else>
+          <div class="actions" style="margin:4px 0 6px"><button class="btn sm" @click="autoClimate">Set for pinks</button><span class="hint" style="align-self:center">heat mat Low, fan 5, mist {{ g.gear.humidifier ? 98 : 88 }}</span></div>
+          <details class="note" :open="advanced" style="margin-top:4px"><summary>Fine-tune heat, air and mist</summary>
           <div class="ctl" v-if="g.gear.heatmat">
             <div class="row"><label>Heat mat</label><span class="mono" style="font-size:12px">{{ money(g.heater*CONFIG.economy.heaterCost,2) }}/game day</span></div>
             <div class="seg" role="group" aria-label="Heat mat">
@@ -165,6 +176,7 @@ export default `
             <input id="mist" type="range" min="60" :max="g.gear.humidifier?110:88" step="1" v-model.number="g.mist">
             <span class="hint">{{ g.gear.humidifier ? 'Aim for 85–95% RH. Above ~96% invites bacteria.' : 'Hand misting tops out around 88%. A humidifier goes higher.' }}</span>
           </div>
+          </details>
         </template>
       </div>
 
@@ -205,8 +217,11 @@ export default `
         </div>
         <div class="actions" style="margin-top:10px"><button class="btn sm" :disabled="!g.lots.length || !g.gear.dehydrator" @click="dryAll">{{ g.gear.dehydrator ? 'Dehydrate all fresh (D)' : 'Needs a dehydrator' }}</button></div>
         <div class="ctl" style="margin-top:10px">
-          <div class="row"><label>Farmers market</label><button class="btn sm" :class="{ghost:!g.attend}" @click="toggleMarket" :aria-pressed="g.attend">{{ g.attend ? 'Booth booked' : 'Skipping markets' }}</button></div>
-          <span class="hint">Every {{ CONFIG.economy.marketEvery }} game days. Booth {{ money(CONFIG.economy.boothFee) }}, paid only when you bring product. Fresh sells only here (up to {{ RULES.marketDemandLb }} lb a day).</span>
+          <div class="row"><label>Farmers market</label><span v-if="!advanced" class="chip good">Auto</span></div>
+          <div class="seg" v-if="advanced" role="group" aria-label="Market booking">
+            <button v-for="m in ['auto','book','skip']" :key="m" :aria-pressed="(g.marketMode||'auto')===m" @click="setMarket(m)">{{ {auto:'Auto',book:'Always',skip:'Skip'}[m] }}</button>
+          </div>
+          <span class="hint">Every {{ CONFIG.economy.marketEvery }} game days. Booth {{ money(CONFIG.economy.boothFee) }}{{ (g.marketMode||'auto')==='auto' ? ', booked only when your haul is worth 3× the fee' : ', paid when you bring product' }}. Fresh sells only here (up to {{ RULES.marketDemandLb }} lb a day).</span>
         </div>
       </div>
 
@@ -276,23 +291,24 @@ export default `
         </div>
         <div class="zonefit" v-if="sheetZoneNote">{{ sheetZoneNote }}</div>
         <div class="choice">
-          <button v-for="(m,k) in MEDIA" :key="k" class="opt" @click="pourPlate(ui.sheet.slot,k)"><span><b>{{ m.full }}</b><small>{{ m.blurb }}</small></span><span class="cost" :title="'Real growers: about '+plateDaysFor(k)+' days'">{{ plateDaysFor(k) }} real d<br><small>{{ gameDays(plateDaysFor(k)) }} game d</small></span></button>
+          <button v-for="(m,k) in mediaShown" :key="k" class="opt" @click="pourPlate(ui.sheet.slot,k)"><span><b>{{ m.full }}</b><small>{{ m.blurb }}</small></span><span class="cost" :title="'Real growers: about '+plateDaysFor(k)+' days'">{{ plateDaysFor(k) }} real d<br><small>{{ gameDays(plateDaysFor(k)) }} game d</small></span></button>
         </div>
         <div class="secth"><b>Prep a grain jar</b><span class="mono muted">{{ money(SUPPLIES.jar) }} · rye, field capacity, 1% gypsum</span></div>
         <p v-if="!isOpen('jar')" class="locked">🔒 Grain jars open when you master agar. Get clean plates going first.</p>
         <div class="choice" v-else>
           <button class="opt" :disabled="!g.cookers.length" @click="prepJar(ui.sheet.slot,'ster')"><span><b>Pressure-cook (sterilize)</b><small>{{ g.cookers.length ? '' : 'Needs a pressure cooker (shop). ' }}90–120 min at 15 psi, ~{{ CONFIG.equipment.cookerDays }} real day incl. cooling ({{ cookerLine }}). Real growers: colonized in {{ SPECIES.bio.jarReal }}.</small></span><span class="cost">cooker</span></button>
-          <button class="opt" @click="prepJar(ui.sheet.slot,'past')"><span><b>Hot-water bath (pasteurize)</b><small>Quick: ready in half a real day, no cooker needed.</small></span><span class="cost">½ real d</span></button>
+          <button class="opt" v-if="showAll" @click="prepJar(ui.sheet.slot,'past')"><span><b>Hot-water bath (pasteurize)</b><small>Quick: ready in half a real day, no cooker needed.</small></span><span class="cost">½ real d</span></button>
         </div>
         <div class="secth"><b>Prep a substrate bag</b><span class="mono muted">1 kg (2.2 lb) dry substrate</span></div>
         <p v-if="!isOpen('bag')" class="locked">🔒 Substrate bags open when you master grain spawn.</p>
         <div class="subt" v-else>
-          <div v-for="(r,k) in BUYABLE" :key="k" class="subrow">
+          <div v-for="(r,k) in bagsShown" :key="k" class="subrow">
             <span><b>{{ r.name }}</b> <span class="rich" :aria-label="'Richness '+r.rich+' of 4'">{{ '●'.repeat(r.rich)+'○'.repeat(4-r.rich) }}</span><small>{{ r.blurb }} ~{{ fmtLb(r.be*CONFIG.growth.yieldScale) }} first flush · colonizes in {{ r.colReal }} · {{ money(r.cost) }}</small></span>
-            <button class="btn sm" :disabled="!canBags" @click="prepBag(ui.sheet.slot,k,'ster')" :aria-label="'Sterilize '+r.name" :title="canBags?'':'Bags only fit the 23 qt canner'">Sterilize</button>
-            <button class="btn ghost sm" @click="prepBag(ui.sheet.slot,k,'past')" :aria-label="'Pasteurize '+r.name">Pasteurize</button>
+            <button class="btn sm" v-if="showAll || r.rich >= 3" :disabled="!canBags" @click="prepBag(ui.sheet.slot,k,'ster')" :aria-label="'Sterilize '+r.name" :title="canBags?'':'Bags only fit the 23 qt canner'">Sterilize</button>
+            <button class="btn ghost sm" v-if="showAll || r.rich < 3" @click="prepBag(ui.sheet.slot,k,'past')" :aria-label="'Pasteurize '+r.name">Pasteurize</button>
           </div>
         </div>
+        <button v-if="!showAll" class="linkbtn" @click="ui.moreOpts=true">Show all options (other agar media, pasteurized grain, more substrates)</button>
         <details class="note"><summary>Field notes: sterilize or pasteurize?</summary>
           <ul><li v-for="p in PREP" :key="p[0]"><b>{{ p[0] }}</b> ({{ p[1].toLowerCase() }}): <span class="ok-t">{{ p[2] }}</span>, not {{ p[3].toLowerCase() }}.</li></ul>
           <p class="muted" style="margin-top:6px">Rule of thumb: the more nitrogen in the mix, the more sterile it has to be.</p>
@@ -414,6 +430,7 @@ export default `
       <h3 style="font-size:28px">Paused</h3>
       <p class="muted">Week {{ g.week }} of {{ CONFIG.time.seasonWeeks }} · {{ money(g.cash) }}</p>
       <div class="actions" style="justify-content:center"><button class="btn big" @click="resume">Resume</button><button class="btn ghost" @click="openNb()">Notebook</button><button class="btn ghost" @click="quit">End season now</button></div>
+      <p class="muted" style="font-size:13.5px">Play style: <b>{{ ui.playMode==='advanced' ? 'Advanced' : 'Basic' }}</b> · <button class="linkbtn" @click="setPlayMode(ui.playMode==='advanced'?'basic':'advanced')">switch to {{ ui.playMode==='advanced' ? 'Basic' : 'Advanced' }}</button></p>
     </div>
   </div>
 
@@ -426,7 +443,7 @@ export default `
       </div>
       <p class="muted" style="font-size:13.5px;margin-bottom:10px">Prices are approximate US retail. Each item changes what you can do or your odds, not just a number.</p>
       <div class="shopgrid">
-        <div v-for="id in EQUIPMENT_ORDER" :key="id" class="item" :class="{owned:g.gear[id]}" :data-item="id">
+        <div v-for="id in gearShown" :key="id" class="item" :class="{owned:g.gear[id]}" :data-item="id">
           <img :src="src(EQUIPMENT[id].img)" alt="">
           <div>
             <span class="label">{{ EQUIPMENT[id].cat }}</span>
@@ -436,6 +453,7 @@ export default `
           <button class="btn sm" :class="{ghost:!buyState(id).ok}" :disabled="!buyState(id).ok" @click="buyGear(id)">{{ g.gear[id] ? 'Owned ✓' : buyState(id).ok ? money(priceOf(id)) : buyState(id).why }}</button>
         </div>
       </div>
+      <button v-if="!advanced && !ui.moreGear" class="linkbtn" style="margin-top:10px" @click="ui.moreGear=true">More gear (16 qt cooker, scale, impulse sealer, CO₂ monitor, flow hood)</button>
     </div>
   </div>
 

@@ -6,11 +6,14 @@ import { mk } from '../js/sim/growth.js';
 import { SPOTS, spotsIn, zoneEnv, zoneFit, spotOpen, zoneOf } from '../js/sim/zones.js';
 import { ZONES } from '../js/content/zones.js';
 
-test('the house has kitchen 2, closet 3, tent 3, garage 2, yard 2 spots', () => {
+test('the house has kitchen 2, closet 3 (+3 with a shelf rack), tent 3, garage 2, yard 2 spots', () => {
   setup();
-  assert.deepEqual(ZONES.map(z => [z.id, z.spots]), [['kitchen', 2], ['closet', 3], ['tent', 3], ['garage', 2], ['yard', 2]]);
-  assert.equal(SPOTS.length, 12);
-  assert.equal(newGame().slots.length, 12);
+  assert.deepEqual(ZONES.map(z => [z.id, z.spots]), [['kitchen', 2], ['closet', 6], ['tent', 3], ['garage', 2], ['yard', 2]]);
+  assert.equal(SPOTS.length, 15); assert.equal(newGame().slots.length, 15);
+  const g = newGame(), closet = spotsIn('closet');
+  assert.deepEqual(closet.map(i => spotOpen(g, i)), [true, true, true, false, false, false]);
+  g.gear.rack = true;
+  assert.ok(closet.every(i => spotOpen(g, i)));
 });
 test('the closet is warm and steady; the garage swings with the weather and cold snaps', () => {
   setup();

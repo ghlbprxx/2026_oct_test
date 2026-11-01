@@ -62,3 +62,15 @@ No FOMO timers, no streak penalties, no paid randomness, no deadlines on shop li
 | Wine cap bed | First flush ~2–6 months after spring/fall inoculation (range 2–12); beds produce 2–4 years; aged hardwood chips better; conifer chips inhibit; straw-only beds faster but exhaust in a season | medium | bed colonization ~90 bio days (60–180) |
 | Grain / substrate / rest (brief) | grain 10–14 d (7–10 with shake), straw 10–14 d, supplemented 14–21 d, flush rest 7–14 d | brief-provided; consistent with common grower guidance, not independently re-verified this session | as brief |
 Sources: dev.to/bibimbop123 mushroom revenue; dir.tridge.com fresh oyster US; healthycanning.com/presto-canners; walmart.com Presto 23-qt; hydrobuilder.com Bella Bora SAB; shroomcraftlab.pages.dev LFH vs SAB; northspore.com wine cap; out-grow.com wine cap guide.
+
+
+## Economy proof (2026-11-01, tools/playtest.mjs, 9 seeds × 24 weeks, medians)
+- careful (online + market): 5/5 stages on all difficulties (78–89% of runs finish the species by week 24); profit Relaxed +$608, Normal +$384, Hardcore +$384; lowest cash $1,961 / $946 / $259; revenue ~60–75% online.
+- marketOnly: 5/5 stages, profit −$64..−$199 (fresh rarely lasts to market; ~85% of harvest is dried).
+- sloppy 0/5 (no SAB → agar checklist fails), random 1/5 and −$310, idle $0.
+- Changes made to get here: wire shelf rack ($60, +3 closet spots); market 'auto' booking (books only when haul ≥ 3× fee); species-mastered no longer re-masters each week.
+- Difficulty differs mostly in starting cash and the dip toward zero, as specified; outcomes for careful play are similar.
+
+## Play style (UI only)
+- Basic (default): recommended options first, auto climate button, fixed prices, auto market, essential gear, no admin panel, starts at 4×.
+- Advanced: everything + admin panel (15 essential knobs, "Show all knobs").

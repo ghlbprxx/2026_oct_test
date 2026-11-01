@@ -17,7 +17,7 @@ export const checklist = g => currentStage(g).checklist.map(it => ({ ...it, have
 export const checklistDone = g => checklist(g).every(it => it.done);
 /** Units needed for the current stage (progression.unitsScale; fewer once the player has learned lessons on earlier species — Phase 6). */
 export const unitsNeeded = g => Math.max(1, Math.round(currentStage(g).units * C.progression.unitsScale));
-export const isMastered = g => checklistDone(g) && g.units >= unitsNeeded(g);
+export const isMastered = g => !g.speciesDone && checklistDone(g) && g.units >= unitsNeeded(g);
 
 /** Snapshot of the numbers a weekly report diffs against. */
 export const weekSnapshot = g => JSON.parse(JSON.stringify({ stats: g.stats, counts: g.counts, cash: g.cash, day: g.day }));
@@ -51,6 +51,7 @@ export function buildReview(g) {
 /** Apply the verdict: advance the ladder on mastery, otherwise repeat the week. Returns follow-up events for the caller to emit after the review. */
 export function applyVerdict(g, r) {
   const after = [];
+  if (g.speciesDone) return after; // free play after the species: reviews still come, no verdicts
   if (r.mastered) {
     g.mastered.push(r.stage);
     emit('track', { type: 'mastered', data: { stage: r.stage, week: g.week } });

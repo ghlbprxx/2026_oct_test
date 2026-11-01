@@ -22,7 +22,7 @@ import { RECIPES, MEDIA, SUPPLIES } from '../content/species/pink-oyster.js';
 export function newGame(mode = 'normal') {
   const day = C.dev.startLevel * RULES.daysPerWeek;
   const g = { mode, day, week: weekOf(day), cash: startCash(mode), slots: Array(SPOTS.length).fill(null), queue: [], cookers: [], gear: {},
-    heater: 0, fae: 2, mist: 80, lots: [], lotSeq: 0, dried: 0, nextMarket: day + C.economy.marketEvery, attend: true, snap: null, forecast: null,
+    heater: 0, fae: 2, mist: 80, lots: [], lotSeq: 0, dried: 0, nextMarket: day + C.economy.marketEvery, marketMode: 'auto', snap: null, forecast: null,
     coffeeAt: null, coffeeDone: false, log: [], learned: [], asked: [], seq: 0, over: false, endReason: '',
     stage: 0, units: 0, mastered: [], counts: {}, speciesDone: false, weeksRepeated: 0, reviews: [],
     stock: { plate: [], jar: [], kit: [], dried: [] }, prices: {}, rep: C.shop.startReputation,

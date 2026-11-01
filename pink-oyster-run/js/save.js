@@ -5,7 +5,7 @@ export const SAVE_KEY = 'por:profile';
 export const SAVE_VERSION = 1;
 const LEGACY = { best: 'por2-best', lessons: 'por2-lessons', muted: 'por2-mute' };
 
-export const blankProfile = () => ({ v: SAVE_VERSION, best: null, lessons: {}, muted: false, expert: false });
+export const blankProfile = () => ({ v: SAVE_VERSION, best: null, lessons: {}, muted: false, expert: false, playMode: 'basic' });
 
 function read(storage, key) { try { const v = storage.getItem(key); return v == null ? undefined : JSON.parse(v); } catch (e) { return undefined; } }
 
@@ -39,7 +39,7 @@ const deep = o => JSON.parse(JSON.stringify(o));
 export function migrateRun(data) {
   if (!data || typeof data !== 'object' || !data.g || typeof data.g !== 'object' || !Array.isArray(data.g.slots)) return null;
   const g = { stage: 0, units: 0, mastered: [], counts: {}, speciesDone: false, weeksRepeated: 0, reviews: [],
-    stock: { plate: [], jar: [], kit: [], dried: [] }, prices: {}, rep: 50, attend: true, gear: {}, cookers: [], lots: [], log: [], learned: [], asked: [], ...deep(data.g) };
+    stock: { plate: [], jar: [], kit: [], dried: [] }, prices: {}, rep: 50, marketMode: 'auto', gear: {}, cookers: [], lots: [], log: [], learned: [], asked: [], ...deep(data.g) };
   for (const k of ['plate', 'jar', 'kit', 'dried']) if (!Array.isArray(g.stock[k])) g.stock[k] = [];
   if (!g.weekStart) g.weekStart = deep({ stats: g.stats || {}, counts: g.counts, cash: g.cash, day: g.day });
   return g;
